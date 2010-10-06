@@ -599,7 +599,7 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str)
 }
 
 
-void draw_device_list(u32 flags, int region, int hermes, int direct_boot)
+void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ftp)
 {
 	//draw_cell();
 	float y = 0.85f;
@@ -714,9 +714,7 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot)
 		// homebrew
 		if((flags>>31) & 1)
 		{
-			sprintf(str, "HOMEBREW MODE");
-			x=0.75f;
-			draw_text_stroke(0.9f, 0.575f, 0.8f, 0xff00ffff, str);
+			draw_text_stroke(0.9f, 0.575f, 0.8f, 0xff00ffff, "HOMEBREW");
 		}
 		else
 		{
@@ -751,7 +749,14 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot)
 		{
 			draw_text_stroke(0.885f, 0.535f, 0.8f, 0xff0000ff, "OFF");
 		}
-
+		if (ftp)
+		{
+			draw_text_stroke(0.84f, 0.655f, 0.8f, 0xffff00ff, "ON");
+		}
+		else
+		{
+			draw_text_stroke(0.84f, 0.655f, 0.8f, 0xffff00ff, "OFF");
+		}
 //ftp text
 
 
@@ -844,8 +849,8 @@ void draw_list( t_menu_list *menu, int menu_size, int selected )
 		
 		if(i<menu_size)
 			{
-			utf8_to_ansi(menu[i].title, ansi, 37);
-			ansi[37]=0;
+			utf8_to_ansi(menu[i].title, ansi, 65);
+			ansi[65]=0;
 			//sprintf(str, "%i) %s", i+1, ansi);
 			sprintf(str, "%s", ansi);
 			grey=(menu[i].title[0]=='_');

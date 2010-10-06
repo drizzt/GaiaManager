@@ -3339,9 +3339,9 @@ skip_1:
 		
 
 			if(mode_list==0)
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), region, hermes, direct_boot);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), region, hermes, direct_boot, ftp_flags & 2);
 			else
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? ((menu_homebrew_list[game_sel].flags<<16) | (1<<31)| ((1<<30) * ((ftp_flags & 2)!=0))) : ((1<<31) | ((1<<30) * ((ftp_flags & 2)!=0))))),region,hermes, direct_boot);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? ((menu_homebrew_list[game_sel].flags<<16) | (1<<31)| ((1<<30) * ((ftp_flags & 2)!=0))) : ((1<<31) | ((1<<30) * ((ftp_flags & 2)!=0))))),region,hermes, direct_boot, ftp_flags & 2);
 			
 		}
 

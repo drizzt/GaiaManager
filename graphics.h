@@ -38,7 +38,7 @@ void display_png(int x, int y, int width, int height, int tx, int ty);
 void display_pngh(int x, int y, int width, int height, int tx, int ty);
 void display_pngbg(int x, int y, int width, int height, int tx, int ty);
 
-void draw_device_list(u32 flags, int region, int hermes, int direct_boot);
+void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ftp);
 
 int initConsole();
 int termConsole();
