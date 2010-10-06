@@ -10,14 +10,15 @@ typedef unsigned char u8;
 #define CONSOLE_WIDTH		(76+16)
 #define CONSOLE_HEIGHT		(31)
 
-#define DISPLAY_WIDTH  512	
-#define DISPLAY_HEIGHT 512
+#define DISPLAY_WIDTH  1920	
+#define DISPLAY_HEIGHT 1080
 
 
 typedef struct
 {
 	unsigned flags;
 	char title[64];
+	char title_id[64];
 	char path[768];
 }
 t_menu_list;
@@ -34,8 +35,10 @@ void draw_square(float x, float y, float w, float h, float z, u32 rgba);
 int set_texture( u8 *buffer, u32 x_size, u32 y_size );
 
 void display_png(int x, int y, int width, int height, int tx, int ty);
+void display_pngh(int x, int y, int width, int height, int tx, int ty);
+void display_pngbg(int x, int y, int width, int height, int tx, int ty);
 
-void draw_device_list(u32 flags);
+void draw_device_list(u32 flags, int region, int hermes, int direct_boot);
 
 int initConsole();
 int termConsole();
@@ -51,6 +54,8 @@ int setRenderObject(void);
 
 void setRenderColor(void);
 void setRenderTexture(void);
+void setRenderTextureh(void);
+void setRenderTexturebg(void);
 
 void flip(void);
 

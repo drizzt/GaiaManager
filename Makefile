@@ -3,16 +3,15 @@
 CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
-PPU_SRCS = main.cpp graphics.cpp icon.cpp syscall8.c $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
+PPU_SRCS = main.cpp at3plus.c graphics.cpp waveout.c $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
 PPU_TARGET = open_manager.elf
+
+PPU_LDLIBS = -lfont_stub -lfontFT_stub -lfreetype_stub -lpthread -latrac3plus_stub -lmixer -laudio_stub -lftp  -lnet_stub -lnetctl_stub -lpngdec_stub -lm -ldbgfont_gcm -lgcm_cmd -lgcm_sys_stub -lio_stub -lsysmodule_stub -lsysutil_stub -lfs_stub\
+
+all : $(PPU_TARGET)
 
 PPU_INCDIRS	+= -I$(CELL_SDK)/target/ppu/include/sysutil
 PPU_CFLAGS  += -g
-
-
-PPU_LDLIBS 	+= -lftp  -lnet_stub -lnetctl_stub\
-                    -lpngdec_stub -lm -ldbgfont_gcm -lgcm_cmd -lgcm_sys_stub\
-		    -lio_stub -lsysmodule_stub -lsysutil_stub -lfs_stub
 
 VPSHADER_SRCS = vpshader.cg vpshader2.cg
 FPSHADER_SRCS = fpshader.cg fpshader2.cg
