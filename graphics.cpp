@@ -544,7 +544,23 @@ u8 c;
 	
 	c= (((*ch & 3)<<6) | (*(ch+1) & 63));
 
-	if(c>127) c=' ';
+	if(c>=0xC0 && c<=0xC5) c='A';
+	else if(c==0xc7) c='C';
+	else if(c>=0xc8 && c<=0xcb) c='E';
+	else if(c>=0xcc && c<=0xcf) c='I';
+	else if(c==0xd1) c='N';
+	else if(c>=0xd2 && c<=0xd6) c='O';
+	else if(c>=0xd9 && c<=0xdc) c='U';
+	else if(c==0xdd) c='Y';
+	else if(c>=0xe0 && c<=0xe5) c='a';
+	else if(c==0xe7) c='c';
+	else if(c>=0xe8 && c<=0xeb) c='e';
+	else if(c>=0xec && c<=0xef) c='i';
+	else if(c==0xf1) c='n';
+	else if(c>=0xf2 && c<=0xf6) c='o';
+	else if(c>=0xf9 && c<=0xfc) c='u';
+	else if(c==0xfd || c==0xff) c='y';
+	else if(c>127) c=*(++ch+1); //' ';
 
 	*ansi++=c;
 	len--;
