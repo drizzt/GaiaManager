@@ -3280,7 +3280,7 @@ skip_1:
 				}
 				else
 				{
-					dispy = 146 + (49 * game_sel-1);
+					dispy = 150 + (49 * game_sel-1);
 				}
 				
 				set_texture( text_bmp, DISPLAY_WIDTH, DISPLAY_HEIGHT);
