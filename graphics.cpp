@@ -87,13 +87,7 @@ static vtx_color *vertex_color;
 static int vert_indx=0;
 
 static int vert_texture_indx=0;
-static int vert_texture2_indx=0;
-static int vert_texture3_indx=0;
-static int vert_texture4_indx=0;
-static int vert_texture5_indx=0;
-static int vert_texture6_indx=0;
-static int vert_textureh_indx=0;
-static int vert_texturebg_indx=0;
+
 
 static u32 text_width;
 static u32 text_height;
@@ -102,15 +96,8 @@ static u32 text_colorp;
 static u32 text_depthp;
 
 static vtx_texture *vertex_text;
-static vtx_texture *vertex_texth;
-static vtx_texture *vertex_textbg;
-
 
 static u32 vertex_text_offset;
-static u32 vertex_text_offseth;
-static u32 vertex_text_offsetbg;
-
-
 
 static u32 text_obj_coord_indx;
 static u32 text_tex_coord_indx;
@@ -265,13 +252,6 @@ void flip(void)
 
 	vert_indx=0; // reset the vertex index
 	vert_texture_indx=0;
-	vert_texture2_indx=0;
-	vert_texture3_indx=0;
-	vert_texture4_indx=0;
-	vert_texture5_indx=0;
-	vert_texture6_indx=0;
-	vert_textureh_indx=0;
-	vert_texturebg_indx=0;
 
 }
 
@@ -923,14 +903,8 @@ int text_create( u32 xsize, u32 ysize )
 
 
 	vertex_text = (vtx_texture*) localAllocAlign(128*1024, 1024*sizeof(vtx_texture));
-	vertex_texth = (vtx_texture*) localAllocAlign(128*1024, 1024*sizeof(vtx_texture));
-	vertex_textbg = (vtx_texture*) localAllocAlign(128*1024, 1024*sizeof(vtx_texture));
 
 	cellGcmAddressToOffset( (void*)vertex_text,&vertex_text_offset );
-	cellGcmAddressToOffset( (void*)vertex_texth,&vertex_text_offseth );
-	cellGcmAddressToOffset( (void*)vertex_textbg,&vertex_text_offsetbg );
-
-
 
 	text_param.format  = CELL_GCM_TEXTURE_A8R8G8B8;
 	text_param.format |= CELL_GCM_TEXTURE_LN;
@@ -991,10 +965,6 @@ int set_texture( u8 *buffer, u32 x_size, u32 y_size )
 
 }
 
-//
-// all of this display code eats dick and needs to be replaced
-//
-
 void setRenderTexture( void )
 {
 	cellGcmSetVertexProgram( gCellGcmCurrentContext, vertex_prg, text_vertex_prg_ucode );
@@ -1008,30 +978,6 @@ void setRenderTexture( void )
 }
 
 
-void setRenderTexturebg( void )
-{
-	cellGcmSetVertexProgram( gCellGcmCurrentContext, vertex_prg, text_vertex_prg_ucode );
-	cellGcmSetFragmentProgram( gCellGcmCurrentContext, fragment_prg, text_fragment_offset);
-	cellGcmSetInvalidateTextureCache( gCellGcmCurrentContext, CELL_GCM_INVALIDATE_TEXTURE );
-	cellGcmSetVertexDataArray( gCellGcmCurrentContext, text_obj_coord_indx, 0, sizeof(vtx_texture), 3, CELL_GCM_VERTEX_F,
-							   CELL_GCM_LOCATION_LOCAL, vertex_text_offsetbg );
-	cellGcmSetVertexDataArray( gCellGcmCurrentContext, text_tex_coord_indx, 0, sizeof(vtx_texture), 2, CELL_GCM_VERTEX_F,
-	                           CELL_GCM_LOCATION_LOCAL, ( vertex_text_offsetbg + sizeof(float)*3 ) );
-	return;
-}
-
-void setRenderTextureh( void )
-{
-	cellGcmSetVertexProgram( gCellGcmCurrentContext, vertex_prg, text_vertex_prg_ucode );
-	cellGcmSetFragmentProgram( gCellGcmCurrentContext, fragment_prg, text_fragment_offset);
-	cellGcmSetInvalidateTextureCache( gCellGcmCurrentContext, CELL_GCM_INVALIDATE_TEXTURE );
-	cellGcmSetVertexDataArray( gCellGcmCurrentContext, text_obj_coord_indx, 0, sizeof(vtx_texture), 3, CELL_GCM_VERTEX_F,
-							   CELL_GCM_LOCATION_LOCAL, vertex_text_offseth );
-	cellGcmSetVertexDataArray( gCellGcmCurrentContext, text_tex_coord_indx, 0, sizeof(vtx_texture), 2, CELL_GCM_VERTEX_F,
-	                           CELL_GCM_LOCATION_LOCAL, ( vertex_text_offseth + sizeof(float)*3 ) );
-	return;
-}
-
 void put_texture_vertex(float x, float y, float z, float tx, float ty)
 {
 	vertex_text[vert_texture_indx].x = x; 
@@ -1044,115 +990,34 @@ void put_texture_vertex(float x, float y, float z, float tx, float ty)
 }
 
 //
-// all of this display code eats dick and needs to be replaced
+// fixed by w4r10ck
 //
 void display_png(int x, int y, int width, int height, int tx, int ty)
 {
-	vertex_text[vert_texture_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
-	vertex_text[vert_texture_indx].y= ((float) ((y)*-2))/((float) 1080)+1.0f;
-	vertex_text[vert_texture_indx].z= 0.0f;
-	vertex_text[vert_texture_indx].tx= 0.0f;
-	vertex_text[vert_texture_indx].ty= 0.0f;
+    vertex_text[vert_texture_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx].y= ((float) ((y)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx].z= 0.0f;
+    vertex_text[vert_texture_indx].tx= 0.0f;
+    vertex_text[vert_texture_indx].ty= 0.0f;
 
-	vert_texture_indx++;
+    vertex_text[vert_texture_indx+1].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+1].y= ((float) ((y)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx+1].z= 0.0f;
+    vertex_text[vert_texture_indx+1].tx= ((float) tx)/1920.0f;
+    vertex_text[vert_texture_indx+1].ty= 0.0f;
 
-	vertex_text[vert_texture_indx].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
-	vertex_text[vert_texture_indx].y= ((float) ((y)*-2))/((float) 1080)+1.0f;
-	vertex_text[vert_texture_indx].z= 0.0f;
-	vertex_text[vert_texture_indx].tx= ((float) tx)/1920.0f;
-	vertex_text[vert_texture_indx].ty= 0.0f;
+    vertex_text[vert_texture_indx+2].x= ((float) ((x)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+2].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx+2].z= 0.0f;
+    vertex_text[vert_texture_indx+2].tx= 0.0f;
+    vertex_text[vert_texture_indx+2].ty= ((float) ty)/1080.0f;
 
-	vert_texture_indx++;
+    vertex_text[vert_texture_indx+3].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+3].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx+3].z= 0.0f;
+    vertex_text[vert_texture_indx+3].tx= ((float) tx)/1920.0f;
+    vertex_text[vert_texture_indx+3].ty=((float) ty)/1080.0f;
 
-	vertex_text[vert_texture_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
-	vertex_text[vert_texture_indx].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
-	vertex_text[vert_texture_indx].z= 0.0f;
-	vertex_text[vert_texture_indx].tx= 0.0f;
-	vertex_text[vert_texture_indx].ty= ((float) ty)/1080.0f;
-
-	vert_texture_indx++;
-
-	vertex_text[vert_texture_indx].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
-	vertex_text[vert_texture_indx].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
-	vertex_text[vert_texture_indx].z= 0.0f;
-	vertex_text[vert_texture_indx].tx= ((float) tx)/1920.0f;
-	vertex_text[vert_texture_indx].ty=((float) ty)/1080.0f;
-
-	vert_texture_indx++;
-
-	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_TRIANGLE_STRIP, 0, 4 );
-}
-
-void display_pngbg(int x, int y, int width, int height, int tx, int ty)
-{
-	vertex_textbg[vert_texturebg_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
-	vertex_textbg[vert_texturebg_indx].y= ((float) ((y)*-2))/((float) 1080)+1.0f;
-	vertex_textbg[vert_texturebg_indx].z= 0.0f;
-	vertex_textbg[vert_texturebg_indx].tx= 0.0f;
-	vertex_textbg[vert_texturebg_indx].ty= 0.0f;
-
-	vert_texturebg_indx++;
-
-	vertex_textbg[vert_texturebg_indx].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
-	vertex_textbg[vert_texturebg_indx].y= ((float) ((y)*-2))/((float) 1080)+1.0f;
-	vertex_textbg[vert_texturebg_indx].z= 0.0f;
-	vertex_textbg[vert_texturebg_indx].tx= ((float) tx)/1920.0f;
-	vertex_textbg[vert_texturebg_indx].ty= 0.0f;
-
-	vert_texturebg_indx++;
-
-	vertex_textbg[vert_texturebg_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
-	vertex_textbg[vert_texturebg_indx].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
-	vertex_textbg[vert_texturebg_indx].z= 0.0f;
-	vertex_textbg[vert_texturebg_indx].tx= 0.0f;
-	vertex_textbg[vert_texturebg_indx].ty= ((float) ty)/1080.0f;
-
-	vert_texturebg_indx++;
-
-	vertex_textbg[vert_texturebg_indx].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
-	vertex_textbg[vert_texturebg_indx].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
-	vertex_textbg[vert_texturebg_indx].z= 0.0f;
-	vertex_textbg[vert_texturebg_indx].tx= ((float) tx)/1920.0f;
-	vertex_textbg[vert_texturebg_indx].ty=((float) ty)/1080.0f;
-
-	vert_texturebg_indx++;
-
-	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_TRIANGLE_STRIP, 0, 4 );
-}
-
-void display_pngh(int x, int y, int width, int height, int tx, int ty)
-{
-	vertex_texth[vert_textureh_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
-	vertex_texth[vert_textureh_indx].y= ((float) ((y)*-2))/((float) 1080)+1.0f;
-	vertex_texth[vert_textureh_indx].z= 0.0f;
-	vertex_texth[vert_textureh_indx].tx= 0.0f;
-	vertex_texth[vert_textureh_indx].ty= 0.0f;
-
-	vert_textureh_indx++;
-
-	vertex_texth[vert_textureh_indx].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
-	vertex_texth[vert_textureh_indx].y= ((float) ((y)*-2))/((float) 1080)+1.0f;
-	vertex_texth[vert_textureh_indx].z= 0.0f;
-	vertex_texth[vert_textureh_indx].tx= ((float) tx)/1920.0f;
-	vertex_texth[vert_textureh_indx].ty= 0.0f;
-
-	vert_textureh_indx++;
-
-	vertex_texth[vert_textureh_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
-	vertex_texth[vert_textureh_indx].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
-	vertex_texth[vert_textureh_indx].z= 0.0f;
-	vertex_texth[vert_textureh_indx].tx= 0.0f;
-	vertex_texth[vert_textureh_indx].ty= ((float) ty)/1080.0f;
-
-	vert_textureh_indx++;
-
-	vertex_texth[vert_textureh_indx].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
-	vertex_texth[vert_textureh_indx].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
-	vertex_texth[vert_textureh_indx].z= 0.0f;
-	vertex_texth[vert_textureh_indx].tx= ((float) tx)/1920.0f;
-	vertex_texth[vert_textureh_indx].ty=((float) ty)/1080.0f;
-
-	vert_textureh_indx++;
-
-	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_TRIANGLE_STRIP, 0, 4 );
+    cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_TRIANGLE_STRIP, vert_texture_indx, 4 );
+    vert_texture_indx+=4;
 }
