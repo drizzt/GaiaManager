@@ -714,11 +714,11 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 		// homebrew
 		if((flags>>31) & 1)
 		{
-			draw_text_stroke(0.9f, 0.575f, 0.8f, 0xff00ffff, "HOMEBREW");
+			draw_text_stroke(0.91f, 0.575f, 0.8f, 0xff00ffff, "HOMEBREW");
 		}
 		else
 		{
-			draw_text_stroke(0.9f, 0.575f, 0.8f, 0xffffff00, "GAME");
+			draw_text_stroke(0.91f, 0.575f, 0.8f, 0xffffff00, "GAME");
 		}
 		// gray bar
 		//draw_square(-1.0f, (0.5f-y+0.05f)*2.0f, 2.0f, 0.25f /*1.0f-(0.5f-y-0.05f)*2.0f*/, -0.1f, 0x605050ff);
@@ -727,7 +727,7 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 
 		cellNetCtlGetInfo(CELL_NET_CTL_INFO_IP_ADDRESS, &info);
 		sprintf(ipaddr, "%16s", info.ip_address);
-		draw_text_stroke( 0.8f, 0.694, 0.7f, 0xff00ffff, ipaddr);
+		draw_text_stroke( 0.8f, 0.691, 0.8f, 0xff00ffff, ipaddr);
 
 
 // hermes text
@@ -743,11 +743,11 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 
 		if (direct_boot == 1)
 		{
-			draw_text_stroke(0.885f, 0.535f, 0.8f, 0xff00ff00, "ON");
+			draw_text_stroke(0.89f, 0.535f, 0.8f, 0xff00ff00, "ON");
 		}
 		else
 		{
-			draw_text_stroke(0.885f, 0.535f, 0.8f, 0xff0000ff, "OFF");
+			draw_text_stroke(0.89f, 0.535f, 0.8f, 0xff0000ff, "OFF");
 		}
 		if (ftp)
 		{
