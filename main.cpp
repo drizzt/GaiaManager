@@ -56,52 +56,59 @@ extern "C" {
 #define MAX_LIST 512
 #define INPUT_FILE  "/dev_bdvd/PS3_GAME/SND0.AT3"
 #define THREAD_NUM 4
-int curThread = 0;
-BGMArg bgmArg;
 
-pthread_t th[THREAD_NUM] ;
-char container[512];
-int fm = -1;
+enum BmModes {
+	GAME = 0,
+	HOMEBREW = 1
+};
+
+static int curThread = 0;
+static BGMArg bgmArg;
+
+static pthread_t th[THREAD_NUM] ;
+static char container[512];
+static int fm = -1;
 
 
-char hdd_folder[64]="ASDFGHJKLMN"; // folder for games (deafult string is changed the first time it is loaded
-char hdd_folder_home[64]="OMAN46756"; // folder for homebrew
+static char hdd_folder[64]="ASDFGHJKLMN"; // folder for games (deafult string is changed the first time it is loaded
+static char hdd_folder_home[64]="OMAN46756"; // folder for homebrew
 // 				Jap, 		English, 	French, 	Spanish, 	German, 	Italian, 	Dutch, 		Portugues, 	Russian, Korean, Chinese, Chinese, Finnish, Swedish, Danish, Norwegian
-char text_delfailed[][128] = {	"Delete failed dump in",	"Delete failed dump in",	"Delete failed dump in",	"Borrar dump fallido en","Loschen fehlgeschlagener Kopie in",	"Delete failed dump in",	"Delete failed dump in",	"Apagar descarga falhada no",	"Delete failed dump in","Delete failed dump in","Delete failed dump in","Delete failed dump in","Delete failed dump in","Raderingen misslyckades, information i","Delete failed dump in","Delete failed dump in"};
-char text_nosplit[][128] = {"You cannot launch split games","You cannot launch split games","You cannot launch split games","No puedes jugar a juegos divididos","Sie konnen keine geteilten Spiele starten","Non puoi avviare giochi divisi","You cannot launch split games","Nao pode iniciar jogos divididos","You cannot launch split games","You cannot launch split games","You cannot launch split games","You cannot launch split games","You cannot launch split games","Du kan inte kora delade spel","You cannot launch split games","You cannot launch split games"};
+static const char text_delfailed[][128] = {	"Delete failed dump in",	"Delete failed dump in",	"Delete failed dump in",	"Borrar dump fallido en","Loschen fehlgeschlagener Kopie in",	"Delete failed dump in",	"Delete failed dump in",	"Apagar descarga falhada no",	"Delete failed dump in","Delete failed dump in","Delete failed dump in","Delete failed dump in","Delete failed dump in","Raderingen misslyckades, information i","Delete failed dump in","Delete failed dump in"};
+static const char text_nosplit[][128] = {"You cannot launch split games","You cannot launch split games","You cannot launch split games","No puedes jugar a juegos divididos","Sie konnen keine geteilten Spiele starten","Non puoi avviare giochi divisi","You cannot launch split games","Nao pode iniciar jogos divididos","You cannot launch split games","You cannot launch split games","You cannot launch split games","You cannot launch split games","You cannot launch split games","Du kan inte kora delade spel","You cannot launch split games","You cannot launch split games"};
 
-char text_wantcopy[][128] = {"Want to copy from","Want to copy from","Want to copy from","Quieres copiar desde","Wollen Sie von","Vuoi copiare da","Want to copy from","Quer copiar de","Want to copy from","Want to copy from","Want to copy from","Want to copy from","Want to copy from","Vill du kopiera fran","Want to copy from","Want to copy from"};
-char text_to[][12] = {"to","to","to","a","zu kopieren","a","to","para","to","to","to","to","to","till","to","to"};
+static const char text_wantcopy[][128] = {"Want to copy from","Want to copy from","Want to copy from","Quieres copiar desde","Wollen Sie von","Vuoi copiare da","Want to copy from","Quer copiar de","Want to copy from","Want to copy from","Want to copy from","Want to copy from","Want to copy from","Vill du kopiera fran","Want to copy from","Want to copy from"};
+static const char text_to[][12] = {"to","to","to","a","zu kopieren","a","to","para","to","to","to","to","to","till","to","to"};
 
 
-char text_eboot[][96] = {"EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN ha sido parcheado.","EBOOT.BIN wurde erfolgreich aktualisiert","EBOOT.BIN e stato aggiornato con successo","EBOOT.BIN has been successfully updated","EBOOT.BIN foi actualizado com sucesso","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","Eboot.bin har uppdaterats utan problem.","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated"};
-char text_launcher[][96] = {"You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","Puedes ejecutar esta utilidad presionando L2+START la proxima vez.","Sie konnen das Spiel ab jetzt mit L2+START starten","Puoi lanciare questa utility premendo L2+START la prossima volta","You can launch this utility pressing L2+START the next time","Pode iniciar este utilitário pressionando L2+START na proxima vez","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","Du kan nu starta detta program genom att trycka L2+START nasta gang.","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time"};
+static const char text_eboot[][96] = {"EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN ha sido parcheado.","EBOOT.BIN wurde erfolgreich aktualisiert","EBOOT.BIN e stato aggiornato con successo","EBOOT.BIN has been successfully updated","EBOOT.BIN foi actualizado com sucesso","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","Eboot.bin har uppdaterats utan problem.","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated"};
+static const char text_launcher[][96] = {"You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","Puedes ejecutar esta utilidad presionando L2+START la proxima vez.","Sie konnen das Spiel ab jetzt mit L2+START starten","Puoi lanciare questa utility premendo L2+START la prossima volta","You can launch this utility pressing L2+START the next time","Pode iniciar este utilitário pressionando L2+START na proxima vez","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","Du kan nu starta detta program genom att trycka L2+START nasta gang.","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time"};
 
-char text_notfound[][32] = {"EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN no encontrado","EBOOT.BIN wurde nicht gefunden","EBOOT.BIN non trovato","EBOOT.BIN not found","EBOOT.BIN não encontrado","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN hittades inte","EBOOT.BIN not found","EBOOT.BIN not found"};
+static const char text_notfound[][32] = {"EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN no encontrado","EBOOT.BIN wurde nicht gefunden","EBOOT.BIN non trovato","EBOOT.BIN not found","EBOOT.BIN não encontrado","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN hittades inte","EBOOT.BIN not found","EBOOT.BIN not found"};
 
-char text_wantexit[][32] = {"Want to exit?","Want to exit?","Want to exit?","Quieres salir?","Wollen Sie beenden?","Vuoi uscire?","Want to exit?","Quer sair?","Want to exit?","Want to exit?","Want to exit?","Want to exit?","Want to exit?","Vill du avsluta?","Want to exit?","Want to exit?"};
-char text_wantdel[][32] = {"Want to delete from","Want to delete from","Want to delete from","Quieres borrar desde","Wollen Sie von loschen","Want to delete from","Want to delete from","Quer apagar de","Want to delete from","Want to delete from","Want to delete from","Want to delete from","Want to delete from","Vill du radera fran","Want to delete from","Want to delete from"};
+static const char text_wantexit[][32] = {"Want to exit?","Want to exit?","Want to exit?","Quieres salir?","Wollen Sie beenden?","Vuoi uscire?","Want to exit?","Quer sair?","Want to exit?","Want to exit?","Want to exit?","Want to exit?","Want to exit?","Vill du avsluta?","Want to exit?","Want to exit?"};
+static const char text_wantdel[][32] = {"Want to delete from","Want to delete from","Want to delete from","Quieres borrar desde","Wollen Sie von loschen","Want to delete from","Want to delete from","Quer apagar de","Want to delete from","Want to delete from","Want to delete from","Want to delete from","Want to delete from","Vill du radera fran","Want to delete from","Want to delete from"};
 
-char text_wantuse[][32] = {"Want to use","Want to use","Want to use","Quieres usar","Mochten Sie","Vuoi usare","Want to use","Quer usar","Want to use","Want to use","Want to use","Want to use","Want to use","Vill du anvanda","Want to use","Want to use"};
-char text_toinstall[][64] = {"to install the game?","to install the game?","to install the game?","para instalar el juego?","fur die Spiele-Installation verwenden?","per installare il gioco?","to install the game?","para instalar o jogo?","to install the game?","to install the game?","to install the game?","to install the game?","to install the game?","till att installera spel?","to install the game?","to install the game?"};
+static const char text_wantuse[][32] = {"Want to use","Want to use","Want to use","Quieres usar","Mochten Sie","Vuoi usare","Want to use","Quer usar","Want to use","Want to use","Want to use","Want to use","Want to use","Vill du anvanda","Want to use","Want to use"};
+static const char text_toinstall[][64] = {"to install the game?","to install the game?","to install the game?","para instalar el juego?","fur die Spiele-Installation verwenden?","per installare il gioco?","to install the game?","para instalar o jogo?","to install the game?","to install the game?","to install the game?","to install the game?","to install the game?","till att installera spel?","to install the game?","to install the game?"};
 
-char soundfile[512];
-t_menu_list menu_list[MAX_LIST];
-int max_menu_list=0;
+static char soundfile[512];
+static t_menu_list menu_list[MAX_LIST];
+static int max_menu_list=0;
 
-int hermes = 0;
-int region = 1;
-int direct_boot = 0;
+static int hermes = 0;
+static int region = 1;
+static int direct_boot = 0;
 
-uint64_t mem_orig = 0x386000014E800020ULL;
-uint64_t mem_patched = 0xE92296887C0802A6ULL; 
+static uint64_t mem_orig = 0x386000014E800020ULL;
+static uint64_t mem_patched = 0xE92296887C0802A6ULL; 
 	
-t_menu_list menu_homebrew_list[MAX_LIST];
-int max_menu_homebrew_list=0;
+static t_menu_list menu_homebrew_list[MAX_LIST];
+static int max_menu_homebrew_list=0;
+static int *max_list=&max_menu_list;
 
-int mode_list=0;
+static enum BmModes mode_list=GAME;
 
-int game_sel=0;
+static int game_sel=0;
 
 using namespace cell::Gcm;
 
@@ -125,13 +132,13 @@ using namespace cell::Gcm;
 
 
 
-unsigned cmd_pad= 0;
+static unsigned cmd_pad= 0;
 
 static void *host_addr;
 
 static int up_count=0, down_count=0, left_count=0, right_count=0, l2_count=0, r2_count=0;
 
-u32 new_pad=0,old_pad=0;
+static u32 new_pad=0,old_pad=0;
 
 int load_libfont_module()
 {
@@ -2047,7 +2054,7 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
      switch (status)
      {
        case CELL_SYSUTIL_REQUEST_EXITGAME:
-		if(mode_list==0)
+		if(mode_list==GAME)
 			syscall36( (char *) "/dev_bdvd"); // restore bluray
 		else
 			syscall36( (char *) "/dev_usb000"); // restore
@@ -2418,7 +2425,7 @@ update_game_folder:
 	if(old_fi!=game_sel && game_sel>=0 && counter_png==0)
 		{
 			old_fi=game_sel;
-			if(mode_list==0)
+			if(mode_list==GAME)
 			{
 
 				int e = 0;
@@ -2481,10 +2488,7 @@ skip_find_device:
 			game_sel--;
 			if(game_sel<0)  
 				{
-				if(mode_list==0)
-					game_sel=max_menu_list-1;
-				else
-					game_sel=max_menu_homebrew_list-1;
+					game_sel=*max_list-1;
 				}
 		} else up_count++;
 	
@@ -2495,10 +2499,7 @@ skip_find_device:
 		  left_count=0;
 			if(game_sel == 0)
 			{
-				if(mode_list==0)
-					game_sel=max_menu_list-1;
-				else
-					game_sel=max_menu_homebrew_list-1;
+				game_sel=*max_list-1;
 			}
 			else
 			{
@@ -2515,15 +2516,7 @@ skip_find_device:
 		if (down_count>7){
 			down_count=0;
 			game_sel++;
-			if(mode_list==0)
-				{
-				if(game_sel>=max_menu_list) game_sel=0;
-				}
-			else
-				{
-				if(game_sel>=max_menu_homebrew_list) game_sel=0;
-				}
-
+			if(game_sel>=*max_list) game_sel=0;
 		} else down_count++;
 			
 	} else down_count=8;
@@ -2542,14 +2535,7 @@ skip_find_device:
 	if ( old_pad & BUTTON_R2 ) {
 
 			game_sel++;
-			if(mode_list==0)
-				{
-				if(game_sel>=max_menu_list) game_sel=0;
-				}
-			else
-				{
-				if(game_sel>=max_menu_homebrew_list) game_sel=0;
-				}
+			if(game_sel>=*max_list) game_sel=0;
 
 			
 	} 
@@ -2558,33 +2544,22 @@ skip_find_device:
 		game_sel--;
 		if(game_sel<0)  
 			{
-			if(mode_list==0)
-				game_sel=max_menu_list-1;
-			else
-				game_sel=max_menu_homebrew_list-1;
+				game_sel=*max_list-1;
 			}
-
 	}
 
 	if ( old_pad & BUTTON_RIGHT ) {
 
 		if (right_count>7){
 			right_count=0;
-			if(game_sel == max_menu_list-1)
+			if(game_sel == *max_list-1)
 			{
 				game_sel = 0;
 			}
 			else
 			{
 				game_sel = game_sel + 16;
-				if(mode_list==0)
-					{
-					if(game_sel>=max_menu_list) game_sel=max_menu_list-1;
-					}
-				else
-					{
-					if(game_sel>=max_menu_homebrew_list) game_sel=max_menu_homebrew_list-1;
-					}
+				if(game_sel>=*max_list) game_sel=*max_list-1;
 			}
 
 		} else right_count++;
@@ -2601,14 +2576,23 @@ skip_find_device:
 
 	 if ( new_pad & BUTTON_START){
 		game_sel=0;
-		mode_list^=1;
+	if (mode_list==GAME)
+	{
+		mode_list = HOMEBREW;
+		max_list=&max_menu_homebrew_list;
+	}
+	else
+	{
+		mode_list = GAME;
+		max_list=&max_menu_list;
+	}
 		old_fi=-1;
 		counter_png=0;
 		}
 
 	
 
-	if ((new_pad & BUTTON_R1) && game_sel>=0 && max_menu_list>0 && mode_list==0){
+	if ((new_pad & BUTTON_R1) && game_sel>=0 && max_menu_list>0 && mode_list==GAME){
 
 		time_start= time(NULL);
 			
@@ -2666,7 +2650,7 @@ skip_find_device:
  
 // delete from devices	
 
-	if ( (new_pad & BUTTON_SQUARE) && game_sel>=0 && max_menu_list>0 && mode_list==0 && (!(menu_list[game_sel].flags & 2048))){
+	if ( (new_pad & BUTTON_SQUARE) && game_sel>=0 && max_menu_list>0 && mode_list==GAME && (!(menu_list[game_sel].flags & 2048))){
 		int n;
 
 			for(n=0;n<11;n++){
@@ -2744,7 +2728,7 @@ skip_find_device:
 		}
 
 
-	if ((new_pad & BUTTON_SQUARE) && mode_list==1)
+	if ((new_pad & BUTTON_SQUARE) && mode_list==HOMEBREW)
 		{
 		// reset to update datas
 		old_fi=-1;
@@ -2754,7 +2738,7 @@ skip_find_device:
 		}
 // copy from devices
 
-	if ((new_pad & BUTTON_CIRCLE) && game_sel>=0 && max_menu_list>0 && mode_list==0)
+	if ((new_pad & BUTTON_CIRCLE) && game_sel>=0 && max_menu_list>0 && mode_list==GAME)
 		{
 		if(menu_list[game_sel].flags & 2048) goto copy_from_bluray;
 
@@ -2980,7 +2964,7 @@ skip_find_device:
 
 // copy from bluray
 
-	    if ( (new_pad & BUTTON_SELECT) & ((fdevices>>11) & 1) && mode_list==0)
+	    if ( (new_pad & BUTTON_SELECT) & ((fdevices>>11) & 1) && mode_list==GAME)
 		{
 copy_from_bluray:
 
@@ -3172,7 +3156,7 @@ copy_from_bluray:
 	{
 		if(ftp_flags & 2) ftp_off(); else ftp_on();
 	}
-	if (new_pad & BUTTON_CROSS && game_sel>=0 && (((mode_list==0) && max_menu_list>0) || ((mode_list==1) && max_menu_homebrew_list>0)) ) {
+	if (new_pad & BUTTON_CROSS && game_sel>=0 && *max_list>0) {
 		
 		if(menu_list[game_sel].flags & 2048)
 			{
@@ -3182,7 +3166,7 @@ copy_from_bluray:
 			exit(0);
 			}
 
-		if(mode_list==1)	
+		if(mode_list==HOMEBREW)	
 			{
 			int prio = 1001;
 		    uint64_t flags = SYS_PROCESS_PRIMARY_STACK_SIZE_64K;
@@ -3268,7 +3252,7 @@ skip_1:
 
 
 
-			if(game_sel>=0 && (((mode_list==0) && max_menu_list>0) || ((mode_list==1) && max_menu_homebrew_list>0)) && png_w!=0 && png_h!=0)
+			if(game_sel>=0 && *max_list>0 && png_w!=0 && png_h!=0)
 				{
 				int dispy = 152;
 				//sprintf(filename, "GAME_SEL IS %d  MAX IS %d", game_sel, max_menu_list);
@@ -3323,7 +3307,7 @@ skip_1:
 			// square for titles
 			//draw_square(-0.9f, 0.9f, 2.0f-0.73f, 2.0-0.50f, -0.1f, 0x00203000);
 
-			if(mode_list==0)
+			if(mode_list==GAME)
 				{
 	
 				if(game_sel>=0 && max_menu_list>0)
@@ -3338,7 +3322,7 @@ skip_1:
 				}
 		
 
-			if(mode_list==0)
+			if(mode_list==GAME)
 				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), region, hermes, direct_boot, ftp_flags & 2);
 			else
 				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? ((menu_homebrew_list[game_sel].flags<<16) | (1<<31)| ((1<<30) * ((ftp_flags & 2)!=0))) : ((1<<31) | ((1<<30) * ((ftp_flags & 2)!=0))))),region,hermes, direct_boot, ftp_flags & 2);
@@ -3350,7 +3334,7 @@ skip_1:
 		flip();
 		cellSysutilCheckCallback();
 	}
-	if(mode_list==0)
+	if(mode_list==GAME)
 		syscall36( (char *) "/dev_bdvd"); // restore bluray
 	else
 		syscall36( (char *) "/dev_usb000"); // restore
