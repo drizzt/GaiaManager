@@ -3294,8 +3294,8 @@ skip_1:
 // 16 titles - 49 pixels - 792 height
 
 				set_texture( text_h, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-				setRenderTextureh();
-				display_pngh(60,dispy, 1295, 49, 1295, 49);
+				setRenderTexture();
+				display_png(60,dispy, 1295, 49, 1295, 49);
 
 				
 				}
@@ -3315,8 +3315,8 @@ skip_1:
 
 			// square for screen
 			set_texture( text_bg, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-			setRenderTexturebg();
-			display_pngbg(0,0,1920,1080,1920,1080);
+			setRenderTexture();
+			display_png(0,0,1920,1080,1920,1080);
 			
 			//draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x00ff0000);
 
