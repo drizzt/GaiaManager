@@ -19,6 +19,8 @@ FPSHADER_SRCS = fpshader.cg fpshader2.cg
 VPSHADER_PPU_OBJS = $(patsubst %.cg, $(OBJS_DIR)/%.ppu.o, $(VPSHADER_SRCS))
 FPSHADER_PPU_OBJS = $(patsubst %.cg, $(OBJS_DIR)/%.ppu.o, $(FPSHADER_SRCS))
 
+CLEANFILES = EBOOT.BIN PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET)
+
 include $(CELL_MK_DIR)/sdk.target.mk
 
 PPU_OBJS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
