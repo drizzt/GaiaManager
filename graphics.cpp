@@ -578,18 +578,24 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str)
 		cellDbgFontPrintf( x, y,size, color, str);
 }
 
+void draw_text_stroke_bool(float x, float y, float size, bool on)
+{
+	u32 color = on ? 0xff00ff00 : 0xff0000ff;
+	draw_text_stroke(x, y, size, color, on ? "ON" : "OFF");
+}
+
 
 void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ftp)
 {
 	//draw_cell();
-	float y = 0.85f;
+	float y = 0.84f;
 	char str[256];
 	int r = region;
 	//char ansi[256];
 
 	int n,ok=0;
 	float len;
-	float x=0.05;
+	float x=0.06;
 	
 	//static int pos=0;
 	//static int cont=0;
@@ -692,6 +698,7 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 		}
 
 		// homebrew
+#if 0
 		if((flags>>31) & 1)
 		{
 			draw_text_stroke(0.91f, 0.575f, 0.8f, 0xff00ffff, "HOMEBREW");
@@ -700,6 +707,7 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 		{
 			draw_text_stroke(0.91f, 0.575f, 0.8f, 0xffffff00, "GAME");
 		}
+#endif
 		// gray bar
 		//draw_square(-1.0f, (0.5f-y+0.05f)*2.0f, 2.0f, 0.25f /*1.0f-(0.5f-y-0.05f)*2.0f*/, -0.1f, 0x605050ff);
 
@@ -707,20 +715,13 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 
 		cellNetCtlGetInfo(CELL_NET_CTL_INFO_IP_ADDRESS, &info);
 		sprintf(ipaddr, "%16s", info.ip_address);
-		draw_text_stroke( 0.8f, 0.691, 0.8f, 0xff00ffff, ipaddr);
 
+		draw_text_stroke_bool(0.86, 0.58, 0.8, hermes);
+		draw_text_stroke_bool(0.86, 0.62, 0.8, ftp);
+		draw_text_stroke     (0.85, 0.66, 0.8, 0xffffffff, (flags>>31) & 1 ? "HOMEBREW" : "GAME");
+		draw_text_stroke     (0.77, 0.70, 0.8, 0xff00ffff, ipaddr);
 
-// hermes text
-		if (hermes == 1)
-		{
-			//draw_text_stroke(0.69f, 0.33f, 1.2f, 0xff0000ff, "HERMES PATCH ON");
-			draw_text_stroke(0.85f, 0.615f, 0.8f, 0xff00ff00, "ON");
-		}
-		else
-		{
-			draw_text_stroke(0.85f, 0.615f, 0.8f, 0xff0000ff, "OFF");
-		}
-
+#if 0
 		if (direct_boot == 1)
 		{
 			draw_text_stroke(0.89f, 0.535f, 0.8f, 0xff00ff00, "ON");
@@ -729,14 +730,7 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 		{
 			draw_text_stroke(0.89f, 0.535f, 0.8f, 0xff0000ff, "OFF");
 		}
-		if (ftp)
-		{
-			draw_text_stroke(0.84f, 0.655f, 0.8f, 0xffff00ff, "ON");
-		}
-		else
-		{
-			draw_text_stroke(0.84f, 0.655f, 0.8f, 0xffff00ff, "OFF");
-		}
+#endif
 //ftp text
 
 
@@ -807,7 +801,7 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 
 void draw_list( t_menu_list *menu, int menu_size, int selected )
 {
-	float y = 0.140f;
+	float y = 0.145f;
 	int i = 0, c=0;
 	char str[256];
 	char ansi[256];
@@ -852,7 +846,7 @@ void draw_list( t_menu_list *menu, int menu_size, int selected )
 		//cellDbgFontPrintf( 0.079f, y-.001, 1.0f, black, str);
 		//cellDbgFontPrintf( 0.081f, y+.001, 1.0f, black, str);
 		//cellDbgFontPrintf( 0.082f, y+.002, 1.0f, black, str);
-		draw_text_stroke(0.05f, y, 1.05f, color, str);
+		draw_text_stroke(0.06f, y, 1.05f, color, str);
 
 		//utf8_to_ansi(menu[i].path, ansip, 37);
 

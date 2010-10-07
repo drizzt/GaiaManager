@@ -40,6 +40,7 @@
 
 #include <libftp.h>
 
+#include "syscall8.h"
 
 sys_ppu_thread_t	soundThread = 0;
 volatile int		isRunning = 0;
@@ -676,18 +677,6 @@ uint64_t peekq(uint64_t addr)
 void pokeq(uint64_t addr, uint64_t val)
 {
 	system_call_2(7, addr, val);
-}
-/*
-uint64_t peekq(uint64_t addr)
-{
-	uint64_t out;
-	system_call_2(6,addr,out);
-	return out;
-}
-*/
-void hermesFix()
-{
-	pokeq (0x80000000000505d0ULL, 0xE92296887C0802A6ULL);
 }
 
 void fix_perm_recursive(const char* start_path)
@@ -2089,7 +2078,7 @@ int main(int argc, char **argv)
 	int one_time=1;
 
 	int counter_png=0;
-	
+	uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)	
 	u8 *text_bmp=NULL;
 	u8 *text_h=NULL;
 	u8 *text_bg=NULL;
@@ -2129,19 +2118,14 @@ int main(int argc, char **argv)
 
 	setRenderColor();
 	
-
-	if(peekq(0x80000000000505d0ULL) == mem_orig)
+	if(sys8_enable(0) > 0)
 	{
-		hermes = 0;
+		sys8_perm_mode(patchmode);
 	}
 	else
 	{
-		hermes = 1;
+		pokeq(0x80000000000505d0ULL, mem_orig);
 	}
-
-
-
-
 
 	//draw_cell();
 
@@ -2520,7 +2504,7 @@ skip_find_device:
 		} else down_count++;
 			
 	} else down_count=8;
-	if (old_pad & BUTTON_L1 ) {
+	if (old_pad & BUTTON_R3 ) {
   	//  bad_perm_recursive(menu_list[game_sel].path);
 		sprintf(string1, "Fix permissions in all directories?\n\nNot necessary with latest hermes, but may still be useful\n(may appear to freeze, give it time)"); 
 		dialog_ret=0;
@@ -2531,7 +2515,7 @@ skip_find_device:
 			fix_perm_recursive("/dev_hdd0/game/OMAN46756/GAMEZ/");
 		}
 	}
-
+#if 0
 	if ( old_pad & BUTTON_R2 ) {
 
 			game_sel++;
@@ -2547,7 +2531,7 @@ skip_find_device:
 				game_sel=*max_list-1;
 			}
 	}
-
+#endif
 	if ( old_pad & BUTTON_RIGHT ) {
 
 		if (right_count>7){
@@ -2574,7 +2558,7 @@ skip_find_device:
 		dir_fixed=0; goto update_game_folder;
 		}
 
-	 if ( new_pad & BUTTON_START){
+	 if ( new_pad & BUTTON_R2){
 		game_sel=0;
 	if (mode_list==GAME)
 	{
@@ -2592,7 +2576,7 @@ skip_find_device:
 
 	
 
-	if ((new_pad & BUTTON_R1) && game_sel>=0 && max_menu_list>0 && mode_list==GAME){
+	if ((new_pad & BUTTON_L3) && game_sel>=0 && max_menu_list>0 && mode_list==GAME){
 
 		time_start= time(NULL);
 			
@@ -2650,7 +2634,7 @@ skip_find_device:
  
 // delete from devices	
 
-	if ( (new_pad & BUTTON_SQUARE) && game_sel>=0 && max_menu_list>0 && mode_list==GAME && (!(menu_list[game_sel].flags & 2048))){
+	if ( (new_pad & BUTTON_TRIANGLE) && game_sel>=0 && max_menu_list>0 && mode_list==GAME && (!(menu_list[game_sel].flags & 2048))){
 		int n;
 
 			for(n=0;n<11;n++){
@@ -2728,7 +2712,7 @@ skip_find_device:
 		}
 
 
-	if ((new_pad & BUTTON_SQUARE) && mode_list==HOMEBREW)
+	if ((new_pad & BUTTON_TRIANGLE) && mode_list==HOMEBREW)
 		{
 		// reset to update datas
 		old_fi=-1;
@@ -2964,7 +2948,7 @@ skip_find_device:
 
 // copy from bluray
 
-	    if ( (new_pad & BUTTON_SELECT) & ((fdevices>>11) & 1) && mode_list==GAME)
+	    if ( (new_pad & BUTTON_SQUARE) & ((fdevices>>11) & 1) && mode_list==GAME)
 		{
 copy_from_bluray:
 
@@ -3147,12 +3131,42 @@ copy_from_bluray:
 				}
 			}
 		}
-	if (new_pad & BUTTON_R3)
+	if (new_pad & BUTTON_L1)
 	{
-		direct_boot ^= 1;
-		//hermes ^= 1;
+		if(sys8_enable(0) < 0)
+		{
+			if(peekq(0x80000000000505d0ULL) == mem_orig)
+			{
+				pokeq(0x80000000000505d0ULL, mem_patched);
+				patchmode = 0; //patched
+			}
+			else
+			{
+			pokeq(0x80000000000505d0ULL, mem_orig);
+			patchmode = 2; //normal
+			//reset game list
+			old_fi=-1;
+			counter_png=0;
+			forcedevices=(1);
+			game_sel=0;
+			} 
+		}
+		else
+		{
+			if (patchmode == 2)
+			{
+				patchmode = 0; //patched
+				sys8_perm_mode(patchmode);
+			}
+			else
+			{
+				patchmode = 2; //normal
+				sys8_perm_mode(patchmode);
+			}
+		}
+		hermes = !patchmode;
 	}
-	if (new_pad & BUTTON_L3)
+	if (new_pad & BUTTON_R1)
 	{
 		if(ftp_flags & 2) ftp_off(); else ftp_on();
 	}
@@ -3231,7 +3245,7 @@ copy_from_bluray:
 	}
 
 skip_1:
-
+#if 0
 	if ( new_pad & BUTTON_TRIANGLE) {
 	
 		dialog_ret=0;
@@ -3244,7 +3258,7 @@ skip_1:
 				break; // exit
 	
 	}
-
+#endif
 		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 		
 		if(!no_video)
@@ -3271,7 +3285,7 @@ skip_1:
 				
 				set_texture( text_bmp, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 				setRenderTexture();
-				display_png(1492,175, 360, 198, 320, 176);
+				display_png(1470, 153, 320, 176, 320, 176);
 // 794
 // start at 120
 
@@ -3279,7 +3293,7 @@ skip_1:
 
 				set_texture( text_h, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 				setRenderTexture();
-				display_png(60,dispy, 1295, 49, 1295, 49);
+				display_png(105,dispy, 1315, 49, 1315, 49);
 
 				
 				}
