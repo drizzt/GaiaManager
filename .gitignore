@@ -1,2 +1,15 @@
+# Target Files
 EBOOT.BIN
 UP0001-OMAN46756_00-0000111122223333.pkg
+
+# Generated files
+at3plus.c
+waveout.c
+*.[fv]po
+*.self
+*.elf
+objs/
+
+# Copyrighted files
+at3plus.h
+waveout.h
