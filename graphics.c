@@ -109,9 +109,6 @@ static CellGcmTexture text_param;
 
 static u32 local_heap = 0;
 
-char ipaddr[64];
-union CellNetCtlInfo info;
-
 static void *localAlloc(const u32 size) 
 {
 	u32 align = (size + 1023) & (~1023);
@@ -156,30 +153,6 @@ void draw_square(float x, float y, float w, float h, float z, u32 color)
 	vert_indx+=4;
 
 }
-
-void put_vertex(float x, float y, float z, u32 color)
-{
-	vertex_color[vert_indx].x = x; 
-	vertex_color[vert_indx].y = y; 
-	vertex_color[vert_indx].z = z; 
-	vertex_color[vert_indx].color=color;
-	
-	vert_indx++;
-}
-
-int get_ip_address(char *ip_address)
-{
-    int ret;
-
-    ret = cellNetCtlGetInfo(CELL_NET_CTL_INFO_IP_ADDRESS, &info);
-    if(ret < 0){
-
-    }
-    memcpy(ip_address, info.ip_address, sizeof(info.ip_address));
-
-    return ret;
-}
-
 
 void setRenderTarget(void)
 {
@@ -455,17 +428,7 @@ int initConsole()
 return 0;
 }
 
-void DbgEnable()
-{
-	cellDbgFontConsoleEnable(consoleID);
-}
-
-void DbgDisable()
-{
-	cellDbgFontConsoleDisable(consoleID);
-}
-
-int termConsole()
+int termConsole(void)
 {
 	int ret;
 	ret = cellDbgFontConsoleClose(consoleID);
@@ -503,10 +466,10 @@ int DPrintf( const char *string, ... )
 	return ret;
 }
 
-void utf8_to_ansi(char *utf8, char *ansi, int len)
+static void utf8_to_ansi(char *utf8, char *ansi, int len)
 {
-u8 *ch= (u8 *) utf8;
-u8 c;
+	u8 *ch= (u8 *) utf8;
+	u8 c;
 
 	while(*ch!=0 && len>0){
 
@@ -564,7 +527,7 @@ u8 c;
 	}
 }
 
-void draw_text_stroke(float x, float y, float size, u32 color, const char *str)
+static void draw_text_stroke(float x, float y, float size, u32 color, const char *str)
 {
 
 		cellDbgFontPrintf( x-.001f, y+.001f,size, 0xff000000, str);
@@ -578,29 +541,27 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str)
 		cellDbgFontPrintf( x, y,size, color, str);
 }
 
-void draw_text_stroke_bool(float x, float y, float size, bool on)
+static void draw_text_stroke_bool(float x, float y, float size, bool on)
 {
 	u32 color = on ? 0xff00ff00 : 0xff0000ff;
 	draw_text_stroke(x, y, size, color, on ? "ON" : "OFF");
 }
 
 
-void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ftp)
+void draw_device_list(u32 flags, int hermes, int direct_boot, int ftp)
 {
-	//draw_cell();
 	float y = 0.84f;
 	char str[256];
-	int r = region;
-	//char ansi[256];
 
 	int n,ok=0;
 	float len;
 	float x=0.06;
 	
-	//static int pos=0;
-	//static int cont=0;
 	char sizer[255];
 	char path[255];
+	char ipaddr[64];
+	union CellNetCtlInfo info;
+	
 	for(n=0;n<12;n++)
 		{
 		
@@ -625,65 +586,22 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 					break;
 				}
 
-			len=0.017*(float)(strlen(str));
+			len=(float) 0.017*strlen(str);
 
 			cellFsGetFreeSize(path, &blockSize, &freeSize);
 			freeSpace = ( ((uint64_t)blockSize * freeSize));
 			freeSpace = freeSpace / 1073741824.00;
 			sprintf(sizer, "%.2fGB", freeSpace);
-			//draw_text_stroke( x, y+0.085, 0.75f,((flags>>(n+16)) & 1) ? 0xffff00ff : 0xffffffff, sizer);
 			
 			draw_text_stroke( x, y+0.064, 1.0f, ((flags>>(n+16)) & 1) ? 0xffff00ff : 0xffffffff, str);
 			x+=len-0.01;
 			draw_text_stroke( x, y+0.064, 1.0f, ((flags>>(n+16)) & 1) ? 0xff999999 : 0xff999999, sizer);
-			len=0.017*(float)(strlen(sizer));
+			len=(float) 0.017*strlen(sizer);
 
 			x+=len;
  
- // moving game title
-			/*
-			if(n==11 && !((flags>>31) & 1)) // only GAME MODE
-				{
-				if((flags>>11) & 1)
-					{
-					int m;
-
-					utf8_to_ansi(bluray_game, ansi, 128);
-					ansi[128]=0;
-					int l=strlen(ansi)+6;
-
-					if(l!=0)
-						{
-						if(l>64) l=63;
-						for(m=0;m<30;m++) 
-							{
-							int k=(m+pos) % l;
-							if(ansi[k])
-								str[m]=ansi[k];
-							else str[m]=32;
-							}
-						str[m]=0;
-
-						cont++; if(cont>=20) {cont=0;pos++;}
-					 
-						//cellDbgFontPrintf( x-.001, y-.001, 1.2f, 0xff000000, str);
-						//cellDbgFontPrintf( x+.001, y+.001, 1.2f, 0xff000000, str);
-						//cellDbgFontPrintf( x+.002, y+.002, 1.2f, 0xff000000, str);
-						draw_text_stroke( x, y+0.06, 1.2f, 0xffffffff, str);
-
-						}
-					}
-				else {pos=0;cont=0;}
-
-				}
-			*/
 			}
-
-
-
 		}
-
-// IP Addr
 
 		cellNetCtlGetInfo(CELL_NET_CTL_INFO_IP_ADDRESS, &info);
 		sprintf(ipaddr, "%16s", info.ip_address);
@@ -693,71 +611,7 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 		draw_text_stroke_bool(0.86, 0.66, 0.8, ftp);
 		draw_text_stroke     (0.85, 0.70, 0.8, 0xffffffff, (flags>>31) & 1 ? "HOMEBREW" : "GAME");
 		draw_text_stroke     (0.77, 0.74, 0.8, 0xff00ffff, ipaddr);
-
-
-		if(!((flags>>31) & 1)) // only GAME MODE
-		{
-
-//		if(!((flags>>30))) draw_text_stroke( 0.850f, 0.445, 0.8f, 0xff00ff00, "ON");
-//			else draw_text_stroke( 0.850f, 0.445, 0.8f, 0xff0000ff, "OFF");
-
-
-		//cellDbgFontPrintf( 0.689f, 0.389f, 1.2f, 0xff000000, "X - To Launch");
-		//cellDbgFontPrintf( 0.691f, 0.391f, 1.2f, 0xff000000, "X - To Launch");
-		//cellDbgFontPrintf( 0.692f, 0.392f, 1.2f, 0xff000000, "X - To Launch");
-		//cellDbgFontPrintf( 0.69f, 0.39f, 1.2f, 0xffffffff, "X - To Launch");
-		//draw_text_stroke(0.69f, 0.39f, 1.2f, 0xffffffff, "X - To Launch");
-		//draw_text_stroke(0.08f, y+0.01f, 1.05f, 0xffffffff, text_launch[region]);
-
-		//cellDbgFontPrintf( 0.69f, 0.39f+0.06f, 1.2f, 0xffffffff, "O - Copy");
-		//cellDbgFontPrintf( 0.689f, 0.449f, 1.2f, 0xff000000, "O - Copy");
-		//cellDbgFontPrintf( 0.691f, 0.451f, 1.2f, 0xff000000, "O - Copy");
-		//cellDbgFontPrintf( 0.692f, 0.452f, 1.2f, 0xff000000, "O - Copy");
-		//draw_text_stroke( 0.28f, y+0.01f, 1.05f, 0xffffffff, text_copy[region]);
-
-
-		if(!(((flags>>(11+16)) & 1)))
-		{
-		//cellDbgFontPrintf( 0.689f, 0.509f,1.2f, 0xff000000, "[] - Delete");
-		//cellDbgFontPrintf( 0.691f, 0.511f,1.2f, 0xff000000, "[] - Delete");
-		//cellDbgFontPrintf( 0.692f, 0.512f,1.2f, 0xff000000, "[] - Delete");
-		//draw_text_stroke( 0.5f, y+0.01f,1.05f, 0xffffffff, text_delete[region]);
-		}
-
-		//cellDbgFontPrintf( 0.689f, 0.569f, 1.2f, 0xff000000, "/\\ - Exit");
-		//cellDbgFontPrintf( 0.691f, 0.571f, 1.2f, 0xff000000, "/\\ - Exit");
-		//cellDbgFontPrintf( 0.692f, 0.572f, 1.2f, 0xff000000, "/\\ - Exit");
-		//draw_text_stroke( 0.75f, y+0.01f, 1.05f, 0xffffffff, text_exit[region]);
-
-
-		}
-		else
-		{
-
-//		if(!((flags>>30) & 1)) draw_text_stroke( 0.850f, 0.445, 0.8f, 0xff00ff00, "ON");
-//			else draw_text_stroke( 0.850f, 0.445, 0.8f, 0xff0000ff, "OFF");
-
-		//cellDbgFontPrintf( 0.689f, 0.389f, 1.2f, 0xff000000, "X - To Launch");
-		//cellDbgFontPrintf( 0.691f, 0.391f, 1.2f, 0xff000000, "X - To Launch");
-		//cellDbgFontPrintf( 0.692f, 0.392f, 1.2f, 0xff000000, "X - To Launch");
-		//draw_text_stroke(0.08f, y+0.01f, 1.05f, 0xffffffff, text_launch[region]);
-
-
-		//cellDbgFontPrintf( 0.689f, 0.509f,1.2f, 0xff000000, "[] - Refresh");
-		//cellDbgFontPrintf( 0.691f, 0.511f,1.2f, 0xff000000, "[] - Refresh");
-		//cellDbgFontPrintf( 0.692f, 0.512f,1.2f, 0xff000000, "[] - Refresh");
-		//draw_text_stroke( 0.5f, y+0.01f,1.05f, 0xffffffff, text_refresh[region]);
-
-		//cellDbgFontPrintf( 0.689f, 0.569f, 1.2f, 0xff000000, "/\\ - Exit");
-		//cellDbgFontPrintf( 0.691f, 0.571f, 1.2f, 0xff000000, "/\\ - Exit");
-		//cellDbgFontPrintf( 0.692f, 0.572f, 1.2f, 0xff000000, "/\\ - Exit");
-		//draw_text_stroke( 0.69f, 0.57f, 1.2f, 0xffffffff, "/\\ - Exit");
-		//draw_text_stroke( 0.75f, y+0.01f, 1.05f, 0xffffffff, text_exit[region]);
-		}
-
-
-
-	}
+}
 		
 
 void draw_list( t_menu_list *menu, int menu_size, int selected )
@@ -798,28 +652,15 @@ void draw_list( t_menu_list *menu, int menu_size, int selected )
 		color= 0xff606060;
 
 		if(i==selected)
-			{
 			color= (flagb && i==0) ? 0xfff0e000 : ((grey==0) ? 0xff00ffff : 0xff008080);
-			}
 		else
 			color= (flagb && i==0)? 0xff807000 : ((grey==0) ?  0xffffffff : 0xff606060);
 		
-		//cellDbgFontPrintf( 0.079f, y-.001, 1.0f, black, str);
-		//cellDbgFontPrintf( 0.081f, y+.001, 1.0f, black, str);
-		//cellDbgFontPrintf( 0.082f, y+.002, 1.0f, black, str);
 		draw_text_stroke(0.06f, y, 1.05f, color, str);
 
-		//utf8_to_ansi(menu[i].path, ansip, 37);
-
-		//draw_text_stroke(0.05f, y+0.04f, 0.9f, 0xff808080, menu[i].path);
-//		cellDbgFontPrintf( 0.08f, y, 1.0f, color, str);
-
-// 116 pixels
 		y += 0.0455f;
 		i++; c++;
 		}
-
-	return;
 }
 
 
@@ -953,17 +794,6 @@ void setRenderTexture( void )
 	return;
 }
 
-
-void put_texture_vertex(float x, float y, float z, float tx, float ty)
-{
-	vertex_text[vert_texture_indx].x = x; 
-	vertex_text[vert_texture_indx].y = y; 
-	vertex_text[vert_texture_indx].z = z; 
-	vertex_text[vert_texture_indx].tx = tx;
-	vertex_text[vert_texture_indx].tx = ty;
-	
-	vert_texture_indx++;
-}
 
 //
 // fixed by w4r10ck

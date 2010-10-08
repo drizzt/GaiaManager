@@ -9,6 +9,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pthread.h>
 
 #include <time.h>
 #include <math.h>
@@ -17,6 +18,7 @@
 #include <sys/process.h>
 #include <sys/memory.h>
 #include <sys/timer.h>
+#include <sys/types.h>
 #include <sys/return_code.h>
 
 #include <cell/gcm.h>
@@ -40,20 +42,13 @@
 
 #include <libftp.h>
 
+#include "at3plus.h"
+#include "graphics.h"
 #include "syscall8.h"
 
 sys_ppu_thread_t	soundThread = 0;
 volatile int		isRunning = 0;
 
-
-extern "C" {
-#include "at3plus.h"
-}
-#include "graphics.h"
-
-extern "C" {
-#include <pthread.h>
-}
 #define MAX_LIST 512
 #define INPUT_FILE  "/dev_bdvd/PS3_GAME/SND0.AT3"
 #define THREAD_NUM 4
@@ -63,11 +58,8 @@ enum BmModes {
 	HOMEBREW = 1
 };
 
-static int curThread = 0;
 static BGMArg bgmArg;
 
-static pthread_t th[THREAD_NUM] ;
-static char container[512];
 static int fm = -1;
 
 
@@ -111,8 +103,6 @@ static enum BmModes mode_list=GAME;
 
 static int game_sel=0;
 
-using namespace cell::Gcm;
-
 #define	BUTTON_SELECT		(1<<0)
 #define	BUTTON_L3			(1<<1)
 #define	BUTTON_R3			(1<<2)
@@ -137,11 +127,11 @@ static unsigned cmd_pad= 0;
 
 static void *host_addr;
 
-static int up_count=0, down_count=0, left_count=0, right_count=0, l2_count=0, r2_count=0;
+static int up_count=0, down_count=0, left_count=0, right_count=0;
 
 static u32 new_pad=0,old_pad=0;
 
-int load_libfont_module()
+static int load_libfont_module(void)
 {
 	int ret;
 	ret = cellSysmoduleLoadModule( CELL_SYSMODULE_FONT );
@@ -225,9 +215,9 @@ static int pad_read( void )
 /* FTP SECTION                                      */
 /****************************************************/
 
-int ftp_flags=0;
+static int ftp_flags=0;
 
-void ftp_handler(CellFtpServiceEvent event, void * /*data*/, size_t /*datalen*/)
+static void ftp_handler(CellFtpServiceEvent event, void * data __attribute__((unused)), size_t datalen __attribute__((unused)))
 {
 
 //DPrintf("Event %i %x %i\n", event, (u32) data, datalen);
@@ -249,7 +239,7 @@ void ftp_handler(CellFtpServiceEvent event, void * /*data*/, size_t /*datalen*/)
 	}
 }
 
-void ftp_on()
+static void ftp_on(void)
 {
 	int ret;
 		
@@ -267,7 +257,7 @@ void ftp_on()
 		}
 }
 
-void ftp_off()
+static void ftp_off(void)
 {
 
 	if(ftp_flags & 2)
@@ -295,7 +285,7 @@ void ftp_off()
 
 static int unload_mod=0;
 
-static int load_modules()
+static int load_modules(void)
 {
 	int ret;
 
@@ -344,7 +334,7 @@ static int load_modules()
 }
 
 
-static int unload_modules()
+static int unload_modules(void)
 {
 
 	ftp_off();
@@ -388,7 +378,7 @@ u32 type_dialog_yes_no = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYP
 u32 type_dialog_ok = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_OK
 				   | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF| CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_OK;
 
-static void dialog_fun1( int button_type, void * )
+static void dialog_fun1( int button_type, void *userData __attribute__((unused)))
 {
 	
 	switch ( button_type ) {
@@ -404,7 +394,7 @@ static void dialog_fun1( int button_type, void * )
 		break;
 	}
 }
-static void dialog_fun2( int button_type, void * )
+static void dialog_fun2( int button_type, void *userData __attribute__((unused)))
 {
 	
 	switch ( button_type ) {
@@ -419,7 +409,7 @@ static void dialog_fun2( int button_type, void * )
 	}
 }
 
-void wait_dialog()
+static void wait_dialog(void)
 {
 
 	while(!dialog_ret)
@@ -434,32 +424,6 @@ void wait_dialog()
 }
 
 
-void draw_cell()
-{
-
-	char r[16];
-	r[0] = (char)(275-192);
-	r[1] = (char)(261-192);
-	r[2] = (char)(263-192);
-	r[3] = (char)(257-192);
-	r[4] = (char)(276-192);
-	r[5] = (char)(257-192);
-	r[6] = (char)(224-192);
-	r[7] = (char)(275-192);
-	r[8] = (char)(257-192);
-	r[9] = (char)(270-192);
-	r[10] = (char)(275-192);
-	r[11] = (char)(264-192);
-	r[12] = (char)(265-192);
-	r[13] = (char)(274-192);
-	r[14] = (char)(271-192);
-	r[15] = (char)(225-192);
-	//draw_text_stroke(0.5, 0.87f, 1.2f,0xff0000ff, r);
-	//sprintf(r,"CELL: %d, STATUS: %d",ret,dOutInfo.status);
-	dialog_ret=0;
-	cellMsgDialogOpen2( type_dialog_ok, r, dialog_fun2, (void*)0x0000aaab, NULL );
-	wait_dialog();
-}
 
 /****************************************************/
 /* PNG SECTION                                      */
@@ -480,7 +444,7 @@ typedef struct CtrlFreeArg
 } CtrlFreeArg;
 
 
-void *png_malloc(u32 size, void * a)
+static void *png_malloc(u32 size, void * a)
 {
     CtrlMallocArg *arg;
     
@@ -505,7 +469,7 @@ static int png_free(void *ptr, void * a)
 	return 0;
 }
 
-int png_out_mapmem(u8 *buffer, size_t buf_size)
+static int png_out_mapmem(u8 *buffer, size_t buf_size)
 {
 	int ret;
 	u32 offset;
@@ -520,11 +484,11 @@ int png_out_mapmem(u8 *buffer, size_t buf_size)
 
 int png_w=0, png_h=0;
 
-void playBootSound(uint64_t ui __attribute__((unused)))
+static void playBootSound(uint64_t ui __attribute__((unused)))
 {
-
-	stop_atrac3();
 	int32_t status;
+
+//	stop_atrac3();
 
 //	delete_atrac3plus(&bgmArg);
 
@@ -540,7 +504,7 @@ void playBootSound(uint64_t ui __attribute__((unused)))
 }
 
 
-int load_png_texture(u8 *data, char *name)
+static int load_png_texture(u8 *data, char *name)
 {
 	int  ret_file, ret, ok=-1;
 	
@@ -635,21 +599,6 @@ int load_png_texture(u8 *data, char *name)
 	
 	InParam.spuThreadEnable   = CELL_PNGDEC_SPU_THREAD_DISABLE;
 
-	//copy the default icon
-/*
-	if(png_w==0)
-		{
-		int n,m,l;
-		u32 *p=(u32 *) data;
-
-		memset(data, 0x0, (DISPLAY_WIDTH * DISPLAY_HEIGHT * 4));
-
-		l=0;
-		for(n=0;n<64;n++)
-			for(m=0;m<128;m++) {p[m+(n<<9)]=(icon_raw[l]<<24) | (icon_raw[l]>>24) | ((icon_raw[l]<<8) & 0xff0000) | ((icon_raw[l]>>8) & 0xff00);l++;}
-		}
-*/
-
 
 return ok;
 }
@@ -658,9 +607,9 @@ return ok;
 /* syscalls                                         */
 /****************************************************/
 
-void syscall36(char *path)
+static void syscall36(char *path)
 {
-	system_call_1(36, (uint64_t) path);
+	system_call_1(36, (uint32_t) path);
 }
 
 
@@ -668,18 +617,18 @@ void syscall36(char *path)
 /* UTILS                                            */
 /****************************************************/
 
-uint64_t peekq(uint64_t addr)
+static uint64_t peekq(uint64_t addr)
 {
 	system_call_1(6,addr);
 	return_to_user_prog(uint64_t);
 }
 
-void pokeq(uint64_t addr, uint64_t val)
+static void pokeq(uint64_t addr, uint64_t val)
 {
 	system_call_2(7, addr, val);
 }
 
-void fix_perm_recursive(const char* start_path)
+static void fix_perm_recursive(const char* start_path)
 {
     int dir_fd;
     uint64_t nread;
@@ -714,44 +663,9 @@ void fix_perm_recursive(const char* start_path)
     }
 }
 
-void bad_perm_recursive(const char* start_path)
-{
-    int dir_fd;
-    uint64_t nread;
-    char f_name[CELL_FS_MAX_FS_FILE_NAME_LENGTH+1];
-    CellFsDirent dir_ent;
-    CellFsErrno err;
-    if (cellFsOpendir(start_path, &dir_fd) == CELL_FS_SUCCEEDED)
-    {
-        cellFsChmod(start_path, 0700);
-        while (1) {
-            err = cellFsReaddir(dir_fd, &dir_ent, &nread);
-            if (nread != 0) {
-                if (!strcmp(dir_ent.d_name, ".") || !strcmp(dir_ent.d_name, ".."))
-                    continue;
-
-                sprintf(f_name, "%s/%s", start_path, dir_ent.d_name);
-
-                if (dir_ent.d_type == CELL_FS_TYPE_DIRECTORY)
-                {
-                    cellFsChmod(f_name, 0700);
-                    fix_perm_recursive(f_name);
-                }
-                else if (dir_ent.d_type == CELL_FS_TYPE_REGULAR)
-                {
-                    cellFsChmod(f_name, 0600);
-                }
-            } else {
-                break;
-            }
-        } 
-        err = cellFsClosedir(dir_fd);
-    }
-}
-
 static char filename[1024];
 
-int parse_ps3_disc(char *path, char * id)
+static int parse_ps3_disc(char *path, char * id)
 {
 	FILE *fp;
 	int n;
@@ -794,7 +708,7 @@ int parse_ps3_disc(char *path, char * id)
 
 // liomajor fix
 
-int parse_param_sfo_id(char * file, char *title_name)
+static int parse_param_sfo_id(char * file, char *title_name)
 {
 	FILE *fp;
 	
@@ -845,7 +759,7 @@ int parse_param_sfo_id(char * file, char *title_name)
 
 }
 
-int parse_param_sfo(char * file, char *title_name)
+static int parse_param_sfo(char * file, char *title_name)
 {
 	FILE *fp;
 	
@@ -897,7 +811,7 @@ int parse_param_sfo(char * file, char *title_name)
 }
 
 
-void sort_entries(t_menu_list *list, int *max)
+static void sort_entries(t_menu_list *list, int *max)
 {
 	int n,m;
 	int fi= (*max);
@@ -915,7 +829,7 @@ void sort_entries(t_menu_list *list, int *max)
 			}
 }
 
-void delete_entries(t_menu_list *list, int *max, u32 flag)
+static void delete_entries(t_menu_list *list, int *max, u32 flag)
 {
 	int n;
 
@@ -939,7 +853,7 @@ void delete_entries(t_menu_list *list, int *max, u32 flag)
 		}
 }
 
-void fill_entries_from_device(char *path, t_menu_list *list, int *max, u32 flag, int sel)
+static void fill_entries_from_device(char *path, t_menu_list *list, int *max, u32 flag, int sel)
 {
 	DIR  *dir;
 	char file[1024];
@@ -1061,7 +975,7 @@ int fast_read=0, fast_writing=0;
 
 int files_opened=0;
 
-int fast_copy_async(char *pathr, char *pathw, int enable)
+static int fast_copy_async(char *pathr, char *pathw, int enable)
 {
 
 	fast_num_files=0;
@@ -1095,9 +1009,9 @@ return 0;
 }
 
 
-int fast_copy_process();
+static int fast_copy_process(void);
 
-int fast_copy_add(char *pathr, char *pathw, char *file)
+static int fast_copy_add(char *pathr, char *pathw, char *file)
 {
 	int size_mem;
 
@@ -1206,9 +1120,9 @@ int fast_copy_add(char *pathr, char *pathw, char *file)
 	return 0;
 }
 
-void fast_func_read(CellFsAio *xaio, CellFsErrno error, int , uint64_t size)
+static void fast_func_read(CellFsAio *xaio, CellFsErrno error, int xid __attribute__((unused)), uint64_t size)
 {
-	t_fast_files* fi = (t_fast_files *) xaio->user_data;
+	t_fast_files* fi = (t_fast_files *) (uint32_t) xaio->user_data;
 
 	if(error!=0 || size!= xaio->size)
 		{
@@ -1221,9 +1135,9 @@ void fast_func_read(CellFsAio *xaio, CellFsErrno error, int , uint64_t size)
 	
 }
 
-void fast_func_write(CellFsAio *xaio, CellFsErrno error, int , uint64_t size)
+static void fast_func_write(CellFsAio *xaio, CellFsErrno error, int xid __attribute__((unused)), uint64_t size)
 {
-	t_fast_files* fi = (t_fast_files *) xaio->user_data;
+	t_fast_files* fi = (t_fast_files *) (uint32_t) xaio->user_data;
 
 	if(error!=0 || size!= xaio->size)
 		{
@@ -1240,7 +1154,7 @@ void fast_func_write(CellFsAio *xaio, CellFsErrno error, int , uint64_t size)
 	fast_writing=2;
 }
 
-int fast_copy_process()
+static int fast_copy_process()
 {
 
 	int n;
@@ -1319,10 +1233,10 @@ int fast_copy_process()
 				if((int64_t) fast_files[current_fast_file_r].t_read.size> fast_files[current_fast_file_r].size_mem)
 					fast_files[current_fast_file_r].t_read.size=fast_files[current_fast_file_r].size_mem;
 
-				fast_files[current_fast_file_r].t_read.user_data= (uint64_t )&fast_files[current_fast_file_r];
+				fast_files[current_fast_file_r].t_read.user_data= (uint32_t )&fast_files[current_fast_file_r];
 
 				fast_files[current_fast_file_r].t_write.fd= fdw;
-				fast_files[current_fast_file_r].t_write.user_data= (uint64_t )&fast_files[current_fast_file_r];
+				fast_files[current_fast_file_r].t_write.user_data= (uint32_t )&fast_files[current_fast_file_r];
 				fast_files[current_fast_file_r].t_write.offset= 0LL;
 				if(fast_files[current_fast_file_r].use_doublebuffer)
 					fast_files[current_fast_file_r].t_write.buf= ((char *) fast_files[current_fast_file_r].mem) + fast_files[current_fast_file_r].size_mem;
@@ -1446,7 +1360,7 @@ int fast_copy_process()
 								if((int64_t) fast_files[current_fast_file_r].t_read.size> fast_files[current_fast_file_r].size_mem)
 									fast_files[current_fast_file_r].t_read.size=fast_files[current_fast_file_r].size_mem;
 
-								fast_files[current_fast_file_r].t_read.user_data= (uint64_t )&fast_files[current_fast_file_r];
+								fast_files[current_fast_file_r].t_read.user_data= (uint32_t )&fast_files[current_fast_file_r];
 
 								fast_read=1;
 								if(cellFsAioRead(&fast_files[current_fast_file_r].t_read, &id_r, fast_func_read)!=0)
@@ -1573,7 +1487,7 @@ int fast_copy_process()
 	sprintf(string1,"Copying. File: %i Time: %2.2i:%2.2i:%2.2i %2.2i/100 Vol: %1.2f GB\n", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60,
 						(int)(write_end*100ULL/write_size), ((double) global_device_bytes)/(1024.0*1024.*1024.0));
 		
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+	cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
 	draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 
@@ -1601,7 +1515,7 @@ int fast_copy_process()
 	if(error && error!=-666)
 		{
 		DPrintf("Error!!!!!!!!!!!!!!!!!!!!!!!!!\nFiles Opened %i\n Waiting 20 seconds to display fatal error\n", files_opened);
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
 		draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 
@@ -1669,96 +1583,6 @@ int fast_copy_process()
 	return error;
 }
 
-
-
-void cache_png(char *path, char *title)
-{
-		char rdr[255];
-
-
-		int fs;
-		int fd;
-		uint64_t fsiz = 0;
-		uint64_t msiz = 0;
-
-		cellFsMkdir("/dev_hdd0/game/OMAN46756/cache2/", CELL_FS_DEFAULT_CREATE_MODE_1);
-		cellFsChmod("/dev_hdd0/game/OMAN46756/cache2/", 0777);
-//		sprintf(rdr, "%s/PS3_GAME/PIC1.PNG", menu_list[game_sel].path);
-		sprintf(rdr, path);
-
-	// Store Source File Size in msiz
-
-		cellFsOpen(rdr, CELL_FS_O_RDONLY, &fs, NULL, 0);
-		cellFsLseek(fs, 0, CELL_FS_SEEK_END, &msiz);
-		cellFsClose(fs);
-
-		int chunk = 8192;
-		char w[chunk];
-
-
-		cellFsOpen(rdr, CELL_FS_O_RDONLY, &fs, NULL, 0);
-
-		sprintf(rdr, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG", title);
-		
-
-		cellFsOpen(rdr, CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_APPEND, &fd, NULL, 0);
-
-		//char o[1024];
-		//sprintf(o, "HEY %lld", msiz);
-		//cellDbgFontPrintf(0.69f, 0.27f, 1.2f, 0xff0000ff, o);
-
-
-		while(fsiz < msiz)
-		{
-			if((fsiz+chunk) > msiz)
-			{
-				chunk = (msiz-fsiz);
-				char x[chunk];
-				cellFsLseek(fs,fsiz,CELL_FS_SEEK_SET, NULL);
-				cellFsRead(fs, (void *)x, chunk, NULL);
-				cellFsWrite(fd, (const void *)x, chunk, NULL);
-				break;
-			}
-			else
-			{
-				cellFsLseek(fs,fsiz,CELL_FS_SEEK_SET, NULL);
-				cellFsRead(fs, (void *)w, chunk, NULL);
-				cellFsWrite(fd, (const void *)w, chunk, NULL);			
-				fsiz = fsiz + chunk;
-			}
-			//sprintf(o, "HEY %lld", fsiz);
-			//cellDbgFontPrintf(0.69f, 0.27f, 1.2f, 0xff0000ff, o);
-		}
-
-
-		cellFsClose(fd);
-		cellFsClose(fs);
-		cellFsChmod(rdr, 0666);
-}
-
-void cache_all()
-{
-		int e;
-		CellFsStat peas;
-		e = cellFsStat(filename, &peas);
-		for(int j=0;j<max_menu_list;j++)
-		{
-			sprintf(filename, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG",menu_list[j].title_id);
-		//	CellFsStat peas;
-			e = cellFsStat(filename, &peas);
-			if(e == CELL_FS_ENOENT)
-			{
-				sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[j].path);
-				cache_png(filename, menu_list[j].title_id);
-				sprintf(filename, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG",menu_list[j].title_id);
-			}
-			else
-			{
-				sprintf(filename, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG",menu_list[j].title_id);
-			}
-		}	
-}
-
 static int _my_game_copy(char *path, char *path2)
 {
 	DIR  *dir;
@@ -1823,7 +1647,7 @@ static int _my_game_copy(char *path, char *path2)
 
 }
 
-int my_game_copy(char *path, char *path2)
+static int my_game_copy(char *path, char *path2)
 {
 	global_device_bytes=0;
 
@@ -1846,7 +1670,7 @@ int num_directories=0, num_files_big=0, num_files_split=0;
 
 // test if files >= 4GB
 
-int my_game_test(char *path)
+static int my_game_test(char *path)
 {
 	DIR  *dir;
    dir=opendir (path);
@@ -1915,7 +1739,7 @@ int my_game_test(char *path)
 				sprintf(string1,"Test File: %i Time: %2.2i:%2.2i:%2.2i Vol: %1.2f GB\n", file_counter, seconds/3600, 
 					(seconds/60) % 60, seconds % 60, ((double) global_device_bytes)/(1024.0*1024.*1024.0));
 			
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
 				draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 
@@ -1947,7 +1771,7 @@ int my_game_test(char *path)
 return 0;
 }
 
-int my_game_delete(char *path)
+static int my_game_delete(char *path)
 {
 	DIR  *dir;
 	char *f= NULL;
@@ -1981,7 +1805,7 @@ int my_game_delete(char *path)
 			}
 		else
 			{
-
+			int seconds;
 			f=(char *) malloc(1024);
 			
 			if(!f) {DPrintf("malloc() Error!!!\n\n");abort_copy=2;closedir (dir);return -1;}
@@ -1995,12 +1819,12 @@ int my_game_delete(char *path)
 
 			display_mess:
 
-			int seconds= (int) (time(NULL)-time_start);
+			seconds= (int) (time(NULL)-time_start);
 			sprintf(string1,"Deleting... File: %i Time: %2.2i:%2.2i:%2.2i\n", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60);
 
 			file_counter++;
 		
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
 			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 
@@ -2065,13 +1889,12 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
 /* MAIN                                             */
 /****************************************************/
 
-char bluray_game[64]; // name of the game
+static char bluray_game[64]; // name of the game
 
 int main(int argc, char **argv)
 {
 	sys_spu_initialize(2, 0);
 	//BGMArg bgmArg;
-	int32_t status;
 	int ret;
 	int dir_fixed=0;
 	//int    fm = -1;
@@ -2137,9 +1960,9 @@ int main(int argc, char **argv)
 	//sys_ppu_thread_create(&soundThread, playBootSound, 0, 100, 0x8000, 0, (char *)"sound thread");
 
 	if(!memcmp(hdd_folder,"ASDFGHJKLM",10) && hdd_folder[10]=='N')
+update_game_folder:
 	{
 
-update_game_folder:
 
 		DIR  *dir,*dir2;
 		dir=opendir ("/dev_hdd0/game");
@@ -2310,13 +2133,12 @@ update_game_folder:
 
 	for(find_device=0;find_device<12;find_device++)
 		{
+			CellFsStat fstatus;
 			if(find_device==11) sprintf(filename, "/dev_bdvd");
 			else if(find_device==0) sprintf(filename, "/dev_hdd0");
 			else sprintf(filename, "/dev_usb00%c", 47+find_device);
-
-			CellFsStat status;
 			
-			if (cellFsStat(filename, &status) == CELL_FS_SUCCEEDED)
+			if (cellFsStat(filename, &fstatus) == CELL_FS_SUCCEEDED)
 				{
 				fdevices|= 1<<find_device;
 				}
@@ -2411,48 +2233,6 @@ update_game_folder:
 			old_fi=game_sel;
 			if(mode_list==GAME)
 			{
-
-				int e = 0;
-				struct stat result;
-/*						
-				CellFsStat peas;
-				e = cellFsStat(filename, &peas);
-				for(int j=0;j<max_menu_list;j++)
-				{
-					sprintf(filename, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG",menu_list[j].title_id);
-					CellFsStat peas;
-					e = cellFsStat(filename, &peas);
-					if(e == CELL_FS_ENOENT)
-					{
-						sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[j].path);
-						cache_png(filename, menu_list[j].title_id);
-						sprintf(filename, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG",menu_list[j].title_id);
-					}
-					else
-					{
-						sprintf(filename, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG",menu_list[j].title_id);
-					}
-				}	
-*/
-
-/*
-
-				sprintf(filename, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG",menu_list[game_sel].title_id);
-				CellFsStat peas;
-				e = cellFsStat(filename, &peas);
-				if(e == CELL_FS_ENOENT)
-				{
-					sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[game_sel].path);
-					cache_png(filename, menu_list[game_sel].title_id);
-					sprintf(filename, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG",menu_list[game_sel].title_id);
-				}
-				else
-				{
-					sprintf(filename, "/dev_hdd0/game/OMAN46756/cache2/%s.PNG",menu_list[game_sel].title_id);
-				}
-					
-*/
-
 				sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[game_sel].path);
 			}
 			else
@@ -2515,23 +2295,7 @@ skip_find_device:
 			fix_perm_recursive("/dev_hdd0/game/OMAN46756/GAMEZ/");
 		}
 	}
-#if 0
-	if ( old_pad & BUTTON_R2 ) {
 
-			game_sel++;
-			if(game_sel>=*max_list) game_sel=0;
-
-			
-	} 
-
-	if ( old_pad & BUTTON_L2 ) {
-		game_sel--;
-		if(game_sel<0)  
-			{
-				game_sel=*max_list-1;
-			}
-	}
-#endif
 	if ( old_pad & BUTTON_RIGHT ) {
 
 		if (right_count>7){
@@ -2605,7 +2369,7 @@ skip_find_device:
 				sprintf(string1,"Files Tested: %i Time: %2.2i:%2.2i:%2.2i Vol: %1.2f GB\n", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60, ((double) global_device_bytes)/(1024.0*1024.*1024.0));
 			
 
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
 			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x000000ff);
 
@@ -2683,7 +2447,7 @@ skip_find_device:
 					else
 						sprintf(string1,"Done!  Files Deleted: %i Time: %2.2i:%2.2i:%2.2i\n", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60);
 
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
 					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x000000ff);
 
@@ -2827,7 +2591,7 @@ skip_find_device:
 
 				my_game_copy((char *) menu_list[game_sel].path, (char *) name);
 
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
 				int seconds= (int) (time(NULL)-time_start);
 				int vflip=0;
@@ -2872,7 +2636,7 @@ skip_find_device:
 						}
 
 				
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
 					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x000000ff);
 
@@ -2949,12 +2713,12 @@ skip_find_device:
 // copy from bluray
 
 	    if ( (new_pad & BUTTON_SQUARE) && ((fdevices>>11) & 1) && mode_list==GAME)
-		{
 copy_from_bluray:
+		{
 
 		char name[1024];
 		int curr_device=0;
-		CellFsStat status;
+		CellFsStat fstatus;
 		char id[16];
 		
 		int n;
@@ -2985,7 +2749,7 @@ copy_from_bluray:
 				else sprintf(name, "/dev_usb00%c", 47+curr_device);
 
 				
-				if (cellFsStat(name, &status) == CELL_FS_SUCCEEDED && !parse_ps3_disc((char *) "/dev_bdvd/PS3_DISC.SFB", id))
+				if (cellFsStat(name, &fstatus) == CELL_FS_SUCCEEDED && !parse_ps3_disc((char *) "/dev_bdvd/PS3_DISC.SFB", id))
 					{
 					
 					// reset to update datas
@@ -3062,7 +2826,7 @@ copy_from_bluray:
 							sprintf(string1,"Done! Files Copied: %i Time: %2.2i:%2.2i:%2.2i Vol: %1.2f GB\n", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60, ((double) global_device_bytes)/(1024.0*1024.*1024.0));
 							}
 
-						cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+						cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
 						draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x000000ff);
 
@@ -3249,21 +3013,7 @@ copy_from_bluray:
 	}
 
 skip_1:
-#if 0
-	if ( new_pad & BUTTON_TRIANGLE) {
-	
-		dialog_ret=0;
-
-		ret = cellMsgDialogOpen2( type_dialog_yes_no, text_wantexit[region], dialog_fun1, (void*)0x0000aaaa, NULL );
-		
-		wait_dialog();
-		
-		if(dialog_ret==1)
-				break; // exit
-	
-	}
-#endif
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 		
 		if(!no_video)
 		{
@@ -3341,9 +3091,9 @@ skip_1:
 		
 
 			if(mode_list==GAME)
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), region, hermes, direct_boot, ftp_flags & 2);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), hermes, direct_boot, ftp_flags & 2);
 			else
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? ((menu_homebrew_list[game_sel].flags<<16) | (1<<31)| ((1<<30) * ((ftp_flags & 2)!=0))) : ((1<<31) | ((1<<30) * ((ftp_flags & 2)!=0))))),region,hermes, direct_boot, ftp_flags & 2);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) | (1<<31) : 0)), hermes, direct_boot, ftp_flags & 2);
 			
 		}
 

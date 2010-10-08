@@ -23,44 +23,33 @@ typedef struct
 }
 t_menu_list;
 
-extern char bluray_game[64];
+extern void draw_square(float x, float y, float w, float h, float z, u32 rgba);
 
-extern unsigned icon_raw[8192];
+extern int set_texture( u8 *buffer, u32 x_size, u32 y_size );
 
-void put_vertex(float x, float y, float z, u32 color);
-void put_texture_vertex(float x, float y, float z, float tx, float ty);
+extern void display_png(int x, int y, int width, int height, int tx, int ty);
 
-void draw_square(float x, float y, float w, float h, float z, u32 rgba);
+extern void draw_device_list(u32 flags, int hermes, int direct_boot, int ftp);
 
-int set_texture( u8 *buffer, u32 x_size, u32 y_size );
+extern int initConsole(void);
+extern int termConsole(void);
+extern int initFont(void);
+extern int termFont(void);
 
-void display_png(int x, int y, int width, int height, int tx, int ty);
-void display_pngh(int x, int y, int width, int height, int tx, int ty);
-void display_pngbg(int x, int y, int width, int height, int tx, int ty);
+extern void initShader(void);
+extern int initDisplay(void);
+extern void setDrawEnv(void);
+extern void setRenderTarget(void);
 
-void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ftp);
+extern int setRenderObject(void);
 
-int initConsole();
-int termConsole();
-int initFont(void);
-int termFont(void);
+extern void setRenderColor(void);
+extern void setRenderTexture(void);
 
-void initShader(void);
-int initDisplay(void);
-void setDrawEnv(void);
-void setRenderTarget(void);
+extern void flip(void);
 
-int setRenderObject(void);
+extern void draw_list( t_menu_list *menu, int menu_size, int selected );
+extern void drawResultWindow( int result, int busy );
 
-void setRenderColor(void);
-void setRenderTexture(void);
-void setRenderTextureh(void);
-void setRenderTexturebg(void);
-
-void flip(void);
-
-void draw_list( t_menu_list *menu, int menu_size, int selected );
-void drawResultWindow( int result, int busy );
-
-int DPrintf( const char *string, ... );
+extern int DPrintf( const char *string, ... );
 
