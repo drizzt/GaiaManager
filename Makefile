@@ -16,7 +16,7 @@ FPSHADER_PPU_OBJS = $(patsubst %.cg, $(OBJS_DIR)/%.ppu.o, $(FPSHADER_SRCS))
 
 PKG_TARGET = UP0001-OMAN46756_00-0000111122223333.pkg
 
-CLEANFILES = PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET)
+CLEANFILES = PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET) readme.aux readme.log readme.out readme.tex
 
 ifneq (exists, $(shell [ -f at3plus.c -a -f at3plus.h -a -f waveout.c -a -f waveout.h ] && echo exists) )
 PPU_INCDIRS += -I$(CELL_SDK)/samples/sdk/codec/atrac3plus_simple
@@ -32,7 +32,8 @@ include $(CELL_MK_DIR)/sdk.target.mk
 
 PPU_OBJS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
 
-all : EBOOT.BIN $(PKG_TARGET)
+all : EBOOT.BIN $(PKG_TARGET) docs
+docs : readme.html readme.pdf
 
 $(VPSHADER_PPU_OBJS): $(OBJS_DIR)/%.ppu.o : %.vpo
 	@mkdir -p $(dir $(@))
@@ -60,3 +61,6 @@ EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET)	# to use in /app_home/PS3_GAME
 
 readme.html: readme.mkd
 	maruku -o $@ $<
+
+readme.pdf: readme.mkd
+	maruku --pdf -o $@ $<
