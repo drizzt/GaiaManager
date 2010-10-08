@@ -625,7 +625,7 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 					break;
 				}
 
-			len=0.02*(float)(strlen(str));
+			len=0.017*(float)(strlen(str));
 
 			cellFsGetFreeSize(path, &blockSize, &freeSize);
 			freeSpace = ( ((uint64_t)blockSize * freeSize));
