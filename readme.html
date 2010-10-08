@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC
+    "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN"
+    "http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd">
+<html xmlns:svg='http://www.w3.org/2000/svg' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+<head><meta content='application/xhtml+xml;charset=utf-8' http-equiv='Content-type' /><title>Open Manager v2.0</title></head>
+<body>
+<h1 id='open_manager_v20'>Open Manager v2.0</h1>
+
+<p>This application has been made by an anonymous person non seeking fame, profit or benefit.</p>
+
+<p>I don&#8217;t want to cause any damage to the video game industry, but it is not reasonable that these consoles (expensive cost) are constructed like butter and we can not do anything to preserve the health of the lens of our readers (my console model cannot be repaired), While Sony is rubbing his hands when you send to repair a console and them are dedicated to eliminating original features of the console, as PS3 Other OS and Linux, relying on what they think best for your business and not caring a shit or the feelings of their users or their acquired rights as users and owners of their consoles.</p>
+
+<p>The videogame industry only wants control, oligopoly, money, pursuit of anything that does not benefit their interests and if it is possible, force legal changes using their influence and power while we&#8217;re just anonymous people we have to endure all the crap on hardware that is passed through a computer, just to avoid taxes.</p>
+
+<p>So I decided to do an experiment: I decided to see if I can make a BACKUP and Homebrew purpose loader (legal in my country), release the source code and waits to see what happens. Maybe someone has the Sony SDK 1.92 and wants to compile, it but that&#8217;s not my problem.</p>
+
+<p>Obviously, is &#8216;illegal&#8217; to build things with the SONY SDK unlicensed but this is only source code ;)</p>
+
+<h2 id='features'>FEATURES</h2>
+
+<p>Open Manager has the next features:</p>
+
+<ul>
+<li>
+<p>Supports up to 512 items from two USB devices, internal hdd and bluray</p>
+</li>
+
+<li>
+<p>Ability to copy games from bdvd to hdd0 or USB&#8217;s, from hdd0 to USB&#8217;s or from USB&#8217;s to hdd0. It is done asking to you the destination device. It use uses asynchronous reading and writing for fast copy.</p>
+</li>
+
+<li>
+<p>Special support for big files in FAT: it splits files &gt;= 4GB using .666xx fragments (if the file is name.ext, the file splits as name.ext.66600, name.ext.66601,&#8230;). This file is not bootable and it is marked using &#8216;_&#8217; as folder prefix. The file is joining when you copy it to hdd0 device</p>
+</li>
+
+<li>
+<p>Automatically finds the path of the games and asks to you about it. In other case, if the Open Manager is installed in the hdd0 creates one. You can change it pressing L2+START later.</p>
+</li>
+
+<li>
+<p>Including checking game option (pressing L3). It displays information about the files, size, splits or big files, if it have one.</p>
+</li>
+
+<li>
+<p>Support for Homebrew: you can creates &#8220;homebrew&#8221; folder in root USB FAT device and put here others folders with an EBOOT.BIN (.self format) and one ICON0.PNG. Also you can use the internal hdd0. Homebrew is launched directly and receive the path in argv[0].</p>
+</li>
+
+<li>
+<p>FTP support to upload homebrew: open_manager uses &#8220;OMAN46756&#8221; as user, by default. I recommend flashfxp to use it, because FTP support is not very good&#8230;</p>
+</li>
+</ul>
+
+<p>NOTE: Open Manager works with Hermes payload update. So,if you return from game list, apps_home can launch gamaes without one disc (some games don&#8217;t work without any disc), but if you return from Homebrew, apps_home works from usb000</p>
+
+<p>NOTE2: You can modify the program as you want, but please, make public the source code</p>
+
+<p><strong>Source Code</strong>: http://github.com/drizztbsd/openbm/tree/sexymanager</p>
+
+<h2 id='v20_codename_gaia_changelog'>v2.0 (codename: Gaia) changelog</h2>
+
+<p>That version is based on the Jurai2 &#8220;Sexy Manager&#8221; with klutsh graphics and some my (drizzt) patches. It also supports the aggressive hermes v3 patching.</p>
+
+<p>This work is licensed under a <a href='http://creativecommons.org/licenses/by-nc-sa/3.0/'>Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License</a>.</p>
+</body></html>

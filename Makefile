@@ -57,3 +57,6 @@ $(PKG_TARGET): openmanager.conf PS3_GAME/USRDIR/EBOOT.BIN
 EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET)	# to use in /app_home/PS3_GAME
 	@echo generating EBOOT.BIN to use in /app_home/PS3_GAME
 	$(MAKE_FSELF) $< $@
+
+readme.html: readme.mkd
+	maruku -o $@ $<

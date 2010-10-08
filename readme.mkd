@@ -41,3 +41,5 @@ v2.0 (codename: Gaia) changelog
 
 That version is based on the Jurai2 "Sexy Manager" with klutsh graphics and some my \(drizzt\) patches.
 It also supports the aggressive hermes v3 patching.
+
+This work is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License](http://creativecommons.org/licenses/by-nc-sa/3.0/).
