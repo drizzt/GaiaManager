@@ -684,32 +684,6 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 
 
 		}
-			if((flags>>31) & 1)
-			{
-			//draw_text_stroke( x, y+0.06, 1.05f, 0xffffffff, "START- GAME MODE");
-			}
-			else
-			{
-			//draw_text_stroke( x, y+0.06, 1.05f, 0xffffffff, "START- HOMEBREW");
-			}
-		if((flags>>11) & 1)
-		{
-			//draw_text_stroke( x+0.25, y+0.06,1.05f, 0xffffffff, "SELECT- BD BACKUP");
-		}
-
-		// homebrew
-#if 0
-		if((flags>>31) & 1)
-		{
-			draw_text_stroke(0.91f, 0.575f, 0.8f, 0xff00ffff, "HOMEBREW");
-		}
-		else
-		{
-			draw_text_stroke(0.91f, 0.575f, 0.8f, 0xffffff00, "GAME");
-		}
-#endif
-		// gray bar
-		//draw_square(-1.0f, (0.5f-y+0.05f)*2.0f, 2.0f, 0.25f /*1.0f-(0.5f-y-0.05f)*2.0f*/, -0.1f, 0x605050ff);
 
 // IP Addr
 
@@ -717,21 +691,10 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 		sprintf(ipaddr, "%16s", info.ip_address);
 
 		draw_text_stroke_bool(0.86, 0.58, 0.8, hermes);
-		draw_text_stroke_bool(0.86, 0.62, 0.8, ftp);
-		draw_text_stroke     (0.85, 0.66, 0.8, 0xffffffff, (flags>>31) & 1 ? "HOMEBREW" : "GAME");
-		draw_text_stroke     (0.77, 0.70, 0.8, 0xff00ffff, ipaddr);
-
-#if 0
-		if (direct_boot == 1)
-		{
-			draw_text_stroke(0.89f, 0.535f, 0.8f, 0xff00ff00, "ON");
-		}
-		else
-		{
-			draw_text_stroke(0.89f, 0.535f, 0.8f, 0xff0000ff, "OFF");
-		}
-#endif
-//ftp text
+		draw_text_stroke_bool(0.86, 0.62, 0.8, direct_boot);
+		draw_text_stroke_bool(0.86, 0.66, 0.8, ftp);
+		draw_text_stroke     (0.85, 0.70, 0.8, 0xffffffff, (flags>>31) & 1 ? "HOMEBREW" : "GAME");
+		draw_text_stroke     (0.77, 0.74, 0.8, 0xff00ffff, ipaddr);
 
 
 		if(!((flags>>31) & 1)) // only GAME MODE

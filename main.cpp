@@ -82,7 +82,7 @@ static const char text_to[][12] = {"to","to","to","a","zu kopieren","a","to","pa
 
 
 static const char text_eboot[][96] = {"EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN ha sido parcheado.","EBOOT.BIN wurde erfolgreich aktualisiert","EBOOT.BIN e stato aggiornato con successo","EBOOT.BIN has been successfully updated","EBOOT.BIN foi actualizado com sucesso","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","Eboot.bin har uppdaterats utan problem.","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated"};
-static const char text_launcher[][96] = {"You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","Puedes ejecutar esta utilidad presionando L2+START la proxima vez.","Sie konnen das Spiel ab jetzt mit L2+START starten","Puoi lanciare questa utility premendo L2+START la prossima volta","You can launch this utility pressing L2+START the next time","Pode iniciar este utilitário pressionando L2+START na proxima vez","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time","Du kan nu starta detta program genom att trycka L2+START nasta gang.","You can launch this utility pressing L2+START the next time","You can launch this utility pressing L2+START the next time"};
+static const char text_launcher[][96] = {"You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Puedes ejecutar esta utilidad presionando SELECT+START la proxima vez.","Sie konnen das Spiel ab jetzt mit SELECT+START starten","Puoi lanciare questa utility premendo SELECT+START la prossima volta","You can launch this utility pressing SELECT+START the next time","Pode iniciar este utilitário pressionando SELECT+START na proxima vez","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Du kan nu starta detta program genom att trycka SELECT+START nasta gang.","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time"};
 
 static const char text_notfound[][32] = {"EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN no encontrado","EBOOT.BIN wurde nicht gefunden","EBOOT.BIN non trovato","EBOOT.BIN not found","EBOOT.BIN não encontrado","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN hittades inte","EBOOT.BIN not found","EBOOT.BIN not found"};
 
@@ -2553,7 +2553,7 @@ skip_find_device:
 
     // update the game folder
 
-	if ((new_pad & BUTTON_START) && (old_pad & BUTTON_L2)){
+	if ((new_pad & BUTTON_START) && (old_pad & BUTTON_SELECT)){
 		
 		dir_fixed=0; goto update_game_folder;
 		}
@@ -3165,6 +3165,10 @@ copy_from_bluray:
 			}
 		}
 		hermes = !patchmode;
+	}
+	if (new_pad & BUTTON_L2)
+	{
+		direct_boot ^= 1;
 	}
 	if (new_pad & BUTTON_R1)
 	{
