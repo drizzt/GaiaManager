@@ -3330,13 +3330,13 @@ skip_1:
 	
 				if(game_sel>=0 && max_menu_list>0)
 					draw_list( menu_list, max_menu_list, game_sel | (0x10000 * ((menu_list[0].flags & 2048)!=0)));
-				else cellDbgFontPrintf( 0.08f, 0.1f, 1.2f, 0xffffffff, "Put games from BR-DISC");
+				//else cellDbgFontPrintf( 0.08f, 0.1f, 1.2f, 0xffffffff, "Put games from BR-DISC");
 				}
 			else
 				{
 				if(game_sel>=0 && max_menu_homebrew_list>0)
 					draw_list(menu_homebrew_list, max_menu_homebrew_list, game_sel );
-				else cellDbgFontPrintf( 0.08f, 0.1f, 1.2f, 0xffffffff, "Put the homebrew in USBXXX:/homebrew");
+				//else cellDbgFontPrintf( 0.08f, 0.1f, 1.2f, 0xffffffff, "Put the homebrew in USBXXX:/homebrew");
 				}
 		
 
