@@ -2948,7 +2948,7 @@ skip_find_device:
 
 // copy from bluray
 
-	    if ( (new_pad & BUTTON_SQUARE) & ((fdevices>>11) & 1) && mode_list==GAME)
+	    if ( (new_pad & BUTTON_SQUARE) && ((fdevices>>11) & 1) && mode_list==GAME)
 		{
 copy_from_bluray:
 
