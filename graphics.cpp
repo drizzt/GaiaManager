@@ -625,8 +625,6 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 					break;
 				}
 
-			len=0.03f*(float)(strlen(str));
-
 			len=0.02*(float)(strlen(str));
 
 			cellFsGetFreeSize(path, &blockSize, &freeSize);
@@ -638,7 +636,7 @@ void draw_device_list(u32 flags, int region, int hermes, int direct_boot, int ft
 			draw_text_stroke( x, y+0.064, 1.0f, ((flags>>(n+16)) & 1) ? 0xffff00ff : 0xffffffff, str);
 			x+=len-0.01;
 			draw_text_stroke( x, y+0.064, 1.0f, ((flags>>(n+16)) & 1) ? 0xff999999 : 0xff999999, sizer);
-			len=0.02*(float)(strlen(sizer));
+			len=0.017*(float)(strlen(sizer));
 
 			x+=len;
  
