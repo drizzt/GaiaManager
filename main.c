@@ -2281,7 +2281,7 @@ skip_find_device:
 		dialog_ret=0;
 		ret = cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
 		wait_dialog();
-               	if(ret==1)
+		if(dialog_ret==1)
 		{
 			sprintf(filename, "/dev_hdd0/game/%s/GAMEZ/",hdd_folder);
 			fix_perm_recursive(filename);
