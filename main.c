@@ -3009,12 +3009,9 @@ skip_1:
 		{
 
 
-
-			if(game_sel>=0 && *max_list>0 && png_w!=0 && png_h!=0)
+			if(game_sel>=0 && *max_list>0)
 				{
 				int dispy = 152;
-				//sprintf(filename, "GAME_SEL IS %d  MAX IS %d", game_sel, max_menu_list);
-				//cellDbgFontPrintf( 0.08f, 0.1f, 1.2f, 0xffffffff, filename);
 				
 				// calculate highlight position
 				
@@ -3027,9 +3024,12 @@ skip_1:
 					dispy = 150 + (49 * game_sel-1);
 				}
 				
-				set_texture( text_bmp, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-				setRenderTexture();
-				display_png(1470, 153, 320, 176, 320, 176);
+				if (png_w!=0 && png_h!=0)
+				{
+					set_texture( text_bmp, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+					setRenderTexture();
+					display_png(1470, 153, 320, 176, 320, 176);
+				}
 
 				set_texture( text_h, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 				setRenderTexture();
