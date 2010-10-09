@@ -1,6 +1,6 @@
 # Target Files
 EBOOT.BIN
-UP0001-OMAN46756_00-0000111122223333.pkg
+*.pkg
 
 # Generated files
 at3plus.c

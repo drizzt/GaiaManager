@@ -64,7 +64,7 @@ static int fm = -1;
 
 
 static char hdd_folder[64]="ASDFGHJKLMN"; // folder for games (deafult string is changed the first time it is loaded
-static char hdd_folder_home[64]="OMAN46756"; // folder for homebrew
+static char hdd_folder_home[64]=FOLDER_NAME; // folder for homebrew
 // 				Jap, 		English, 	French, 	Spanish, 	German, 	Italian, 	Dutch, 		Portugues, 	Russian, Korean, Chinese, Chinese, Finnish, Swedish, Danish, Norwegian
 static const char text_delfailed[][128] = {	"Delete failed dump in",	"Delete failed dump in",	"Delete failed dump in",	"Borrar dump fallido en","Loschen fehlgeschlagener Kopie in",	"Delete failed dump in",	"Delete failed dump in",	"Apagar descarga falhada no",	"Delete failed dump in","Delete failed dump in","Delete failed dump in","Delete failed dump in","Delete failed dump in","Raderingen misslyckades, information i","Delete failed dump in","Delete failed dump in"};
 static const char text_nosplit[][128] = {"You cannot launch split games","You cannot launch split games","You cannot launch split games","No puedes jugar a juegos divididos","Sie konnen keine geteilten Spiele starten","Non puoi avviare giochi divisi","You cannot launch split games","Nao pode iniciar jogos divididos","You cannot launch split games","You cannot launch split games","You cannot launch split games","You cannot launch split games","You cannot launch split games","Du kan inte kora delade spel","You cannot launch split games","You cannot launch split games"};
