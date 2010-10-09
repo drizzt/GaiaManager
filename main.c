@@ -88,7 +88,6 @@ static char soundfile[512];
 static t_menu_list menu_list[MAX_LIST];
 static int max_menu_list=0;
 
-static int hermes = 0;
 static int region = 1;
 static int direct_boot = 0;
 
@@ -1933,10 +1932,10 @@ int main(int argc, char **argv)
 
 	cellSysutilRegisterCallback(0, gfxSysutilCallback, NULL);
 
-	sprintf(filename, "/dev_hdd0/game/%s/USRDIR/BG.png", hdd_folder_home);
+	sprintf(filename, "/dev_hdd0/game/%s/USRDIR/BGG.PNG", hdd_folder_home);
 	load_png_texture(text_bg, filename);
 
-	sprintf(filename, "/dev_hdd0/game/%s/USRDIR/HIGHLIGHT.png", hdd_folder_home);
+	sprintf(filename, "/dev_hdd0/game/%s/USRDIR/HIGHLIGHT.PNG", hdd_folder_home);
 	load_png_texture(text_h, filename);
 
 	setRenderColor();
@@ -2224,7 +2223,16 @@ update_game_folder:
 			old_fi=game_sel;
 			if(mode_list==GAME)
 			{
-				sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[game_sel].path);
+				struct stat st;
+				sprintf(filename, "/dev_hdd0/game/%s/COVERS/%s.PNG", hdd_folder_home, menu_list[game_sel].title_id);
+				if (stat(filename, &st) < 0)
+				{
+					sprintf(filename, "%s/../../COVERS/%s.PNG", menu_list[game_sel].path, menu_list[game_sel].title_id);
+					if (stat(filename, &st) < 0)
+					{
+						sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[game_sel].path);
+					}
+				}
 			}
 			else
 				sprintf(filename, "%s/ICON0.PNG", menu_homebrew_list[game_sel].path);
@@ -2275,17 +2283,12 @@ skip_find_device:
 		} else down_count++;
 			
 	} else down_count=8;
-	if (old_pad & BUTTON_R3 ) {
-  	//  bad_perm_recursive(menu_list[game_sel].path);
-		sprintf(string1, "Fix permissions in all directories?\n\nNot necessary with latest hermes, but may still be useful\n(may appear to freeze, give it time)"); 
-		dialog_ret=0;
-		ret = cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
-		wait_dialog();
-		if(dialog_ret==1)
-		{
-			sprintf(filename, "/dev_hdd0/game/%s/GAMEZ/",hdd_folder);
-			fix_perm_recursive(filename);
-		}
+	if (old_pad & BUTTON_L3) {
+		//reset game list
+		old_fi=-1;
+		counter_png=0;
+		forcedevices=(1);
+		game_sel=0;
 	}
 
 	if ( old_pad & BUTTON_RIGHT ) {
@@ -2320,17 +2323,20 @@ skip_find_device:
 	{
 		mode_list = HOMEBREW;
 		max_list=&max_menu_homebrew_list;
+		sprintf(filename, "/dev_hdd0/game/%s/USRDIR/BGH.PNG", hdd_folder_home);
 	}
 	else
 	{
 		mode_list = GAME;
 		max_list=&max_menu_list;
+		sprintf(filename, "/dev_hdd0/game/%s/USRDIR/BGG.PNG", hdd_folder_home);
 	}
 		old_fi=-1;
 		counter_png=0;
+		load_png_texture(text_bg, filename);
 		}
 
-	if ((new_pad & BUTTON_L3) && game_sel>=0 && max_menu_list>0 && mode_list==GAME){
+	if ((new_pad & BUTTON_R3) && game_sel>=0 && max_menu_list>0 && mode_list==GAME){
 
 		time_start= time(NULL);
 			
@@ -2388,17 +2394,17 @@ skip_find_device:
  
 // delete from devices	
 
-	if ( (new_pad & BUTTON_TRIANGLE) && game_sel>=0 && max_menu_list>0 && mode_list==GAME && (!(menu_list[game_sel].flags & 2048))){
+	if ( (new_pad & BUTTON_TRIANGLE) && game_sel>=0 && *max_list>0 && ((mode_list==GAME && (!(menu_list[game_sel].flags & 2048))) || mode_list==HOMEBREW )){
 		int n;
-
+		t_menu_list *menu_tmp_list = (mode_list == GAME) ? menu_list : menu_homebrew_list;
 			for(n=0;n<11;n++){
-				if((menu_list[game_sel].flags>>n) & 1) break;
+				if((menu_tmp_list[game_sel].flags>>n) & 1) break;
 				}
 
 			if(n==0)
-				sprintf(filename, "%s\n\n%s HDD0?", menu_list[game_sel].title, text_wantdel[region]); 
+				sprintf(filename, "%s\n\n%s HDD0?", menu_tmp_list[game_sel].title, text_wantdel[region]); 
 			else
-				sprintf(filename, "%s\n\n%s USB00%c?", menu_list[game_sel].title, text_wantdel[region], 47+n); 
+				sprintf(filename, "%s\n\n%s USB00%c?", menu_tmp_list[game_sel].title, text_wantdel[region], 47+n); 
 
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
@@ -2420,11 +2426,11 @@ skip_find_device:
 				file_counter=0;
 				new_pad=0;
 				
-				DPrintf("Starting... \n delete %s\n\n", menu_list[game_sel].path);
+				DPrintf("Starting... \n delete %s\n\n", menu_tmp_list[game_sel].path);
 
-				my_game_delete((char *) menu_list[game_sel].path);
+				my_game_delete((char *) menu_tmp_list[game_sel].path);
 				
-				rmdir((char *) menu_list[game_sel].path); // delete this folder
+				rmdir((char *) menu_tmp_list[game_sel].path); // delete this folder
 
 				game_sel=0;
 
@@ -2465,15 +2471,6 @@ skip_find_device:
 			}
 		}
 
-
-	if ((new_pad & BUTTON_TRIANGLE) && mode_list==HOMEBREW)
-		{
-		// reset to update datas
-		old_fi=-1;
-		counter_png=0;
-		forcedevices=(1);
-		game_sel=0;
-		}
 // copy from devices
 
 	if ((new_pad & BUTTON_CIRCLE) && game_sel>=0 && max_menu_list>0 && mode_list==GAME)
@@ -2885,7 +2882,7 @@ copy_from_bluray:
 				}
 			}
 		}
-	if (new_pad & BUTTON_L1)
+	if ((new_pad & BUTTON_L1) && mode_list == GAME)
 	{
 		if(sys8_enable(0) < 0)
 		{
@@ -2898,11 +2895,6 @@ copy_from_bluray:
 			{
 			pokeq(0x80000000000505d0ULL, mem_orig);
 			patchmode = 2; //normal
-			//reset game list
-			old_fi=-1;
-			counter_png=0;
-			forcedevices=(1);
-			game_sel=0;
 			} 
 		}
 		else
@@ -2918,9 +2910,8 @@ copy_from_bluray:
 				sys8_perm_mode(patchmode);
 			}
 		}
-		hermes = !patchmode;
 	}
-	if (new_pad & BUTTON_L2)
+	if ((new_pad & BUTTON_L2) && mode_list == GAME)
 	{
 		direct_boot ^= 1;
 	}
@@ -2991,11 +2982,16 @@ copy_from_bluray:
 					
 					}
 				else
-				{
-					sprintf(filename, "%s\n\n%s", menu_list[game_sel].title, text_notfound[region]);
+					{
+					sprintf(string1, "%s\n\n%s\n\nDo you want to try fixing permissions?", menu_list[game_sel].title, text_notfound[region]); 
 					dialog_ret=0;
-					ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
+					ret = cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
 					wait_dialog();
+					if(dialog_ret==1)
+					{
+						sprintf(filename, "%s",menu_list[game_sel].path);
+						fix_perm_recursive(filename);
+					}
 					}
 				}
 			}
@@ -3024,11 +3020,17 @@ skip_1:
 					dispy = 150 + (49 * game_sel-1);
 				}
 				
-				if (png_w!=0 && png_h!=0)
+				if (png_w == 320 && png_h == 176)
 				{
 					set_texture( text_bmp, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 					setRenderTexture();
-					display_png(1470, 153, 320, 176, 320, 176);
+					display_png(1446, 140, 320, 176, 320, 176);
+				}
+				else
+				if (png_w != 0 && png_h != 0) {
+					set_texture( text_bmp, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+					setRenderTexture();
+					display_png(1446, 140, 260, 300, png_w, png_h);	
 				}
 
 				set_texture( text_h, DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -3062,9 +3064,9 @@ skip_1:
 		
 
 			if(mode_list==GAME)
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), hermes, direct_boot, ftp_flags & 2);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), !patchmode, direct_boot, ftp_flags & 2);
 			else
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) | (1<<31) : 0)), hermes, direct_boot, ftp_flags & 2);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) | (1<<31) : 0)), !patchmode, direct_boot, ftp_flags & 2);
 			
 		}
 

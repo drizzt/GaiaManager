@@ -606,11 +606,15 @@ void draw_device_list(u32 flags, int hermes, int direct_boot, int ftp)
 		cellNetCtlGetInfo(CELL_NET_CTL_INFO_IP_ADDRESS, &info);
 		sprintf(ipaddr, "%16s", info.ip_address);
 
-		draw_text_stroke_bool(0.86, 0.58, 0.8, hermes);
-		draw_text_stroke_bool(0.86, 0.62, 0.8, direct_boot);
-		draw_text_stroke_bool(0.86, 0.66, 0.8, ftp);
-		draw_text_stroke     (0.85, 0.70, 0.8, 0xffffffff, (flags>>31) & 1 ? "HOMEBREW" : "GAME");
-		draw_text_stroke     (0.77, 0.74, 0.8, 0xff00ffff, ipaddr);
+		// on GAME mode
+		if (((flags>>31) & 1) == 0)
+		{
+			draw_text_stroke_bool(0.86, 0.68, 0.8, hermes);
+			draw_text_stroke_bool(0.86, 0.72, 0.8, direct_boot);
+		}
+		draw_text_stroke_bool(0.86, 0.76, 0.8, ftp);
+		draw_text_stroke     (0.85, 0.80, 0.8, 0xffffffff, (flags>>31) & 1 ? "HOMEBREW" : "GAME");
+		draw_text_stroke     (0.77, 0.84, 0.8, 0xff00ffff, ipaddr);
 }
 		
 
