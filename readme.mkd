@@ -30,7 +30,7 @@ Open Manager has the next features:
 
 - FTP support to upload homebrew: open\_manager uses "OMAN46756" as user, by default. I recommend flashfxp to use it, because FTP support is not very good...
 
-NOTE: Open Manager works with Hermes payload update. So,if you return from game list, apps\_home can launch gamaes without one disc \(some games don't work without any disc\), but if you return from Homebrew, apps\_home works from usb000
+NOTE: Open Manager works with Hermes payload update. So,if you return from game list, apps\_home can launch games without one disc \(some games don't work without any disc\), but if you return from Homebrew, apps\_home works from usb000
 
 NOTE2: You can modify the program as you want, but please, make public the source code
 
