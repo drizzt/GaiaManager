@@ -1910,10 +1910,10 @@ int main(int argc, char **argv)
 	load_libfont_module();
 
 
-	sprintf(soundfile,"/dev_hdd0/game/OMAN46756/USRDIR/BOOT.AT3");
+	sprintf(soundfile,"/dev_hdd0/game/%s/USRDIR/BOOT.AT3", hdd_folder_home);
 	sys_ppu_thread_create(&soundThread, playBootSound, NULL, 100, 0x8000, 0, (char *)"sound thread");
 
-	fix_perm_recursive("/dev_hdd0/game/OMAN46756/cache2/");
+	//fix_perm_recursive("/dev_hdd0/game/OMAN46756/cache2/");
 	cellSysutilGetSystemParamInt(CELL_SYSUTIL_SYSTEMPARAM_ID_LANG, &region);
 
 
@@ -1933,10 +1933,10 @@ int main(int argc, char **argv)
 
 	cellSysutilRegisterCallback(0, gfxSysutilCallback, NULL);
 
-	sprintf(filename, "/dev_hdd0/game/OMAN46756/USRDIR/BG.png");
+	sprintf(filename, "/dev_hdd0/game/%s/USRDIR/BG.png", hdd_folder_home);
 	load_png_texture(text_bg, filename);
 
-	sprintf(filename, "/dev_hdd0/game/OMAN46756/USRDIR/HIGHLIGHT.png");
+	sprintf(filename, "/dev_hdd0/game/%s/USRDIR/HIGHLIGHT.png", hdd_folder_home);
 	load_png_texture(text_h, filename);
 
 	setRenderColor();
@@ -1949,15 +1949,6 @@ int main(int argc, char **argv)
 	{
 		pokeq(0x80000000000505d0ULL, mem_orig);
 	}
-
-	//draw_cell();
-
-//	pthread_t th[THREAD_NUM] ;
-//	long int i ;
-//	pthread_create(&th[0], NULL, playBootSound, (void *)i);
-
-	//sprintf(soundfile,"/dev_hdd0/game/OMAN46756/USRDIR/BOOT.AT3");
-	//sys_ppu_thread_create(&soundThread, playBootSound, 0, 100, 0x8000, 0, (char *)"sound thread");
 
 	if(!memcmp(hdd_folder,"ASDFGHJKLM",10) && hdd_folder[10]=='N')
 update_game_folder:
@@ -2292,7 +2283,8 @@ skip_find_device:
 		wait_dialog();
                	if(ret==1)
 		{
-			fix_perm_recursive("/dev_hdd0/game/OMAN46756/GAMEZ/");
+			sprintf(filename, "/dev_hdd0/game/%s/GAMEZ/",hdd_folder);
+			fix_perm_recursive(filename);
 		}
 	}
 
@@ -2337,8 +2329,6 @@ skip_find_device:
 		old_fi=-1;
 		counter_png=0;
 		}
-
-	
 
 	if ((new_pad & BUTTON_L3) && game_sel>=0 && max_menu_list>0 && mode_list==GAME){
 
@@ -3040,25 +3030,10 @@ skip_1:
 				set_texture( text_bmp, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 				setRenderTexture();
 				display_png(1470, 153, 320, 176, 320, 176);
-// 794
-// start at 120
-
-// 16 titles - 49 pixels - 792 height
 
 				set_texture( text_h, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 				setRenderTexture();
 				display_png(105,dispy, 1315, 49, 1315, 49);
-
-				
-				}
-			else
-				{
-
-				//set_texture( text_bmp, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-
-				//setRenderTexture();
-
-				//display_png( 1280-256-80, 80, 256, 128, 128, 64);
 
 				}
 
@@ -3070,10 +3045,6 @@ skip_1:
 			setRenderTexture();
 			display_png(0,0,1920,1080,1920,1080);
 			
-			//draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x00ff0000);
-
-			// square for titles
-			//draw_square(-0.9f, 0.9f, 2.0f-0.73f, 2.0-0.50f, -0.1f, 0x00203000);
 
 			if(mode_list==GAME)
 				{
