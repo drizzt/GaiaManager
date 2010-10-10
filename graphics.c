@@ -593,7 +593,7 @@ void draw_device_list(u32 flags, int hermes, int direct_boot, int ftp)
 			freeSpace = freeSpace / 1073741824.00;
 			sprintf(sizer, "%.2fGB", freeSpace);
 			
-			draw_text_stroke( x, y+0.064, 1.0f, ((flags>>(n+16)) & 1) ? 0xffff00ff : 0xffffffff, str);
+			draw_text_stroke( x, y+0.064, 1.0f, ((flags>>(n+16)) & 1) ? 0xff00ffff : 0xffffffff, str);
 			x+=len-0.01;
 			draw_text_stroke( x, y+0.064, 1.0f, ((flags>>(n+16)) & 1) ? 0xff999999 : 0xff999999, sizer);
 			len=(float) 0.017*strlen(sizer);
