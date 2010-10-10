@@ -49,6 +49,9 @@
 sys_ppu_thread_t	soundThread = 0;
 volatile int		isRunning = 0;
 
+#define USE_HDD0_GAMEZ	/* Use /dev_hdd0/GAMEZ as fallback games folder */
+#define USE_HDD0_COVERZ /* Use /dev/hdd0/COVERZ as fallback covers folder */
+
 #define MAX_LIST 512
 #define INPUT_FILE  "/dev_bdvd/PS3_GAME/SND0.AT3"
 #define THREAD_NUM 4
@@ -2001,6 +2004,7 @@ update_game_folder:
 	
 	if(!dir_fixed)
 		{
+#ifndef USE_HDD0_GAMEZ
 		if(argc>=1)
 			{
 			// use the path of EBOOT.BIN
@@ -2011,7 +2015,10 @@ update_game_folder:
 
 				s= ((char *) argv[0])+15;
 				while(*s!=0 && *s!='/' && n<63) {hdd_folder[n]=*s++; n++;} hdd_folder[n]=0;
-
+#else
+				strcpy(hdd_folder, "..");
+#endif				
+		
 				dir_fixed=1;
 
 				// create the folder
@@ -2020,10 +2027,14 @@ update_game_folder:
 				mkdir(filename, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 
 				dialog_ret=0;
-				sprintf(filename, "/%s\nis the new folder for games", hdd_folder); 
+#ifdef USE_HDD0_GAMEZ
+				strcpy(filename, "/dev_hdd0/GAMEZ is the new folder for games");
+#else
+				sprintf(filename, "/%s\nis the new folder for games", hdd_folder);
+#endif
 				ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
 				wait_dialog();
-
+#ifndef USE_HDD0_GAMEZ
 				}
 			else
 				{
@@ -2035,6 +2046,7 @@ update_game_folder:
 				exit(0);
 				}
 			}
+#endif
 		}
 	
 	// modify EBOOT.BIN
@@ -2225,10 +2237,14 @@ update_game_folder:
 			if(mode_list==GAME)
 			{
 				struct stat st;
-				sprintf(filename, "/dev_hdd0/game/%s/COVERS/%s.PNG", hdd_folder_home, menu_list[game_sel].title_id);
+#ifndef USE_HDD0_COVERZ
+				sprintf(filename, "/dev_hdd0/game/%s/COVERZ/%s.PNG", hdd_folder_home, menu_list[game_sel].title_id);
+#else
+				sprintf(filename, "/dev_hdd0/COVERZ/%s.PNG", menu_list[game_sel].title_id);
+#endif
 				if (stat(filename, &st) < 0)
 				{
-					sprintf(filename, "%s/../../COVERS/%s.PNG", menu_list[game_sel].path, menu_list[game_sel].title_id);
+					sprintf(filename, "%s/../../COVERZ/%s.PNG", menu_list[game_sel].path, menu_list[game_sel].title_id);
 					if (stat(filename, &st) < 0)
 					{
 						sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[game_sel].path);
@@ -2679,7 +2695,6 @@ skip_find_device:
 							char *p=strstr(menu_list[game_sel].path, "/GAMEZ")+7;
 							if(p[0]=='_') p++; // skip special char
 
-							//sprintf(filename, "/dev_hdd0/game/%s/GAMEZ/_%s", hdd_folder, p);	
 							sprintf(filename, "/dev_hdd0/game/%s/GAMEZ/_%s", hdd_folder, p);
 							}
 						else
