@@ -93,7 +93,9 @@ static int direct_boot = 0;
 
 static uint64_t mem_orig = 0x386000014E800020ULL;
 static uint64_t mem_patched = 0xE92296887C0802A6ULL; 
-	
+static uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)	
+
+
 static t_menu_list menu_homebrew_list[MAX_LIST];
 static int max_menu_homebrew_list=0;
 static int *max_list=&max_menu_list;
@@ -1884,6 +1886,19 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
 }
 
 
+static set_hermes_mode(bool enable) {
+	patchmode = enable ? 0 : 2;
+
+	if(sys8_enable(0) > 0)
+	{
+		sys8_perm_mode(patchmode);
+	}
+	else
+	{
+		pokeq(0x80000000000505d0ULL, enable ? mem_patched : mem_orig);
+	}
+}
+
 /****************************************************/
 /* MAIN                                             */
 /****************************************************/
@@ -1900,7 +1915,6 @@ int main(int argc, char **argv)
 	int one_time=1;
 
 	int counter_png=0;
-	uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)	
 	u8 *text_bmp=NULL;
 	u8 *text_h=NULL;
 	u8 *text_bg=NULL;
@@ -1939,15 +1953,8 @@ int main(int argc, char **argv)
 	load_png_texture(text_h, filename);
 
 	setRenderColor();
-	
-	if(sys8_enable(0) > 0)
-	{
-		sys8_perm_mode(patchmode);
-	}
-	else
-	{
-		pokeq(0x80000000000505d0ULL, mem_orig);
-	}
+
+	set_hermes_mode(!patchmode);
 
 	if(!memcmp(hdd_folder,"ASDFGHJKLM",10) && hdd_folder[10]=='N')
 update_game_folder:
@@ -2884,32 +2891,7 @@ copy_from_bluray:
 		}
 	if ((new_pad & BUTTON_L1) && mode_list == GAME)
 	{
-		if(sys8_enable(0) < 0)
-		{
-			if(peekq(0x80000000000505d0ULL) == mem_orig)
-			{
-				pokeq(0x80000000000505d0ULL, mem_patched);
-				patchmode = 0; //patched
-			}
-			else
-			{
-			pokeq(0x80000000000505d0ULL, mem_orig);
-			patchmode = 2; //normal
-			} 
-		}
-		else
-		{
-			if (patchmode == 2)
-			{
-				patchmode = 0; //patched
-				sys8_perm_mode(patchmode);
-			}
-			else
-			{
-				patchmode = 2; //normal
-				sys8_perm_mode(patchmode);
-			}
-		}
+		set_hermes_mode(patchmode); // toggle patch mode
 	}
 	if ((new_pad & BUTTON_L2) && mode_list == GAME)
 	{
@@ -2965,10 +2947,6 @@ copy_from_bluray:
 				if(stat(filename, &s)>=0)
 					{
 					syscall36( menu_list[game_sel].path );
-					//sprintf(string1, "::: %s :::\n\nDo you want to start the game now,\nwithout exiting to XMB?\n\nWarning: Some games do not support such launch mode!",  menu_list[game_sel].title); 
-					//dialog_ret=0;
-					//ret = cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
-					//wait_dialog();
 					if(direct_boot==1)
 					{
 						ret = unload_modules();
@@ -2989,8 +2967,11 @@ copy_from_bluray:
 					wait_dialog();
 					if(dialog_ret==1)
 					{
+						uint64_t old_patchmode = patchmode;
+						set_hermes_mode(false);
 						sprintf(filename, "%s",menu_list[game_sel].path);
 						fix_perm_recursive(filename);
+						set_hermes_mode(!old_patchmode);
 					}
 					}
 				}
