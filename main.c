@@ -618,12 +618,6 @@ static void syscall36(char *path)
 /* UTILS                                            */
 /****************************************************/
 
-static uint64_t peekq(uint64_t addr)
-{
-	system_call_1(6,addr);
-	return_to_user_prog(uint64_t);
-}
-
 static void pokeq(uint64_t addr, uint64_t val)
 {
 	system_call_2(7, addr, val);
@@ -1886,7 +1880,7 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
 }
 
 
-static set_hermes_mode(bool enable) {
+static void set_hermes_mode(bool enable) {
 	patchmode = enable ? 0 : 2;
 
 	if(sys8_enable(0) > 0)
