@@ -2562,7 +2562,7 @@ skip_find_device:
 					
 					if(p[0]=='_') p++; // skip special char
 
-					sprintf(name, "/dev_hdd0/game/%s", hdd_folder);	
+					sprintf(name, "/dev_hdd0/game/%s/", hdd_folder);
 					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 					sprintf(name, "/dev_hdd0/game/%s/GAMEZ", hdd_folder);	
 					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);

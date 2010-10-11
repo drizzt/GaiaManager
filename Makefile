@@ -49,6 +49,8 @@ $(FPSHADER_PPU_OBJS): $(OBJS_DIR)/%.ppu.o : %.fpo
 $(OBJS_DIR)/$(PPU_TARGET): $(PPU_TARGET)
 	@mkdir -p $(dir $(@))
 	$(PPU_STRIP) -s $< -o $@
+	@echo setting ftp home path to /
+	sed -i 's:\x00/dev_hdd0/game/%s\x00:\x00/\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00:' $@
 
 PS3_GAME/USRDIR/EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET)
 	@mkdir -p $(dir $(@))
