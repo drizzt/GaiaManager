@@ -1904,7 +1904,7 @@ static void set_hermes_mode(bool enable) {
 
 static char bluray_game[64]; // name of the game
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
 	sys_spu_initialize(2, 0);
 	//BGMArg bgmArg;
@@ -1920,6 +1920,9 @@ int main(int argc, char **argv)
 	//char INPUT_FILE[] = "/dev_bdvd/PS3_GAME/SND0.AT3";
 	ret = load_modules();
 	load_libfont_module();
+
+	// Fix EBOOT.BIN permission
+	chmod(argv[0], 00666);
 
 #ifndef WITHOUT_SOUND
 	sprintf(soundfile,"/dev_hdd0/game/%s/USRDIR/BOOT.AT3", hdd_folder_home);
