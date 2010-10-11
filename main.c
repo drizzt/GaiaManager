@@ -42,29 +42,26 @@
 
 #include <libftp.h>
 
-#include "at3plus.h"
+#include "config.h"
 #include "graphics.h"
 #include "syscall8.h"
-
-sys_ppu_thread_t	soundThread = 0;
-volatile int		isRunning = 0;
-
-#define USE_HDD0_GAMEZ	/* Use /dev_hdd0/GAMEZ as fallback games folder */
-#define USE_HDD0_COVERZ /* Use /dev/hdd0/COVERZ as fallback covers folder */
+#ifndef WITHOUT_SOUND
+#include "at3plus.h"
+#endif
 
 #define MAX_LIST 512
-#define INPUT_FILE  "/dev_bdvd/PS3_GAME/SND0.AT3"
-#define THREAD_NUM 4
 
 enum BmModes {
 	GAME = 0,
 	HOMEBREW = 1
 };
 
-static BGMArg bgmArg;
 
+#ifndef WITHOUT_SOUND
 static int fm = -1;
-
+static char soundfile[512];
+static sys_ppu_thread_t	soundThread = 0;
+#endif
 
 static char hdd_folder[64]="ASDFGHJKLMN"; // folder for games (deafult string is changed the first time it is loaded
 static char hdd_folder_home[64]=FOLDER_NAME; // folder for homebrew
@@ -87,7 +84,6 @@ static const char text_wantdel[][32] = {"Want to delete from","Want to delete fr
 static const char text_wantuse[][32] = {"Want to use","Want to use","Want to use","Quieres usar","Mochten Sie","Vuoi usare","Want to use","Quer usar","Want to use","Want to use","Want to use","Want to use","Want to use","Vill du anvanda","Want to use","Want to use"};
 static const char text_toinstall[][64] = {"to install the game?","to install the game?","to install the game?","para instalar el juego?","fur die Spiele-Installation verwenden?","per installare il gioco?","to install the game?","para instalar o jogo?","to install the game?","to install the game?","to install the game?","to install the game?","to install the game?","till att installera spel?","to install the game?","to install the game?"};
 
-static char soundfile[512];
 static t_menu_list menu_list[MAX_LIST];
 static int max_menu_list=0;
 
@@ -330,9 +326,11 @@ static int load_modules(void)
 	ret = cellSysmoduleLoadModule(CELL_SYSMODULE_NET);
 	if (ret < 0) return ret; else unload_mod|=16;
 
+#ifndef WITHOUT_SOUND
 	ret = cellSysmoduleLoadModule( CELL_SYSMODULE_ATRAC3PLUS );
 	if (ret != CELL_OK) return ret;
 	else unload_mod|=32;
+#endif
 
 	return ret;
 }
@@ -349,7 +347,9 @@ static int unload_modules(void)
 
 	free(host_addr);
 
+#ifndef WITHOUT_SOUND
 	if(unload_mod & 32) cellSysmoduleUnloadModule(CELL_SYSMODULE_ATRAC3PLUS);
+#endif
 
 	if(unload_mod & 16) cellSysmoduleUnloadModule(CELL_SYSMODULE_NET);
 
@@ -488,9 +488,11 @@ static int png_out_mapmem(u8 *buffer, size_t buf_size)
 
 int png_w=0, png_h=0;
 
+#ifndef WITHOUT_SOUND
 static void playBootSound(uint64_t ui __attribute__((unused)))
 {
 	int32_t status;
+	BGMArg bgmArg;
 
 //	stop_atrac3();
 
@@ -506,7 +508,7 @@ static void playBootSound(uint64_t ui __attribute__((unused)))
 	sys_ppu_thread_exit(0);	
 
 }
-
+#endif
 
 static int load_png_texture(u8 *data, char *name)
 {
@@ -1919,9 +1921,10 @@ int main(int argc, char **argv)
 	ret = load_modules();
 	load_libfont_module();
 
-
+#ifndef WITHOUT_SOUND
 	sprintf(soundfile,"/dev_hdd0/game/%s/USRDIR/BOOT.AT3", hdd_folder_home);
 	sys_ppu_thread_create(&soundThread, playBootSound, NULL, 100, 0x8000, 0, (char *)"sound thread");
+#endif
 
 	//fix_perm_recursive("/dev_hdd0/game/OMAN46756/cache2/");
 	cellSysutilGetSystemParamInt(CELL_SYSUTIL_SYSTEMPARAM_ID_LANG, &region);
@@ -1972,7 +1975,7 @@ update_game_folder:
 
 				if(!(entry->d_type & DT_DIR)) continue;
 
-                sprintf(filename, "/dev_hdd0/game/%s/GAMEZ", entry->d_name);
+                sprintf(filename, "/dev_hdd0/game/%s/%s", entry->d_name, GAMES_DIR);
 			//sprintf(filename, "/dev_hdd0/GAMES");
                 
 				dir2=opendir (filename);
@@ -2004,7 +2007,7 @@ update_game_folder:
 	
 	if(!dir_fixed)
 		{
-#ifndef USE_HDD0_GAMEZ
+#ifndef USE_HDD0_GAMES
 		if(argc>=1)
 			{
 			// use the path of EBOOT.BIN
@@ -2022,19 +2025,19 @@ update_game_folder:
 				dir_fixed=1;
 
 				// create the folder
-				sprintf(filename, "/dev_hdd0/game/%s/GAMEZ",hdd_folder);
+				sprintf(filename, "/dev_hdd0/game/%s/%s",hdd_folder, GAMES_DIR);
 				//sprintf(filename, "/dev_hdd0/GAMES");
 				mkdir(filename, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 
 				dialog_ret=0;
-#ifdef USE_HDD0_GAMEZ
-				strcpy(filename, "/dev_hdd0/GAMEZ is the new folder for games");
+#ifdef USE_HDD0_GAMES
+				sprintf(filename, "/dev_hdd0/%s is the new folder for games", GAMES_DIR);
 #else
 				sprintf(filename, "/%s\nis the new folder for games", hdd_folder);
 #endif
 				ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
 				wait_dialog();
-#ifndef USE_HDD0_GAMEZ
+#ifndef USE_HDD0_GAMES
 				}
 			else
 				{
@@ -2201,8 +2204,8 @@ update_game_folder:
 					
 					forcedevices &= ~ (1<<find_device);
 
-					if(find_device==0) sprintf(filename, "/dev_hdd0/game/%s/GAMEZ",hdd_folder);
-						else sprintf(filename, "/dev_usb00%c/GAMEZ", 47+find_device);
+					if(find_device==0) sprintf(filename, "/dev_hdd0/game/%s/%s",hdd_folder,GAMES_DIR);
+						else sprintf(filename, "/dev_usb00%c/%s", 47+find_device,GAMES_DIR);
 
 					if((fdevices>>find_device) & 1)
 						fill_entries_from_device(filename, menu_list, &max_menu_list, (1<<find_device), 0);
@@ -2237,14 +2240,14 @@ update_game_folder:
 			if(mode_list==GAME)
 			{
 				struct stat st;
-#ifndef USE_HDD0_COVERZ
-				sprintf(filename, "/dev_hdd0/game/%s/COVERZ/%s.PNG", hdd_folder_home, menu_list[game_sel].title_id);
+#ifndef USE_HDD0_COVERS
+				sprintf(filename, "/dev_hdd0/game/%s/%s/%s.PNG", hdd_folder_home, COVERS_DIR, menu_list[game_sel].title_id);
 #else
-				sprintf(filename, "/dev_hdd0/COVERZ/%s.PNG", menu_list[game_sel].title_id);
+				sprintf(filename, "/dev_hdd0/%s/%s.PNG", COVERS_DIR, menu_list[game_sel].title_id);
 #endif
 				if (stat(filename, &st) < 0)
 				{
-					sprintf(filename, "%s/../../COVERZ/%s.PNG", menu_list[game_sel].path, menu_list[game_sel].title_id);
+					sprintf(filename, "%s/../../%s/%s.PNG", menu_list[game_sel].path, COVERS_DIR, menu_list[game_sel].title_id);
 					if (stat(filename, &st) < 0)
 					{
 						sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[game_sel].path);
@@ -2526,11 +2529,11 @@ skip_find_device:
            if(dialog_ret==1)
 				{
 
-			    sprintf(name, "/dev_usb00%c/GAMEZ", 47+curr_device);
+			    sprintf(name, "/dev_usb00%c/%s", 47+curr_device,GAMES_DIR);
 				mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-				sprintf(name, "/dev_usb00%c/GAMEZ", 47+curr_device);
+				sprintf(name, "/dev_usb00%c/%s", 47+curr_device,GAMES_DIR);
 				mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-				sprintf(name, "/dev_usb00%c/GAMEZ/%s", 47+curr_device, strstr(menu_list[game_sel].path, "/GAMEZ")+7);
+				sprintf(name, "/dev_usb00%c/%s/%s", 47+curr_device, GAMES_DIR, strstr(menu_list[game_sel].path, "/" GAMES_DIR)+sizeof(GAMES_DIR)+1);
 				mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 					
 				}
@@ -2558,15 +2561,15 @@ skip_find_device:
 
 				if(dialog_ret==1)
 				{
-					char *p=strstr(menu_list[game_sel].path, "/GAMEZ")+7;
+					char *p=strstr(menu_list[game_sel].path, "/" GAMES_DIR)+sizeof(GAMES_DIR) + 1;
 					
 					if(p[0]=='_') p++; // skip special char
 
 					sprintf(name, "/dev_hdd0/game/%s/", hdd_folder);
 					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-					sprintf(name, "/dev_hdd0/game/%s/GAMEZ", hdd_folder);	
+					sprintf(name, "/dev_hdd0/game/%s/%s", hdd_folder, GAMES_DIR);
 					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-					sprintf(name, "/dev_hdd0/game/%s/GAMEZ/%s", hdd_folder, p);	
+					sprintf(name, "/dev_hdd0/game/%s/%s/%s", hdd_folder, GAMES_DIR, p);
 					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 				}
 			
@@ -2605,14 +2608,14 @@ skip_find_device:
 
 					if(dest==0) 
 						{
-						char *p=strstr(menu_list[game_sel].path, "/GAMEZ")+7;
+						char *p=strstr(menu_list[game_sel].path, "/" GAMES_DIR)+sizeof(GAMES_DIR)+1;
 						if(p[0]=='_') p++; // skip special char
 
-						sprintf(filename, "/dev_hdd0/game/%s/GAMEZ/_%s", hdd_folder, strstr(menu_list[game_sel].path, "/GAMEZ")+7);
+						sprintf(filename, "/dev_hdd0/game/%s/%s/_%s", hdd_folder, GAMES_DIR, strstr(menu_list[game_sel].path, "/" GAMES_DIR)+sizeof(GAMES_DIR)+1);
 						}
 					else
 						{
-						sprintf(filename, "/dev_usb00%c/GAMEZ/_%s", 47+dest, strstr(menu_list[game_sel].path, "/GAMEZ")+7);
+						sprintf(filename, "/dev_usb00%c/%s/_%s", 47+dest, GAMES_DIR, strstr(menu_list[game_sel].path, "/" GAMES_DIR)+sizeof(GAMES_DIR)+1);
 						}
 
 					// try rename
@@ -2692,14 +2695,14 @@ skip_find_device:
 						{
 						if(dest==0) 
 							{
-							char *p=strstr(menu_list[game_sel].path, "/GAMEZ")+7;
+							char *p=strstr(menu_list[game_sel].path, "/" GAMES_DIR)+sizeof(GAMES_DIR)+1;
 							if(p[0]=='_') p++; // skip special char
 
-							sprintf(filename, "/dev_hdd0/game/%s/GAMEZ/_%s", hdd_folder, p);
+							sprintf(filename, "/dev_hdd0/game/%s/%s/_%s", hdd_folder, GAMES_DIR, p);
 							}
 						else
 							{
-							sprintf(filename, "/dev_usb00%c/GAMEZ/_%s", 47+dest, strstr(menu_list[game_sel].path, "/GAMEZ")+7);
+							sprintf(filename, "/dev_usb00%c/%s/_%s", 47+dest, GAMES_DIR, strstr(menu_list[game_sel].path, "/" GAMES_DIR)+sizeof(GAMES_DIR)+1);
 							}
 						
 						ret=rename(name, filename);
@@ -2763,20 +2766,20 @@ copy_from_bluray:
 					
 					if(curr_device==0) 
 						{
-						sprintf(name, "/dev_hdd0/game/%s", hdd_folder);	
+						sprintf(name, "/dev_hdd0/game/%s/", hdd_folder);
 						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-						sprintf(name, "/dev_hdd0/game/%s/GAMEZ", hdd_folder);	
+						sprintf(name, "/dev_hdd0/game/%s/%s", hdd_folder, GAMES_DIR);
 						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-						sprintf(name, "/dev_hdd0/game/%s/GAMEZ/%s", hdd_folder, id);	
+						sprintf(name, "/dev_hdd0/game/%s/%s/%s", hdd_folder, GAMES_DIR, id);
 						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 						}
 					else
 						{
-						sprintf(name, "/dev_usb00%c/GAMEZ", 47+curr_device);
+						sprintf(name, "/dev_usb00%c/%s", 47+curr_device, GAMES_DIR);
 						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-						sprintf(name, "/dev_usb00%c/GAMEZ", 47+curr_device);
+						sprintf(name, "/dev_usb00%c/%s", 47+curr_device, GAMES_DIR);
 						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-						sprintf(name, "/dev_usb00%c/GAMEZ/%s", 47+curr_device, id);
+						sprintf(name, "/dev_usb00%c/%s/%s", 47+curr_device, GAMES_DIR, id);
 						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 						}
 
@@ -2801,11 +2804,11 @@ copy_from_bluray:
 
 						if(curr_device==0) 
 							{
-							sprintf(filename, "/dev_hdd0/game/%s/GAMEZ/_%s", hdd_folder, id);	
+							sprintf(filename, "/dev_hdd0/game/%s/%s/_%s", hdd_folder, GAMES_DIR, id);
 							}
 						else
 							{
-							sprintf(filename, "/dev_usb00%c/GAMEZ/_%s", 47+curr_device, id);
+							sprintf(filename, "/dev_usb00%c/%s/_%s", 47+curr_device, GAMES_DIR, id);
 							}
 						
 						ret=rename(name, filename);
@@ -2879,11 +2882,11 @@ copy_from_bluray:
 						{
 						if(curr_device==0) 
 							{
-							sprintf(filename, "/dev_hdd0/game/%s/GAMEZ/_%s", hdd_folder, id);	
+							sprintf(filename, "/dev_hdd0/game/%s/%s/_%s", hdd_folder, GAMES_DIR, id);
 							}
 						else
 							{
-							sprintf(filename, "/dev_usb00%c/GAMEZ/_%s", 47+curr_device, id);
+							sprintf(filename, "/dev_usb00%c/%s/_%s", 47+curr_device, GAMES_DIR, id);
 							}
 						
 						ret=rename(name, filename);

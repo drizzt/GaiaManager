@@ -1,7 +1,7 @@
 CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
-PPU_SRCS = main.c at3plus.c graphics.c waveout.c syscall8.c $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
+PPU_SRCS = main.c graphics.c syscall8.c $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
 PPU_TARGET = open_manager.elf
 
 PPU_LDLIBS = -lfont_stub -lfontFT_stub -lfreetype_stub -lpthread -latrac3plus_stub -lmixer -laudio_stub -lftp  -lnet_stub -lnetctl_stub -lpngdec_stub -lm -ldbgfont_gcm -lgcm_cmd -lgcm_sys_stub -lio_stub -lsysmodule_stub -lsysutil_stub -lfs_stub
@@ -22,6 +22,13 @@ PKG_TARGET = $(PACKAGE_NAME).pkg
 
 CLEANFILES = PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET) readme.aux readme.log readme.out readme.tex
 
+ifeq ($(strip $(WITH_SOUND)),)
+PPU_CPPFLAGS += -DWITHOUT_SOUND
+
+else
+
+PPU_SRCS += at3plus.c waveout.c
+
 ifneq (exists, $(shell [ -f at3plus.c -a -f at3plus.h -a -f waveout.c -a -f waveout.h ] && echo exists) )
 PPU_INCDIRS += -I$(CELL_SDK)/samples/sdk/codec/atrac3plus_simple
 
@@ -29,6 +36,8 @@ at3plus.c: $(CELL_SDK)/samples/sdk/codec/atrac3plus_simple/at3plus.c
 	cp $< $@
 waveout.c: $(CELL_SDK)/samples/sdk/codec/atrac3plus_simple/waveout.c
 	cp $< $@
+endif
+
 endif
 
 include $(CELL_MK_DIR)/sdk.target.mk
