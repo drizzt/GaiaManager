@@ -3062,7 +3062,7 @@ skip_1:
 			if(mode_list==GAME)
 				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), !patchmode, direct_boot, ftp_flags & 2);
 			else
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) | (1<<31) : 0)), !patchmode, direct_boot, ftp_flags & 2);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? (menu_homebrew_list[game_sel].flags<<16) | (1U<<31) : 1U<<31)), !patchmode, direct_boot, ftp_flags & 2);
 			
 		}
 
