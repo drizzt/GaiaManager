@@ -33,7 +33,7 @@ That version is based on the Jurai2 **Sexy Manager** and **Open Manager** with _
 
 It also supports the aggressive Hermes v3 patching.
 
-It uses GAIA01985 as folder name and product name
+It uses **GAIA01985** as folder name and product name, and it uses **BDRIPS** for games and **BDCOVERS** for covers
 
 Legal
 -----
