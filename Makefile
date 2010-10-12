@@ -22,6 +22,14 @@ PKG_TARGET = $(PACKAGE_NAME).pkg
 
 CLEANFILES = ftphack$(EXE_SUFFIX) PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET) readme.aux readme.log readme.out readme.tex
 
+ifneq ($(strip $(WITH_GAMES_DIR)),)
+PPU_CPPFLAGS += -D'GAMES_DIR="$(WITH_GAMES_DIR)"'
+endif
+
+ifneq ($(strip $(WITH_COVERS_DIR)),)
+PPU_CPPFLAGS += -D'COVERS_DIR="$(WITH_COVERS_DIR)"'
+endif
+
 ifeq ($(strip $(WITH_SOUND)),)
 PPU_CPPFLAGS += -DWITHOUT_SOUND
 
