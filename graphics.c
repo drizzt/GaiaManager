@@ -541,10 +541,10 @@ static void draw_text_stroke(float x, float y, float size, u32 color, const char
 		cellDbgFontPrintf( x, y,size, color, str);
 }
 
-static void draw_text_stroke_bool(float x, float y, float size, bool on)
+static void draw_text_bool(float x, float y, float size, bool on)
 {
 	u32 color = on ? 0xff00ff00 : 0xff0000ff;
-	draw_text_stroke(x, y, size, color, on ? "ON" : "OFF");
+	cellDbgFontPrintf(x, y, size, color, on ? "ON" : "OFF");
 }
 
 
@@ -606,15 +606,33 @@ void draw_device_list(u32 flags, int hermes, int direct_boot, int ftp)
 		cellNetCtlGetInfo(CELL_NET_CTL_INFO_IP_ADDRESS, &info);
 		sprintf(ipaddr, "%16s", info.ip_address);
 
+		cellDbgFontPrintf(0.775, 0.432, 0.8, 0xffffffff, "Launch Selected");
+
 		// on GAME mode
 		if (((flags>>31) & 1) == 0)
 		{
-			draw_text_stroke_bool(0.86, 0.68, 0.8, hermes);
-			draw_text_stroke_bool(0.86, 0.72, 0.8, direct_boot);
+			cellDbgFontPrintf(0.775, 0.472, 0.8, 0xffffffff, "Backup BDVD");
+			cellDbgFontPrintf(0.775, 0.515, 0.8, 0xffffffff, "Copy Selected");
+			cellDbgFontPrintf(0.775, 0.555, 0.8, 0xffffffff, "Delete Selected");
+			cellDbgFontPrintf(0.775, 0.595, 0.8, 0xffffffff, "Refresh List");
+			cellDbgFontPrintf(0.775, 0.635, 0.8, 0xffffffff, "Check Selected");
+			cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff, "Mem Patch:");
+			draw_text_bool	 (0.895, 0.68, 0.8, hermes);
+			cellDbgFontPrintf(0.775, 0.72, 0.8, 0xffffffff, "Direct Boot:");
+			draw_text_bool   (0.895, 0.72, 0.8, direct_boot);
 		}
-		draw_text_stroke_bool(0.86, 0.76, 0.8, ftp);
-		draw_text_stroke     (0.85, 0.80, 0.8, 0xffffffff, (flags>>31) & 1 ? "HOMEBREW" : "GAME");
-		draw_text_stroke     (0.77, 0.84, 0.8, 0xff00ffff, ipaddr);
+		else
+		{
+			cellDbgFontPrintf(0.775, 0.472, 0.8, 0xffffffff, "Delete Selected");
+			cellDbgFontPrintf(0.775, 0.515, 0.8, 0xffffffff, "Refresh List");
+		}
+		
+		cellDbgFontPrintf(0.775, 0.76, 0.8, 0xffffffff, "FTP Server:");
+		draw_text_bool   (0.895, 0.76, 0.8, ftp);
+		cellDbgFontPrintf(0.775, 0.80, 0.8, 0xffffffff, "OM Mode:");
+		cellDbgFontPrintf(0.86, 0.80, 0.8, 0xffffffff, (flags>>31) & 1 ? "HOMEBREW" : "GAME");
+		cellDbgFontPrintf(0.775, 0.84, 0.8, 0xffffffff, "IP");
+		cellDbgFontPrintf(0.771, 0.84, 0.8, 0xff00ffff, ipaddr);
 }
 		
 
