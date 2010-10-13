@@ -613,9 +613,18 @@ return ok;
 /* syscalls                                         */
 /****************************************************/
 
-static void syscall36(char *path)
+/* psfreedom uses a generic syscall35 instead of syscall36 */
+static uint32_t syscall35(const char *srcpath, const char *dstpath)
 {
-	system_call_1(36, (uint32_t) path);
+	system_call_2(35, (uint32_t) srcpath, (uint32_t) dstpath);
+	return_to_user_prog(uint32_t);
+}
+
+static void syscall36(const char *path)
+{
+	if (syscall35("/dev_bdvd", path) != 0) {
+		system_call_1(36, (uint32_t) path);
+	}
 }
 
 
