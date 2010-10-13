@@ -548,7 +548,7 @@ static void draw_text_bool(float x, float y, float size, bool on)
 }
 
 
-void draw_device_list(u32 flags, int hermes, int direct_boot, int ftp)
+void draw_device_list(u32 flags, int disc_less, int direct_boot, int ftp)
 {
 	float y = 0.84f;
 	char str[256];
@@ -618,7 +618,7 @@ void draw_device_list(u32 flags, int hermes, int direct_boot, int ftp)
 			cellDbgFontPrintf(0.775, 0.635, 0.8, 0xffffffff, "Check Selected");
 			//cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff, "Mem Patch:");
 			cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff, "Disc Less:");
-			draw_text_bool	 (0.895, 0.68, 0.8, hermes);
+			draw_text_bool	 (0.895, 0.68, 0.8, disc_less);
 			cellDbgFontPrintf(0.775, 0.72, 0.8, 0xffffffff, "Direct Boot:");
 			draw_text_bool   (0.895, 0.72, 0.8, direct_boot);
 		}
