@@ -1,0 +1,3 @@
+[submodule "ext/libftphack"]
+	path = ext/libftphack
+	url = git://github.com/drizztbsd/libftphack.git

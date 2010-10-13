@@ -20,7 +20,8 @@ FOLDER_NAME = $(shell echo $(PACKAGE_NAME) | sed -n 's/^[[:alnum:]]*-\([[:alnum:
 
 PKG_TARGET = $(PACKAGE_NAME).pkg
 
-CLEANFILES = ftphack$(EXE_SUFFIX) PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET) readme.aux readme.log readme.out readme.tex
+CLEANFILES = PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET) readme.aux readme.log readme.out readme.tex
+SUBDIRS = ext
 
 ifneq ($(strip $(WITH_GAMES_DIR)),)
 PPU_CPPFLAGS += -D'GAMES_DIR="$(WITH_GAMES_DIR)"'
@@ -50,11 +51,6 @@ endif
 
 include $(CELL_MK_DIR)/sdk.target.mk
 
-#Damn mingw bug!
-ifeq ($(strip $(CC)),cc)
-CC=gcc
-endif
-
 PPU_OBJS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
 
 all : EBOOT.BIN $(PKG_TARGET) docs
@@ -68,11 +64,11 @@ $(FPSHADER_PPU_OBJS): $(OBJS_DIR)/%.ppu.o : %.fpo
 	@mkdir -p $(dir $(@))
 	$(PPU_OBJCOPY)  -I binary -O elf64-powerpc-celloslv2 -B powerpc $< $@
 
-$(OBJS_DIR)/$(PPU_TARGET): $(PPU_TARGET) ftphack
+$(OBJS_DIR)/$(PPU_TARGET): $(PPU_TARGET)
 	@mkdir -p $(dir $(@))
 	$(PPU_STRIP) -s $< -o $@
 	@echo setting ftp home path to /
-	./ftphack $@
+	./ext/libftphack/libftphack $@
 
 PS3_GAME/USRDIR/EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET)
 	@mkdir -p $(dir $(@))
