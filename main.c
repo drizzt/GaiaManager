@@ -1975,8 +1975,14 @@ int main(int argc, char *argv[])
 	set_hermes_mode(!patchmode);
 
 	/* XXX Add Mathieulh patch for retail updates, remove it when the patch is applied in all payloads */
-	if (peekq(0x8000000000057410ULL) != 0x48000098e86298c0ULL)
-		pokeq(0x8000000000057410ULL, 0x48000098e86298c0ULL);
+	do {
+		uint64_t data = peekq(0x8000000000057410ULL);
+	
+		if ((data>>32) != 0x48000098UL)
+		{
+			pokeq(0x8000000000057410ULL, (data & 0xFFFFFFFF) | (0x48000098ULL<<32));
+		}
+	} while(0);
 
 	if(!memcmp(hdd_folder,"ASDFGHJKLM",10) && hdd_folder[10]=='N')
 update_game_folder:
