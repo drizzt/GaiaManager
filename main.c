@@ -632,6 +632,12 @@ static void syscall36(const char *path)
 /* UTILS                                            */
 /****************************************************/
 
+static uint64_t peekq(uint64_t addr)
+{
+	system_call_1(6,addr);
+	return_to_user_prog(uint64_t);
+}
+
 static void pokeq(uint64_t addr, uint64_t val)
 {
 	system_call_2(7, addr, val);
@@ -1967,6 +1973,10 @@ int main(int argc, char *argv[])
 	setRenderColor();
 
 	set_hermes_mode(!patchmode);
+
+	/* XXX Add Mathieulh patch for retail updates, remove it when the patch is applied in all payloads */
+	if (peekq(0x8000000000057410ULL) != 0x48000098e86298c0ULL)
+		pokeq(0x8000000000057410ULL, 0x48000098e86298c0ULL);
 
 	if(!memcmp(hdd_folder,"ASDFGHJKLM",10) && hdd_folder[10]=='N')
 update_game_folder:
