@@ -635,7 +635,7 @@ static void syscall36(const char *path)
 
 static void restorecall36(const char *path)
 {
-	if (syscall35(path, NULL) != 0) {
+	if (syscall35(path, path) != 0) {
 		system_call_1(36, (uint32_t) path);
 	}
 }
@@ -1889,10 +1889,12 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
      switch (status)
      {
        case CELL_SYSUTIL_REQUEST_EXITGAME:
-		if(mode_list==GAME)
+		if(mode_list==GAME){
 			restorecall36( (char *) "/dev_bdvd"); // restore bluray
-		else
+			restorecall36( (char *) "/app_home");
+		}else{
 			restorecall36( (char *) "/dev_usb000"); // restore
+		}
 
 		unload_modules();
 	
@@ -1978,7 +1980,7 @@ int main(int argc, char *argv[])
 
 	setRenderColor();
 
-	set_hermes_mode(!patchmode);
+	//set_hermes_mode(!patchmode);
 
 	if(!memcmp(hdd_folder,"ASDFGHJKLM",10) && hdd_folder[10]=='N')
 update_game_folder:
@@ -2069,6 +2071,7 @@ update_game_folder:
 				ret = cellMsgDialogOpen2( type_dialog_ok, "Panic!!!\nI cannot find the folder to install games!!!", dialog_fun2, (void*)0x0000aaab, NULL );
 				wait_dialog();
 				restorecall36( (char *) "/dev_bdvd"); // restore bluray
+				restorecall36( (char *) "/app_home");
 				ret = unload_modules();
 				exit(0);
 				}
@@ -2149,6 +2152,7 @@ update_game_folder:
 
 
 	restorecall36( (char *) "/dev_bdvd"); // select bluray
+	restorecall36( (char *) "/app_home");
 
 	/* main loop */
 	while( pad_read() != 0)
@@ -3082,9 +3086,9 @@ skip_1:
 		
 
 			if(mode_list==GAME)
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), !patchmode, direct_boot, ftp_flags & 2);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), disc_less, direct_boot, ftp_flags & 2);
 			else
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? (menu_homebrew_list[game_sel].flags<<16) | (1U<<31) : 1U<<31)), !patchmode, direct_boot, ftp_flags & 2);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? (menu_homebrew_list[game_sel].flags<<16) | (1U<<31) : 1U<<31)), disc_less, direct_boot, ftp_flags & 2);
 			
 		}
 
@@ -3093,10 +3097,12 @@ skip_1:
 		flip();
 		cellSysutilCheckCallback();
 	}
-	if(mode_list==GAME)
+	if(mode_list==GAME){
 		restorecall36( (char *) "/dev_bdvd"); // restore bluray
-	else
+		restorecall36( (char *) "/app_home");
+	}else{
 		restorecall36( (char *) "/dev_usb000"); // restore
+	}
 
 	ret = unload_modules();
 	
