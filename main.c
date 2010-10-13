@@ -622,7 +622,8 @@ static uint32_t syscall35(const char *srcpath, const char *dstpath)
 
 static void syscall36(const char *path)
 {
-	if (syscall35("/dev_bdvd", path) != 0) {
+	if (syscall35("/app_home/", path) != 0) {
+/*	if (syscall35("/app_home", path) != 0) {*/
 		system_call_1(36, (uint32_t) path);
 	}
 }
