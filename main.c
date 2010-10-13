@@ -74,9 +74,9 @@ static const char text_to[][12] = {"to","to","to","a","zu kopieren","a","to","pa
 
 
 static const char text_eboot[][96] = {"EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN ha sido parcheado.","EBOOT.BIN wurde erfolgreich aktualisiert","EBOOT.BIN e stato aggiornato con successo","EBOOT.BIN has been successfully updated","EBOOT.BIN foi actualizado com sucesso","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","Eboot.bin har uppdaterats utan problem.","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated"};
-static const char text_launcher[][96] = {"You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Puedes ejecutar esta utilidad presionando SELECT+START la proxima vez.","Sie konnen das Spiel ab jetzt mit SELECT+START starten","Puoi lanciare questa utility premendo SELECT+START la prossima volta","You can launch this utility pressing SELECT+START the next time","Pode iniciar este utilitário pressionando SELECT+START na proxima vez","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Du kan nu starta detta program genom att trycka SELECT+START nasta gang.","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time"};
+static const char text_launcher[][96] = {"You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Puedes ejecutar esta utilidad presionando SELECT+START la proxima vez.","Sie konnen das Spiel ab jetzt mit SELECT+START starten","Puoi lanciare questa utility premendo SELECT+START la prossima volta","You can launch this utility pressing SELECT+START the next time","Pode iniciar este utilitï¿½rio pressionando SELECT+START na proxima vez","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Du kan nu starta detta program genom att trycka SELECT+START nasta gang.","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time"};
 
-static const char text_notfound[][32] = {"EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN no encontrado","EBOOT.BIN wurde nicht gefunden","EBOOT.BIN non trovato","EBOOT.BIN not found","EBOOT.BIN não encontrado","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN hittades inte","EBOOT.BIN not found","EBOOT.BIN not found"};
+static const char text_notfound[][32] = {"EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN no encontrado","EBOOT.BIN wurde nicht gefunden","EBOOT.BIN non trovato","EBOOT.BIN not found","EBOOT.BIN nï¿½o encontrado","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN hittades inte","EBOOT.BIN not found","EBOOT.BIN not found"};
 
 static const char text_wantexit[][32] = {"Want to exit?","Want to exit?","Want to exit?","Quieres salir?","Wollen Sie beenden?","Vuoi uscire?","Want to exit?","Quer sair?","Want to exit?","Want to exit?","Want to exit?","Want to exit?","Want to exit?","Vill du avsluta?","Want to exit?","Want to exit?"};
 static const char text_wantdel[][32] = {"Want to delete from","Want to delete from","Want to delete from","Quieres borrar desde","Wollen Sie von loschen","Want to delete from","Want to delete from","Quer apagar de","Want to delete from","Want to delete from","Want to delete from","Want to delete from","Want to delete from","Vill du radera fran","Want to delete from","Want to delete from"};
@@ -89,10 +89,12 @@ static int max_menu_list=0;
 
 static int region = 1;
 static int direct_boot = 0;
+static int disc_less = 0;
+static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
 
 static uint64_t mem_orig = 0x386000014E800020ULL;
 static uint64_t mem_patched = 0xE92296887C0802A6ULL; 
-static uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)	
+static uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)
 
 
 static t_menu_list menu_homebrew_list[MAX_LIST];
@@ -622,7 +624,18 @@ static uint32_t syscall35(const char *srcpath, const char *dstpath)
 
 static void syscall36(const char *path)
 {
-	if (syscall35("/dev_bdvd", path) != 0) {
+	const char *hook_root = "/dev_bdvd";
+	if (disc_less==1){
+		hook_root = "/app_home";
+	}
+	if (syscall35(hook_root, path) != 0) {
+		system_call_1(36, (uint32_t) path);
+	}
+}
+
+static void restorecall36(const char *path)
+{
+	if (syscall35(path, path) != 0) {
 		system_call_1(36, (uint32_t) path);
 	}
 }
@@ -1882,10 +1895,12 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
      switch (status)
      {
        case CELL_SYSUTIL_REQUEST_EXITGAME:
-		if(mode_list==GAME)
-			syscall36( (char *) "/dev_bdvd"); // restore bluray
-		else
-			syscall36( (char *) "/dev_usb000"); // restore
+		if(mode_list==GAME){
+			restorecall36( (char *) "/dev_bdvd"); // restore bluray
+			restorecall36( (char *) "/app_home");
+		}else{
+			restorecall36( (char *) "/dev_usb000"); // restore
+		}
 
 		unload_modules();
 	
@@ -1898,7 +1913,6 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
          printf( "Graphics common: Unknown status received: 0x%llx\n", status );
       }
 }
-
 
 static void set_hermes_mode(bool enable) {
 	patchmode = enable ? 0 : 2;
@@ -1972,7 +1986,10 @@ int main(int argc, char *argv[])
 
 	setRenderColor();
 
-	set_hermes_mode(!patchmode);
+	if (syscall35("/dev_hdd0", "/dev_hdd0") == 0)
+		payload_type = 1;
+	else
+		set_hermes_mode(!patchmode);
 
 	/* XXX Add Mathieulh patch for retail updates, remove it when the patch is applied in all payloads */
 	do {
@@ -2072,7 +2089,8 @@ update_game_folder:
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_ok, "Panic!!!\nI cannot find the folder to install games!!!", dialog_fun2, (void*)0x0000aaab, NULL );
 				wait_dialog();
-				syscall36( (char *) "/dev_bdvd"); // restore bluray
+				restorecall36( (char *) "/dev_bdvd"); // restore bluray
+				restorecall36( (char *) "/app_home");
 				ret = unload_modules();
 				exit(0);
 				}
@@ -2152,7 +2170,8 @@ update_game_folder:
 	int find_device=0;
 
 
-	syscall36( (char *) "/dev_bdvd"); // select bluray
+	restorecall36( (char *) "/dev_bdvd"); // select bluray
+	restorecall36( (char *) "/app_home");
 
 	/* main loop */
 	while( pad_read() != 0)
@@ -2931,7 +2950,10 @@ copy_from_bluray:
 		}
 	if ((new_pad & BUTTON_L1) && mode_list == GAME)
 	{
-		set_hermes_mode(patchmode); // toggle patch mode
+		if (payload_type == 0)
+			set_hermes_mode(patchmode); // toggle patch mode
+		else if (payload_type == 1)
+			disc_less ^= 1;
 	}
 	if ((new_pad & BUTTON_L2) && mode_list == GAME)
 	{
@@ -2946,7 +2968,8 @@ copy_from_bluray:
 		if(menu_list[game_sel].flags & 2048)
 			{
 			flip();
-			syscall36( (char *) "/dev_bdvd"); // restore bdvd
+			restorecall36( (char *) "/dev_bdvd"); // restore bdvd
+			restorecall36( (char *) "/app_home");
 			ret = unload_modules();
 			exit(0);
 			}
@@ -2962,7 +2985,7 @@ copy_from_bluray:
 
 // SHOULD DETERMINE USB #?
 
-			syscall36( (char *) "/dev_usb000"); // restore
+			restorecall36( (char *) "/dev_usb000"); // restore
 			ret = unload_modules();
 
 			sys_game_process_exitspawn(filename, NULL, NULL, 0, 0, prio, flags);
@@ -3008,10 +3031,10 @@ copy_from_bluray:
 					if(dialog_ret==1)
 					{
 						uint64_t old_patchmode = patchmode;
-						set_hermes_mode(false);
+						if (payload_type == 0) set_hermes_mode(false);
 						sprintf(filename, "%s",menu_list[game_sel].path);
 						fix_perm_recursive(filename);
-						set_hermes_mode(!old_patchmode);
+						if (payload_type == 0) set_hermes_mode(!old_patchmode);
 					}
 					}
 				}
@@ -3085,9 +3108,9 @@ skip_1:
 		
 
 			if(mode_list==GAME)
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), !patchmode, direct_boot, ftp_flags & 2);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), payload_type == 1 ? disc_less : !patchmode, payload_type, direct_boot, ftp_flags & 2);
 			else
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? (menu_homebrew_list[game_sel].flags<<16) | (1U<<31) : 1U<<31)), !patchmode, direct_boot, ftp_flags & 2);
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? (menu_homebrew_list[game_sel].flags<<16) | (1U<<31) : 1U<<31)), payload_type == 1 ? disc_less : !patchmode, payload_type, direct_boot, ftp_flags & 2);
 			
 		}
 
@@ -3096,10 +3119,12 @@ skip_1:
 		flip();
 		cellSysutilCheckCallback();
 	}
-	if(mode_list==GAME)
-		syscall36( (char *) "/dev_bdvd"); // restore bluray
-	else
-		syscall36( (char *) "/dev_usb000"); // restore
+	if(mode_list==GAME){
+		restorecall36( (char *) "/dev_bdvd"); // restore bluray
+		restorecall36( (char *) "/app_home");
+	}else{
+		restorecall36( (char *) "/dev_usb000"); // restore
+	}
 
 	ret = unload_modules();
 	
