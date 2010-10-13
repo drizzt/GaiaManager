@@ -89,10 +89,12 @@ static int max_menu_list=0;
 
 static int region = 1;
 static int direct_boot = 0;
+static int disc_less = 0;
 
 static uint64_t mem_orig = 0x386000014E800020ULL;
 static uint64_t mem_patched = 0xE92296887C0802A6ULL; 
-static uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)	
+static uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)
+
 
 
 static t_menu_list menu_homebrew_list[MAX_LIST];
@@ -622,7 +624,18 @@ static uint32_t syscall35(const char *srcpath, const char *dstpath)
 
 static void syscall36(const char *path)
 {
-	if (syscall35("/app_home/", path) != 0) {
+	const char *hook_root = "/dev_bdvd";
+	if (disc_less==1){
+		hook_root = "/app_home";
+	}
+	if (syscall35(hook_root, path) != 0) {
+		system_call_1(36, (uint32_t) path);
+	}
+}
+
+static void restorecall36(const char *path)
+{
+	if (syscall35(path, NULL) != 0) {
 		system_call_1(36, (uint32_t) path);
 	}
 }
@@ -1877,9 +1890,9 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
      {
        case CELL_SYSUTIL_REQUEST_EXITGAME:
 		if(mode_list==GAME)
-			syscall36( (char *) "/dev_bdvd"); // restore bluray
+			restorecall36( (char *) "/dev_bdvd"); // restore bluray
 		else
-			syscall36( (char *) "/dev_usb000"); // restore
+			restorecall36( (char *) "/dev_usb000"); // restore
 
 		unload_modules();
 	
@@ -1892,7 +1905,6 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
          printf( "Graphics common: Unknown status received: 0x%llx\n", status );
       }
 }
-
 
 static void set_hermes_mode(bool enable) {
 	patchmode = enable ? 0 : 2;
@@ -2056,7 +2068,7 @@ update_game_folder:
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_ok, "Panic!!!\nI cannot find the folder to install games!!!", dialog_fun2, (void*)0x0000aaab, NULL );
 				wait_dialog();
-				syscall36( (char *) "/dev_bdvd"); // restore bluray
+				restorecall36( (char *) "/dev_bdvd"); // restore bluray
 				ret = unload_modules();
 				exit(0);
 				}
@@ -2136,7 +2148,7 @@ update_game_folder:
 	int find_device=0;
 
 
-	syscall36( (char *) "/dev_bdvd"); // select bluray
+	restorecall36( (char *) "/dev_bdvd"); // select bluray
 
 	/* main loop */
 	while( pad_read() != 0)
@@ -2915,7 +2927,7 @@ copy_from_bluray:
 		}
 	if ((new_pad & BUTTON_L1) && mode_list == GAME)
 	{
-		set_hermes_mode(patchmode); // toggle patch mode
+		disc_less ^= 1;
 	}
 	if ((new_pad & BUTTON_L2) && mode_list == GAME)
 	{
@@ -2930,7 +2942,8 @@ copy_from_bluray:
 		if(menu_list[game_sel].flags & 2048)
 			{
 			flip();
-			syscall36( (char *) "/dev_bdvd"); // restore bdvd
+			restorecall36( (char *) "/dev_bdvd"); // restore bdvd
+			restorecall36( (char *) "/app_home");
 			ret = unload_modules();
 			exit(0);
 			}
@@ -2946,7 +2959,7 @@ copy_from_bluray:
 
 // SHOULD DETERMINE USB #?
 
-			syscall36( (char *) "/dev_usb000"); // restore
+			restorecall36( (char *) "/dev_usb000"); // restore
 			ret = unload_modules();
 
 			sys_game_process_exitspawn(filename, NULL, NULL, 0, 0, prio, flags);
@@ -2991,11 +3004,11 @@ copy_from_bluray:
 					wait_dialog();
 					if(dialog_ret==1)
 					{
-						uint64_t old_patchmode = patchmode;
-						set_hermes_mode(false);
+						//uint64_t old_patchmode = patchmode;
+						//set_hermes_mode(false);
 						sprintf(filename, "%s",menu_list[game_sel].path);
 						fix_perm_recursive(filename);
-						set_hermes_mode(!old_patchmode);
+						//set_hermes_mode(!old_patchmode);
 					}
 					}
 				}
@@ -3081,9 +3094,9 @@ skip_1:
 		cellSysutilCheckCallback();
 	}
 	if(mode_list==GAME)
-		syscall36( (char *) "/dev_bdvd"); // restore bluray
+		restorecall36( (char *) "/dev_bdvd"); // restore bluray
 	else
-		syscall36( (char *) "/dev_usb000"); // restore
+		restorecall36( (char *) "/dev_usb000"); // restore
 
 	ret = unload_modules();
 	
