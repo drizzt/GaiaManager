@@ -74,9 +74,9 @@ static const char text_to[][12] = {"to","to","to","a","zu kopieren","a","to","pa
 
 
 static const char text_eboot[][96] = {"EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN ha sido parcheado.","EBOOT.BIN wurde erfolgreich aktualisiert","EBOOT.BIN e stato aggiornato con successo","EBOOT.BIN has been successfully updated","EBOOT.BIN foi actualizado com sucesso","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated","Eboot.bin har uppdaterats utan problem.","EBOOT.BIN has been successfully updated","EBOOT.BIN has been successfully updated"};
-static const char text_launcher[][96] = {"You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Puedes ejecutar esta utilidad presionando SELECT+START la proxima vez.","Sie konnen das Spiel ab jetzt mit SELECT+START starten","Puoi lanciare questa utility premendo SELECT+START la prossima volta","You can launch this utility pressing SELECT+START the next time","Pode iniciar este utilitário pressionando SELECT+START na proxima vez","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Du kan nu starta detta program genom att trycka SELECT+START nasta gang.","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time"};
+static const char text_launcher[][96] = {"You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Puedes ejecutar esta utilidad presionando SELECT+START la proxima vez.","Sie konnen das Spiel ab jetzt mit SELECT+START starten","Puoi lanciare questa utility premendo SELECT+START la prossima volta","You can launch this utility pressing SELECT+START the next time","Pode iniciar este utilitï¿½rio pressionando SELECT+START na proxima vez","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time","Du kan nu starta detta program genom att trycka SELECT+START nasta gang.","You can launch this utility pressing SELECT+START the next time","You can launch this utility pressing SELECT+START the next time"};
 
-static const char text_notfound[][32] = {"EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN no encontrado","EBOOT.BIN wurde nicht gefunden","EBOOT.BIN non trovato","EBOOT.BIN not found","EBOOT.BIN não encontrado","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN hittades inte","EBOOT.BIN not found","EBOOT.BIN not found"};
+static const char text_notfound[][32] = {"EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN no encontrado","EBOOT.BIN wurde nicht gefunden","EBOOT.BIN non trovato","EBOOT.BIN not found","EBOOT.BIN nï¿½o encontrado","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN not found","EBOOT.BIN hittades inte","EBOOT.BIN not found","EBOOT.BIN not found"};
 
 static const char text_wantexit[][32] = {"Want to exit?","Want to exit?","Want to exit?","Quieres salir?","Wollen Sie beenden?","Vuoi uscire?","Want to exit?","Quer sair?","Want to exit?","Want to exit?","Want to exit?","Want to exit?","Want to exit?","Vill du avsluta?","Want to exit?","Want to exit?"};
 static const char text_wantdel[][32] = {"Want to delete from","Want to delete from","Want to delete from","Quieres borrar desde","Wollen Sie von loschen","Want to delete from","Want to delete from","Quer apagar de","Want to delete from","Want to delete from","Want to delete from","Want to delete from","Want to delete from","Vill du radera fran","Want to delete from","Want to delete from"};
@@ -90,11 +90,18 @@ static int max_menu_list=0;
 static int region = 1;
 static int direct_boot = 0;
 static int disc_less = 0;
+<<<<<<< HEAD
+=======
+static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
+>>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 
 static uint64_t mem_orig = 0x386000014E800020ULL;
 static uint64_t mem_patched = 0xE92296887C0802A6ULL; 
 static uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)
+<<<<<<< HEAD
 
+=======
+>>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 
 
 static t_menu_list menu_homebrew_list[MAX_LIST];
@@ -644,6 +651,12 @@ static void restorecall36(const char *path)
 /****************************************************/
 /* UTILS                                            */
 /****************************************************/
+
+static uint64_t peekq(uint64_t addr)
+{
+	system_call_1(6,addr);
+	return_to_user_prog(uint64_t);
+}
 
 static void pokeq(uint64_t addr, uint64_t val)
 {
@@ -1980,7 +1993,24 @@ int main(int argc, char *argv[])
 
 	setRenderColor();
 
+<<<<<<< HEAD
 	//set_hermes_mode(!patchmode);
+=======
+	if (syscall35("/dev_hdd0", "/dev_hdd0") == 0)
+		payload_type = 1;
+	else
+		set_hermes_mode(!patchmode);
+
+	/* XXX Add Mathieulh patch for retail updates, remove it when the patch is applied in all payloads */
+	do {
+		uint64_t data = peekq(0x8000000000057410ULL);
+	
+		if ((data>>32) != 0x48000098UL)
+		{
+			pokeq(0x8000000000057410ULL, (data & 0xFFFFFFFF) | (0x48000098ULL<<32));
+		}
+	} while(0);
+>>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 
 	if(!memcmp(hdd_folder,"ASDFGHJKLM",10) && hdd_folder[10]=='N')
 update_game_folder:
@@ -2931,7 +2961,14 @@ copy_from_bluray:
 		}
 	if ((new_pad & BUTTON_L1) && mode_list == GAME)
 	{
+<<<<<<< HEAD
 		disc_less ^= 1;
+=======
+		if (payload_type == 0)
+			set_hermes_mode(patchmode); // toggle patch mode
+		else if (payload_type == 1)
+			disc_less ^= 1;
+>>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 	}
 	if ((new_pad & BUTTON_L2) && mode_list == GAME)
 	{
@@ -3008,11 +3045,19 @@ copy_from_bluray:
 					wait_dialog();
 					if(dialog_ret==1)
 					{
+<<<<<<< HEAD
 						//uint64_t old_patchmode = patchmode;
 						//set_hermes_mode(false);
 						sprintf(filename, "%s",menu_list[game_sel].path);
 						fix_perm_recursive(filename);
 						//set_hermes_mode(!old_patchmode);
+=======
+						uint64_t old_patchmode = patchmode;
+						if (payload_type == 0) set_hermes_mode(false);
+						sprintf(filename, "%s",menu_list[game_sel].path);
+						fix_perm_recursive(filename);
+						if (payload_type == 0) set_hermes_mode(!old_patchmode);
+>>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 					}
 					}
 				}
@@ -3086,9 +3131,15 @@ skip_1:
 		
 
 			if(mode_list==GAME)
+<<<<<<< HEAD
 				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), disc_less, direct_boot, ftp_flags & 2);
 			else
 				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? (menu_homebrew_list[game_sel].flags<<16) | (1U<<31) : 1U<<31)), disc_less, direct_boot, ftp_flags & 2);
+=======
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), payload_type == 1 ? disc_less : !patchmode, payload_type, direct_boot, ftp_flags & 2);
+			else
+				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? (menu_homebrew_list[game_sel].flags<<16) | (1U<<31) : 1U<<31)), payload_type == 1 ? disc_less : !patchmode, payload_type, direct_boot, ftp_flags & 2);
+>>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 			
 		}
 
