@@ -1896,8 +1896,8 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param, void* userdata)
      {
        case CELL_SYSUTIL_REQUEST_EXITGAME:
 		if(mode_list==GAME){
-			restorecall36( (char *) "/dev_bdvd"); // restore bluray
 			restorecall36( (char *) "/app_home");
+			restorecall36( (char *) "/dev_bdvd"); // restore bluray
 		}else{
 			restorecall36( (char *) "/dev_usb000"); // restore
 		}
@@ -2089,8 +2089,8 @@ update_game_folder:
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_ok, "Panic!!!\nI cannot find the folder to install games!!!", dialog_fun2, (void*)0x0000aaab, NULL );
 				wait_dialog();
-				restorecall36( (char *) "/dev_bdvd"); // restore bluray
 				restorecall36( (char *) "/app_home");
+				restorecall36( (char *) "/dev_bdvd"); // restore bluray
 				ret = unload_modules();
 				exit(0);
 				}
@@ -2170,8 +2170,8 @@ update_game_folder:
 	int find_device=0;
 
 
-	restorecall36( (char *) "/dev_bdvd"); // select bluray
 	restorecall36( (char *) "/app_home");
+	restorecall36( (char *) "/dev_bdvd"); // select bluray
 
 	/* main loop */
 	while( pad_read() != 0)
@@ -2968,8 +2968,8 @@ copy_from_bluray:
 		if(menu_list[game_sel].flags & 2048)
 			{
 			flip();
-			restorecall36( (char *) "/dev_bdvd"); // restore bdvd
 			restorecall36( (char *) "/app_home");
+			restorecall36( (char *) "/dev_bdvd"); // restore bdvd
 			ret = unload_modules();
 			exit(0);
 			}
@@ -3120,8 +3120,8 @@ skip_1:
 		cellSysutilCheckCallback();
 	}
 	if(mode_list==GAME){
-		restorecall36( (char *) "/dev_bdvd"); // restore bluray
 		restorecall36( (char *) "/app_home");
+		restorecall36( (char *) "/dev_bdvd"); // restore bluray
 	}else{
 		restorecall36( (char *) "/dev_usb000"); // restore
 	}
