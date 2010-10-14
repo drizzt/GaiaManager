@@ -1,60 +1,101 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-	<head>
-		<title>Gaia Manager - OpenSource Backup Manager Project</title>
-		<style type="text/css">
-			code {
-				color: #CFF;
-				background-color: #111;
-			}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
-			.spacer {
-				background-color: #303437;
-				border-bottom: 1px solid #1d1f21;
-				height: 36px;
-				font-size: 11px;
-				font-family: Verdana, Geneva, sans-serif;
-				font-variant: small-caps;
-				font-weight: bold;
-				vertical-align: middle;
-				display: table-cell;
-				text-align: center;
-			}
-		</style>
-	</head>
-	<body bgcolor="#282b2e" text="#cccccc" link="#ffffcc" vlink="#ffffcc" alink="#ffffcc">
-		<center> <img src="img/logo.png" alt="Gaia Manager"></center>
-		<div style="display:table; width:100%">
-			<div class="spacer">usage</div>
-		</div>
-		<p>You just need to put your game in <b>/dev_hdd0/BDRIPS</b> via FTP or <b>BDRIPS</b> in the root of a FAT32 formatted USB disk, you can change the games directory compiling with <code>make WITH_GAMES_DIR=<i>XXX</i></code><br>
-		And your games cover (260x300) in <b>/dev_hdd0/BDCOVERS</b> or <b>BDCOVERS</b> in the root of the USB disk that contains the game as TITLEID.PNG (for example BLES12345.PNG)</p>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Gaia Manager - OpenSource Backup Manager Project</title>
+  <style type="text/css">
+/*<![CDATA[*/
 
-		<div style="display:table; width:100%">
-			<div class="spacer">features</div>
-		</div>
-		<ul>
-			<li>Supports up to 512 items from two USB devices, internal hdd and bluray</li>
-			<li>Ability to copy games from bdvd to hdd0 or USB's, from hdd0 to USB's or from USB's to hdd0. It is done asking to you the destination device. It use uses asynchronous reading and writing for fast copy.</li>
-			<li>Special support for big files in FAT: it splits files &gt;= 4GB using .666xx fragments (if the file is name.ext, the file splits as name.ext.66600, name.ext.66601,...). This file is not bootable and it is marked using '_' as folder prefix. The file is joined when you copy it to hdd0 device</li>
-			<li>Automatically finds the path of the games and asks to you about it. In other case, if the Gaia Manager is installed in the hdd0 creates one. You can change it pressing L2+START later.</li>
-			<li>Including checking game option (pressing R3). It displays information about the files, size, splits or big files, if it have one.</li>
-			<li>Support for Homebrew: you can creates "homebrew" folder in root USB FAT device and put here others folders with an EBOOT.BIN (.self format) and one ICON0.PNG. Also you can use the internal hdd0. Homebrew is launched directly and receive the path in argv[0].</li>
-			<li>FTP support to upload homebrew: Gaia Manager uses "GAIA01985" as user, by default. I recommend flashfxp to use it, because FTP (Sony) support is not very good...</li>
-			<li>Supports Hermes v3 patching and disc-less playing. if you return from game list, apps_home can launch games without one disc (some games don't work without any disc)</li>
-		</ul>
+    a {
+      color: #FFC;
+    }
+    a:link {
+      color: #FFC;
+    }
+    a:active {
+      color: #FFC;
+    }
+    a:hover {
+      color: #FFC;
+    }
+    a:visited {
+      color: #FFC;
+    }
 
-		<div style="display:table; width:100%">
-			<div class="spacer">supported payloads</div>
-		</div>
-		<ul>
-			<li><a href="http://www.teknoconsolas.es/index.php?q=scene/psgroove-de-hermes-v3-parcheado-por-waninkoko-teknoconsolas-para-poder-instalar-demos.html">Hermes v3 payload with waninoko patch</a></li>
-			<li><a href="http://psfreedom.com/">PSFreedom</a> with new pl3, such as <a href="http://psfmod.klutsh.com/">psfMOD</a> 0.9.6.0 or newer</li>
-		</ul>
-		<div style="display:table; width:100%">
-			<div class="spacer">source code</div>
-		</div>
-		<p>You can compile it using <a href="http://github.com/drizztbsd/GaiaManager">my github repository</a><br>
-		I use <b>git submodules</b>, so you need to do <code>git submodule update --init</code> after the first clone (and when I update a submodule)</p>
-	</body>
+    body {
+      background-color: #282B2E;
+      color: #CCC;
+    }
+
+    code {
+      color: #CFF;
+      background-color: #111;
+      padding: 0 0.2em;
+    }
+
+    h2 {
+      background-color: #303437;
+      border-bottom: 1px solid #1d1f21;
+      font-size: 8px;
+      font-family: Verdana, Geneva, sans-serif;
+      text-transform: uppercase;
+      font-weight: bold;
+      padding: 12px 0;
+      text-align: center;
+   }
+
+    img.center {
+      display: block;
+      margin: 0.2em auto;
+    }
+
+  /*]]>*/
+  </style>
+</head>
+
+<body>
+  <div id="header">
+    <img class="center" src="img/logo.png" alt="Gaia Manager" />
+  </div>
+
+  <h2>usage</h2>
+
+  <p>You just need to put your game in <strong>/dev_hdd0/BDRIPS</strong> via FTP or <strong>BDRIPS</strong> in the root of a FAT32 formatted USB disk, you can change the games directory compiling with <code>make WITH_GAMES_DIR=<em>XXX</em></code><br />
+  And your games cover (260x300) in <strong>/dev_hdd0/BDCOVERS</strong> or <strong>BDCOVERS</strong> in the root of the USB disk that contains the game as <strong>TITLEID.PNG</strong> (for example <strong>BLES12345.PNG</strong>).</p>
+
+  <h2>features</h2>
+
+  <ul>
+    <li>Supports up to 512 items from two USB devices, internal hdd and bluray</li>
+
+    <li>Ability to copy games from bdvd to hdd0 or USB's, from hdd0 to USB's or from USB's to hdd0. It is done asking to you the destination device. It use uses asynchronous reading and writing for fast copy.</li>
+
+    <li>Special support for big files in FAT: it splits files &gt;= 4GB using .666xx fragments (if the file is name.ext, the file splits as name.ext.66600, name.ext.66601,...). This file is not bootable and it is marked using '_' as folder prefix. The file is joined when you copy it to hdd0 device</li>
+
+    <li>Automatically finds the path of the games and asks to you about it. In other case, if the Gaia Manager is installed in the hdd0 creates one. You can change it pressing <strong>SELECT+START</strong> later.</li>
+
+    <li>Including checking game option (pressing <strong>R3</strong>). It displays information about the files, size, splits or big files, if it have one.</li>
+
+    <li>Support for Homebrew: you can creates "homebrew" folder in root USB FAT device and put here others folders with an EBOOT.BIN (.self format) and one ICON0.PNG. Also you can use the internal hdd0. Homebrew is launched directly and receive the path in argv[0].</li>
+
+    <li>FTP support to upload homebrew: Gaia Manager uses "<strong>GAIA01985</strong>" as user, by default. I recommend flashfxp to use it, because FTP (Sony) support is not very good...</li>
+
+    <li>Supports Hermes v3 patching and disc-less playing. if you return from game list, apps_home can launch games without one disc (some games don't work without any disc)</li>
+  </ul>
+
+  <h2>supported payloads</h2>
+
+  <ul>
+    <li><a href="http://www.teknoconsolas.es/index.php?q=scene/psgroove-de-hermes-v3-parcheado-por-waninkoko-teknoconsolas-para-poder-instalar-demos.html">Hermes v3 payload with waninoko patch</a></li>
+
+    <li><a href="http://psfreedom.com/">PSFreedom</a> with new pl3, such as <a href="http://psfmod.klutsh.com/">psfMOD</a> 0.9.6.0 or newer</li>
+  </ul>
+
+  <h2>source code</h2>
+
+  <p>You can compile it using <a href="http://github.com/drizztbsd/GaiaManager">my github repository</a><br />
+  I use <strong>git submodules</strong>, so you need to do <code>git submodule update --init</code> after the first clone (and when I update a submodule)</p>
+</body>
 </html>
