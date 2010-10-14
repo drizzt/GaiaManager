@@ -548,11 +548,7 @@ static void draw_text_bool(float x, float y, float size, bool on)
 }
 
 
-<<<<<<< HEAD
-void draw_device_list(u32 flags, int disc_less, int direct_boot, int ftp)
-=======
 void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot, int ftp)
->>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 {
 	float y = 0.84f;
 	char str[256];
@@ -620,14 +616,8 @@ void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot, 
 			cellDbgFontPrintf(0.775, 0.555, 0.8, 0xffffffff, "Delete Selected");
 			cellDbgFontPrintf(0.775, 0.595, 0.8, 0xffffffff, "Refresh List");
 			cellDbgFontPrintf(0.775, 0.635, 0.8, 0xffffffff, "Check Selected");
-<<<<<<< HEAD
-			//cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff, "Mem Patch:");
-			cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff, "Disc Less:");
-			draw_text_bool	 (0.895, 0.68, 0.8, disc_less);
-=======
 			cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff, payload_type == 1 ? "Disc Less:" : "Mem Patch:");
 			draw_text_bool	 (0.895, 0.68, 0.8, hermes);
->>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 			cellDbgFontPrintf(0.775, 0.72, 0.8, 0xffffffff, "Direct Boot:");
 			draw_text_bool   (0.895, 0.72, 0.8, direct_boot);
 		}

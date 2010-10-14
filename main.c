@@ -90,18 +90,11 @@ static int max_menu_list=0;
 static int region = 1;
 static int direct_boot = 0;
 static int disc_less = 0;
-<<<<<<< HEAD
-=======
 static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
->>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 
 static uint64_t mem_orig = 0x386000014E800020ULL;
 static uint64_t mem_patched = 0xE92296887C0802A6ULL; 
 static uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)
-<<<<<<< HEAD
-
-=======
->>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 
 
 static t_menu_list menu_homebrew_list[MAX_LIST];
@@ -1993,9 +1986,6 @@ int main(int argc, char *argv[])
 
 	setRenderColor();
 
-<<<<<<< HEAD
-	//set_hermes_mode(!patchmode);
-=======
 	if (syscall35("/dev_hdd0", "/dev_hdd0") == 0)
 		payload_type = 1;
 	else
@@ -2010,7 +2000,6 @@ int main(int argc, char *argv[])
 			pokeq(0x8000000000057410ULL, (data & 0xFFFFFFFF) | (0x48000098ULL<<32));
 		}
 	} while(0);
->>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 
 	if(!memcmp(hdd_folder,"ASDFGHJKLM",10) && hdd_folder[10]=='N')
 update_game_folder:
@@ -2961,14 +2950,10 @@ copy_from_bluray:
 		}
 	if ((new_pad & BUTTON_L1) && mode_list == GAME)
 	{
-<<<<<<< HEAD
-		disc_less ^= 1;
-=======
 		if (payload_type == 0)
 			set_hermes_mode(patchmode); // toggle patch mode
 		else if (payload_type == 1)
 			disc_less ^= 1;
->>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 	}
 	if ((new_pad & BUTTON_L2) && mode_list == GAME)
 	{
@@ -3045,19 +3030,11 @@ copy_from_bluray:
 					wait_dialog();
 					if(dialog_ret==1)
 					{
-<<<<<<< HEAD
-						//uint64_t old_patchmode = patchmode;
-						//set_hermes_mode(false);
-						sprintf(filename, "%s",menu_list[game_sel].path);
-						fix_perm_recursive(filename);
-						//set_hermes_mode(!old_patchmode);
-=======
 						uint64_t old_patchmode = patchmode;
 						if (payload_type == 0) set_hermes_mode(false);
 						sprintf(filename, "%s",menu_list[game_sel].path);
 						fix_perm_recursive(filename);
 						if (payload_type == 0) set_hermes_mode(!old_patchmode);
->>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 					}
 					}
 				}
@@ -3131,15 +3108,9 @@ skip_1:
 		
 
 			if(mode_list==GAME)
-<<<<<<< HEAD
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), disc_less, direct_boot, ftp_flags & 2);
-			else
-				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? (menu_homebrew_list[game_sel].flags<<16) | (1U<<31) : 1U<<31)), disc_less, direct_boot, ftp_flags & 2);
-=======
 				draw_device_list((fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0)), payload_type == 1 ? disc_less : !patchmode, payload_type, direct_boot, ftp_flags & 2);
 			else
 				draw_device_list((fdevices | ((game_sel>=0 && max_menu_homebrew_list>0) ? (menu_homebrew_list[game_sel].flags<<16) | (1U<<31) : 1U<<31)), payload_type == 1 ? disc_less : !patchmode, payload_type, direct_boot, ftp_flags & 2);
->>>>>>> 05d84561670e02ac059b782b50a914fed92e1c20
 			
 		}
 

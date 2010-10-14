@@ -20,7 +20,7 @@ FOLDER_NAME = $(shell echo $(PACKAGE_NAME) | sed -n 's/^[[:alnum:]]*-\([[:alnum:
 
 PKG_TARGET = $(PACKAGE_NAME).pkg
 
-CLEANFILES = PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET) readme.aux readme.log readme.out readme.tex EBOOT.BIN *.pkg
+CLEANFILES = PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET) readme.aux readme.log readme.out readme.tex
 SUBDIRS = ext
 
 ifneq ($(strip $(WITH_GAMES_DIR)),)
