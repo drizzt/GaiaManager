@@ -40,3 +40,8 @@ img.center {
   display: block;
   margin: 0.2em auto;
 }
+
+a img {
+  border-style: none;
+  text-decoration: none;
+}
