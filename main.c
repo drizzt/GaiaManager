@@ -645,11 +645,13 @@ static void restorecall36(const char *path)
 /* UTILS                                            */
 /****************************************************/
 
+#if 0	// Unused
 static uint64_t peekq(uint64_t addr)
 {
 	system_call_1(6,addr);
 	return_to_user_prog(uint64_t);
 }
+#endif
 
 static void pokeq(uint64_t addr, uint64_t val)
 {
@@ -1990,16 +1992,6 @@ int main(int argc, char *argv[])
 		payload_type = 1;
 	else
 		set_hermes_mode(!patchmode);
-
-	/* XXX Add Mathieulh patch for retail updates, remove it when the patch is applied in all payloads */
-	do {
-		uint64_t data = peekq(0x8000000000057410ULL);
-	
-		if ((data>>32) != 0x48000098UL)
-		{
-			pokeq(0x8000000000057410ULL, (data & 0xFFFFFFFF) | (0x48000098ULL<<32));
-		}
-	} while(0);
 
 	if(!memcmp(hdd_folder,"ASDFGHJKLM",10) && hdd_folder[10]=='N')
 update_game_folder:
