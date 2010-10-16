@@ -257,6 +257,38 @@ time_t time_start;	// time counter init
 
 static char string1[256];
 
+static int load_libfont_module(void);
+static void ftp_on(void);
+static void ftp_off(void);
+static int load_modules(void);
+static int unload_modules(void);
+static void wait_dialog(void);
+static void *png_malloc(u32 size, void *a);
+static int png_free(void *ptr, void *a);
+static int png_out_mapmem(u8 * buffer, size_t buf_size);
+#ifndef WITHOUT_SOUND
+static void playBootSound(uint64_t ui __attribute__ ((unused)));
+#endif
+static int load_png_texture(u8 * data, char *name);
+static uint32_t syscall35(const char *srcpath, const char *dstpath);
+static void syscall36(const char *path);
+static void restorecall36(const char *path);
+//static uint64_t peekq(uint64_t addr);
+static void pokeq(uint64_t addr, uint64_t val);
+static void fix_perm_recursive(const char *start_path);
+static int parse_ps3_disc(char *path, char *id);
+static int parse_param_sfo_id(char *file, char *title_name);
+static int parse_param_sfo(char *file, char *title_name);
+static void sort_entries(t_menu_list * list, int *max);
+static void delete_entries(t_menu_list * list, int *max, u32 flag);
+static void fill_entries_from_device(char *path, t_menu_list * list,
+				     int *max, u32 flag, int sel);
+static void update_game_folder(char *ebootbin);
+static void reset_game_list(int force);
+static void set_hermes_mode(bool enable);
+static void copy_from_bluray(void);
+
+
 static int load_libfont_module(void)
 {
 	int ret;
@@ -1092,11 +1124,13 @@ static void fill_entries_from_device(char *path, t_menu_list * list,
 
 }
 
-static void update_game_folder(int argc, char *argv[])
+static void update_game_folder(char *ebootbin)
 {
-	int ret, dir_fixed;
+	int ret, dir_fixed = 0;
+	char old_hdd_folder[64] = {0,};
 
 	DIR *dir, *dir2;
+	strncpy(old_hdd_folder, hdd_folder, sizeof(hdd_folder));
 	dir = opendir("/dev_hdd0/game");
 
 	if (dir) {
@@ -1148,7 +1182,7 @@ static void update_game_folder(int argc, char *argv[])
 	}
 
 	if (!dir_fixed) {
-		strcpy(hdd_folder, "..");
+		strcpy(hdd_folder, "./../.");	// Don't change it to ".."
 
 		dir_fixed = 1;
 
@@ -1170,11 +1204,11 @@ static void update_game_folder(int argc, char *argv[])
 		wait_dialog();
 	}
 	// modify EBOOT.BIN
-	if (dir_fixed && argc >= 1) {
+	if (dir_fixed && ebootbin) {
 		FILE *fp;
 		int n;
 
-		fp = fopen(argv[0], "r+");
+		fp = fopen(ebootbin, "r+");
 		if (fp != NULL) {
 			int len;
 			char *mem = NULL;
@@ -1192,10 +1226,10 @@ static void update_game_folder(int argc, char *argv[])
 
 			fread((void *) mem, len, 1, fp);
 
-			for (n = 0; n < (len - 10); n++) {
+			for (n = 0; n < (int)(len - strlen(old_hdd_folder)); n++) {
 
-				if (!memcmp(&mem[n], "ASDFGHJKLM", 10)
-				    && mem[n + 10] == 'N') {
+				if (!memcmp(&mem[n], old_hdd_folder,
+				    strlen(old_hdd_folder))) {
 					strncpy(&mem[n], hdd_folder, 64);
 
 					fseek(fp, 0, SEEK_SET);
@@ -1218,6 +1252,7 @@ static void update_game_folder(int argc, char *argv[])
 			fclose(fp);
 		}
 	}
+	reset_game_list(1);
 }
 
 /*****************************************************/
@@ -1250,6 +1285,14 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 		    ("Graphics common: Unknown status received: 0x%llx\n",
 		     status);
 	}
+}
+
+static void reset_game_list(int force)
+{
+	old_fi = -1;
+	counter_png = 0;
+	forcedevices = force;
+	game_sel = 0;
 }
 
 static void set_hermes_mode(bool enable)
@@ -1321,10 +1364,7 @@ static void copy_from_bluray(void)
 				       "/dev_bdvd/PS3_DISC.SFB", id)) {
 
 			// reset to update datas
-			game_sel = 0;
-			old_fi = -1;
-			counter_png = 0;
-			forcedevices = (1 << curr_device);
+			reset_game_list(1 << curr_device);
 
 			if (curr_device == 0) {
 				sprintf(name, "/dev_hdd0/game/%s/",
@@ -1542,7 +1582,6 @@ int main(int argc, char *argv[])
 	sys_spu_initialize(2, 0);
 	//BGMArg bgmArg;
 	int ret;
-	int dir_fixed = 0;
 	//int    fm = -1;
 	int one_time = 1;
 
@@ -1604,7 +1643,7 @@ int main(int argc, char *argv[])
 		set_hermes_mode(!patchmode);
 
 	if (!memcmp(hdd_folder, "ASDFGHJKLM", 10) && hdd_folder[10] == 'N')
-		update_game_folder(argc, argv);
+		update_game_folder(argv[0]);
 
 	// create homebrew folder
 	if (argc >= 1) {
@@ -1888,11 +1927,7 @@ int main(int argc, char *argv[])
 		} else
 			down_count = 8;
 		if (old_pad & BUTTON_L3) {
-			//reset game list
-			old_fi = -1;
-			counter_png = 0;
-			forcedevices = (1);
-			game_sel = 0;
+			reset_game_list(1);
 		}
 
 		if (old_pad & BUTTON_RIGHT) {
@@ -1916,11 +1951,8 @@ int main(int argc, char *argv[])
 
 		// update the game folder
 
-		if ((new_pad & BUTTON_START) && (old_pad & BUTTON_SELECT)) {
-
-			dir_fixed = 0;
-			update_game_folder(argc, argv);
-		}
+		if ((new_pad & BUTTON_START) && (old_pad & BUTTON_SELECT))
+			update_game_folder(argv[0]);
 
 		if (new_pad & BUTTON_R2) {
 			game_sel = 0;
@@ -2064,10 +2096,7 @@ int main(int argc, char *argv[])
 				time_start = time(NULL);
 
 				// reset to update datas
-
-				old_fi = -1;
-				counter_png = 0;
-				forcedevices = (1 << n);
+				reset_game_list(1 << n);
 
 				abort_copy = 0;
 				initConsole();
@@ -2082,8 +2111,6 @@ int main(int argc, char *argv[])
 					       [game_sel].path);
 
 				rmdir((char *) menu_tmp_list[game_sel].path);	// delete this folder
-
-				game_sel = 0;
 
 				int seconds =
 				    (int) (time(NULL) - time_start);
@@ -2289,9 +2316,7 @@ int main(int argc, char *argv[])
 			if (dialog_ret == 1) {
 
 				// reset to update datas
-				old_fi = -1;
-				counter_png = 0;
-				forcedevices = (1 << curr_device);
+				reset_game_list(1 << curr_device);
 				time_start = time(NULL);
 
 				abort_copy = 0;
@@ -2600,10 +2625,7 @@ int main(int argc, char *argv[])
 						       id)) {
 
 					// reset to update datas
-					game_sel = 0;
-					old_fi = -1;
-					counter_png = 0;
-					forcedevices = (1 << curr_device);
+					reset_game_list(1 << curr_device);
 
 					if (curr_device == 0) {
 						sprintf(name,
