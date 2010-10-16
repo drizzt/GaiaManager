@@ -30,7 +30,7 @@
 #include <cell/cell_fs.h>
 
 #include <sysutil/sysutil_sysparam.h>
-#include <sysutil/sysutil_discgame.h>
+//#include <sysutil/sysutil_discgame.h>
 #include <sysutil/sysutil_msgdialog.h>
 #include <sysutil/sysutil_oskdialog.h>
 #include <cell/font.h>
@@ -317,23 +317,36 @@ int pad_read(void)
 	u32 padd;
 
 	CellPadData databuf;
+#if (CELL_SDK_VERSION<=0x210001)
 	CellPadInfo infobuf;
+#else
+	CellPadInfo2 infobuf;
+#endif
 	static u32 old_info = 0;
 
 
 	cmd_pad = 0;
 
+#if (CELL_SDK_VERSION<=0x210001)
 	ret = cellPadGetInfo(&infobuf);
+#else
+	ret = cellPadGetInfo2(&infobuf);
+#endif
 	if (ret != 0) {
 		old_pad = new_pad = 0;
 		return 1;
 	}
 
+#if (CELL_SDK_VERSION<=0x210001)
 	if (infobuf.status[0] == CELL_PAD_STATUS_DISCONNECTED) {
+#else
+	if (infobuf.port_status[0] == CELL_PAD_STATUS_DISCONNECTED) {
+#endif
 		old_pad = new_pad = 0;
 		return 1;
 	}
 
+#if (CELL_SDK_VERSION<=0x210001)
 	if ((infobuf.info & CELL_PAD_INFO_INTERCEPTED)
 	    && (!(old_info & CELL_PAD_INFO_INTERCEPTED))) {
 		old_info = infobuf.info;
@@ -343,6 +356,17 @@ int pad_read(void)
 		old_pad = new_pad = 0;
 		return 1;
 	}
+#else
+	if ((infobuf.system_info & CELL_PAD_INFO_INTERCEPTED)
+	    && (!(old_info & CELL_PAD_INFO_INTERCEPTED))) {
+		old_info = infobuf.system_info;
+	} else if ((!(infobuf.system_info & CELL_PAD_INFO_INTERCEPTED))
+		   && (old_info & CELL_PAD_INFO_INTERCEPTED)) {
+		old_info = infobuf.system_info;
+		old_pad = new_pad = 0;
+		return 1;
+	}
+#endif
 
 	ret = cellPadGetData(0, &databuf);
 
