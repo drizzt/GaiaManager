@@ -10,26 +10,27 @@ typedef unsigned char u8;
 #define CONSOLE_WIDTH		(76+16)
 #define CONSOLE_HEIGHT		(31)
 
-#define DISPLAY_WIDTH  1920	
+#define DISPLAY_WIDTH  1920
 #define DISPLAY_HEIGHT 1080
 
 
-typedef struct
-{
+typedef struct {
 	unsigned flags;
 	char title[64];
 	char title_id[64];
 	char path[768];
-}
-t_menu_list;
+} t_menu_list;
 
-extern void draw_square(float x, float y, float w, float h, float z, u32 rgba);
+extern void draw_square(float x, float y, float w, float h, float z,
+			u32 rgba);
 
-extern int set_texture( u8 *buffer, u32 x_size, u32 y_size );
+extern int set_texture(u8 * buffer, u32 x_size, u32 y_size);
 
-extern void display_png(int x, int y, int width, int height, int tx, int ty);
+extern void display_png(int x, int y, int width, int height, int tx,
+			int ty);
 
-extern void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot, int ftp);
+extern void draw_device_list(u32 flags, int hermes, int payload_type,
+			     int direct_boot, int ftp);
 
 extern int initConsole(void);
 extern int termConsole(void);
@@ -48,8 +49,7 @@ extern void setRenderTexture(void);
 
 extern void flip(void);
 
-extern void draw_list( t_menu_list *menu, int menu_size, int selected );
-extern void drawResultWindow( int result, int busy );
+extern void draw_list(t_menu_list * menu, int menu_size, int selected);
+extern void drawResultWindow(int result, int busy);
 
-extern int DPrintf( const char *string, ... );
-
+extern int DPrintf(const char *string, ...);

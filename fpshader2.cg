@@ -1,20 +1,16 @@
 
-struct v2fConnector
-{
-	float2 texCoord  : TEXCOORD0;
+struct v2fConnector {
+	float2 texCoord:TEXCOORD0;
 };
 
-struct f2fConnector
-{
-	float4 COL : COLOR;
+struct f2fConnector {
+	float4 COL:COLOR;
 };
 
-f2fConnector main( v2fConnector v2f, uniform texobj2D texture)
+f2fConnector main(v2fConnector v2f, uniform texobj2D texture)
 {
 	f2fConnector f2f;
-	f2f.COL = tex2D( texture, v2f.texCoord );
-	
+	f2f.COL = tex2D(texture, v2f.texCoord);
+
 	return f2f;
 }
-
-

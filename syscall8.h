@@ -47,14 +47,13 @@ payload V3 is loaded at 0x80000000007ff000
 */
 
 // hook_open
-typedef struct
-{
-	uint64_t compare_addr; // kernel address to compare string
-	uint64_t replace_addr; // kernel address to replace string
-	int compare_len;       // len of compare string
-	int replace_len;       // len of replace string
+	typedef struct {
+		uint64_t compare_addr;	// kernel address to compare string
+		uint64_t replace_addr;	// kernel address to replace string
+		int compare_len;	// len of compare string
+		int replace_len;	// len of replace string
 
-} path_open_entry;
+	} path_open_entry;
 
 /* NOTES about path_open_entry:
 
@@ -94,7 +93,7 @@ replace_len= strlen(replace_addr);
 	key: 64 bits key to enable syscalls
 */
 
-int sys8_disable(uint64_t key);
+	int sys8_disable(uint64_t key);
 
 /*
 	sys8_enable: enable syscalls 6,7, 36 and 8 when 
@@ -105,7 +104,7 @@ int sys8_disable(uint64_t key);
 
 */
 
-int sys8_enable(uint64_t key);
+	int sys8_enable(uint64_t key);
 
 /*
 	sys8_memcpy: 64 bits address memory copy
@@ -120,7 +119,7 @@ int sys8_enable(uint64_t key);
 
 */
 
-uint64_t sys8_memcpy(uint64_t dst, uint64_t src, uint64_t size);
+	uint64_t sys8_memcpy(uint64_t dst, uint64_t src, uint64_t size);
 
 /*
 	sys8_memset: 64 bits address memory set
@@ -135,7 +134,7 @@ uint64_t sys8_memcpy(uint64_t dst, uint64_t src, uint64_t size);
 
 */
 
-uint64_t sys8_memset(uint64_t dst, uint64_t val, uint64_t size);
+	uint64_t sys8_memset(uint64_t dst, uint64_t val, uint64_t size);
 
 /*
 	sys8_call: kernel 64 bits address to call
@@ -149,7 +148,8 @@ uint64_t sys8_memset(uint64_t dst, uint64_t val, uint64_t size);
 */
 
 
-uint64_t  sys8_call(uint64_t addr, uint64_t param1, uint64_t param2);
+	uint64_t sys8_call(uint64_t addr, uint64_t param1,
+			   uint64_t param2);
 
 /*
 	sys8_alloc: kernel function to alloc memory
@@ -162,7 +162,7 @@ uint64_t  sys8_call(uint64_t addr, uint64_t param1, uint64_t param2);
 
 */
 
-uint64_t  sys8_alloc(uint64_t size, uint64_t pool);
+	uint64_t sys8_alloc(uint64_t size, uint64_t pool);
 
 /*
 	sys8_free: kernel function to free memory
@@ -175,14 +175,14 @@ uint64_t  sys8_alloc(uint64_t size, uint64_t pool);
 
 */
 
-uint64_t  sys8_free(uint64_t addr, uint64_t pool);
+	uint64_t sys8_free(uint64_t addr, uint64_t pool);
 
 /*
 	sys8_panic: kernel panic function
 
 */
 
-void sys8_panic(void);
+	void sys8_panic(void);
 
 /*
 	sys8_perm_mode: function to changes as work 0x80000000000505d0 calls (connected with access permissions)
@@ -193,7 +193,7 @@ void sys8_panic(void);
 
 */
 
-int sys8_perm_mode(uint64_t mode);
+	int sys8_perm_mode(uint64_t mode);
 
 
 /*
@@ -205,7 +205,7 @@ int sys8_perm_mode(uint64_t mode);
 
 */
 
-uint64_t sys8_path_table(uint64_t addr_table);
+	uint64_t sys8_path_table(uint64_t addr_table);
 
 
 /*
@@ -315,7 +315,6 @@ To test path redirections:
 
 
 #ifdef __cplusplus
-  }
+}
 #endif
-
 #endif
