@@ -212,7 +212,6 @@ static uint64_t mem_orig = 0x386000014E800020ULL;
 static uint64_t mem_patched = 0xE92296887C0802A6ULL;
 static uint64_t patchmode = 2;	//0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)
 
-
 static t_menu_list menu_homebrew_list[MAX_LIST];
 static int max_menu_homebrew_list = 0;
 static int *max_list = &max_menu_list;
@@ -1813,20 +1812,11 @@ int main(int argc, char *argv[])
 				old_fi = game_sel;
 				if (mode_list == GAME) {
 					struct stat st;
-#ifndef USE_HDD0_COVERS
-					sprintf(filename,
-						"/dev_hdd0/game/%s/%s/%s.PNG",
-						hdd_folder_home,
-						COVERS_DIR,
-						menu_list
-						[game_sel].title_id);
-#else
 					sprintf(filename,
 						"/dev_hdd0/%s/%s.PNG",
 						COVERS_DIR,
 						menu_list
 						[game_sel].title_id);
-#endif
 					if (stat(filename, &st) < 0) {
 						sprintf(filename,
 							"%s/../../%s/%s.PNG",

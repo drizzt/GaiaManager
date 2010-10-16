@@ -732,6 +732,8 @@ void draw_device_list(u32 flags, int hermes, int payload_type,
 			  (flags >> 31) & 1 ? "HOMEBREW" : "GAME");
 	cellDbgFontPrintf(0.775, 0.84, 0.8, 0xffffffff, "IP");
 	cellDbgFontPrintf(0.771, 0.84, 0.8, 0xff00ffff, ipaddr);
+
+	draw_text_stroke(0.36, 0.095, 0.8, 0xffdddddd, VERSION);
 }
 
 
