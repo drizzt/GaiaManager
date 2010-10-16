@@ -1,3 +1,5 @@
+#ifndef _GRAPHICS_H
+#define _GRAPHICS_H
 
 #include <cell/gcm.h>
 #include <cell/dbgfont.h>
@@ -53,3 +55,5 @@ extern void draw_list(t_menu_list * menu, int menu_size, int selected);
 extern void drawResultWindow(int result, int busy);
 
 extern int DPrintf(const char *string, ...);
+
+#endif
