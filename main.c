@@ -30,7 +30,6 @@
 #include <cell/cell_fs.h>
 
 #include <sysutil/sysutil_sysparam.h>
-//#include <sysutil/sysutil_discgame.h>
 #include <sysutil/sysutil_msgdialog.h>
 #include <sysutil/sysutil_oskdialog.h>
 #include <cell/font.h>
@@ -283,7 +282,11 @@ static void sort_entries(t_menu_list * list, int *max);
 static void delete_entries(t_menu_list * list, int *max, u32 flag);
 static void fill_entries_from_device(char *path, t_menu_list * list,
 				     int *max, u32 flag, int sel);
+#ifndef WITHOUT_SAVE_STATUS
+static void parse_ini(void);
+#endif
 static void update_game_folder(char *ebootbin);
+static void quit(void);
 static void reset_game_list(int force);
 static void set_hermes_mode(bool enable);
 static void copy_from_bluray(void);
@@ -1148,6 +1151,32 @@ static void fill_entries_from_device(char *path, t_menu_list * list,
 
 }
 
+#ifndef WITHOUT_SAVE_STATUS
+static void parse_ini(void)
+{
+	FILE *fid;
+
+	snprintf(filename, sizeof(filename), "/dev_hdd0/game/%s/prev_status.ini",
+		 hdd_folder_home);
+	fid = fopen(filename, "r");
+	if (!fid)
+		return;
+
+	while (fgets(filename, sizeof(filename), fid) != NULL) {
+		if (strncmp(filename, "patchmode = ", 12) == 0)
+			patchmode = strtoull(&filename[12], NULL, 10);
+		else if (strncmp(filename, "disc_less = ", 12) == 0)
+			disc_less = atoi(&filename[12]);
+		else if (strncmp(filename, "direct_boot = ", 14) == 0)
+			direct_boot = atoi(&filename[14]);
+		else if (strncmp(filename, "ftp_flags = ", 12) == 0)
+			ftp_flags = atoi(&filename[12]);
+	}
+
+	fclose(fid);
+}
+#endif
+
 static void update_game_folder(char *ebootbin)
 {
 	int ret, dir_fixed = 0;
@@ -1279,6 +1308,34 @@ static void update_game_folder(char *ebootbin)
 	reset_game_list(1);
 }
 
+static void quit(void)
+{
+	FILE *fid;
+	if (mode_list == GAME) {
+		restorecall36((char *) "/app_home");
+		restorecall36((char *) "/dev_bdvd");	// restore bluray
+	} else {
+		restorecall36((char *) "/dev_usb000");	// restore
+	}
+
+#ifndef WITHOUT_SAVE_STATUS
+	// save previous status
+	snprintf(filename, sizeof(filename), "/dev_hdd0/game/%s/prev_status.ini", hdd_folder_home);
+	fid = fopen(filename, "w");
+	if (fid) {
+		fprintf(fid, "patchmode = %llu\n", patchmode);
+		fprintf(fid, "disc_less = %d\n", disc_less);
+		fprintf(fid, "direct_boot = %d\n", direct_boot);
+		fprintf(fid, "ftp_flags = %d\n", ftp_flags);
+		fclose(fid);
+	}
+#endif
+
+	unload_modules();
+
+	sys_process_exit(1);
+}
+
 /*****************************************************/
 /* CALLBACK                                          */
 /*****************************************************/
@@ -1290,16 +1347,7 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 	(void) userdata;
 	switch (status) {
 	case CELL_SYSUTIL_REQUEST_EXITGAME:
-		if (mode_list == GAME) {
-			restorecall36((char *) "/app_home");
-			restorecall36((char *) "/dev_bdvd");	// restore bluray
-		} else {
-			restorecall36((char *) "/dev_usb000");	// restore
-		}
-
-		unload_modules();
-
-		sys_process_exit(1);
+		quit();
 		break;
 	case CELL_SYSUTIL_DRAWING_BEGIN:
 	case CELL_SYSUTIL_DRAWING_END:
@@ -1632,6 +1680,18 @@ int main(int argc, char *argv[])
 
 
 	cellNetCtlInit();
+
+#ifndef WITHOUT_SAVE_STATUS
+	parse_ini();
+
+	if (ftp_flags % 2) {
+		int old_ftp_flags = ftp_flags;
+		ftp_flags = 0;
+		ftp_on();
+		ftp_flags = old_ftp_flags;
+	}
+#endif
+
 	//ftp_off();
 	u32 frame_buf_size = DISPLAY_HEIGHT * DISPLAY_WIDTH * 4;
 
@@ -3118,14 +3178,5 @@ int main(int argc, char *argv[])
 		cellSysutilCheckCallback();
 	}
 
-	if (mode_list == GAME) {
-		restorecall36((char *) "/app_home");
-		restorecall36((char *) "/dev_bdvd");	// restore bluray
-	} else {
-		restorecall36((char *) "/dev_usb000");	// restore
-	}
-
-	ret = unload_modules();
-
-	sys_process_exit(1);
+	quit();
 }
