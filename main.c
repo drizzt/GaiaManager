@@ -1156,7 +1156,7 @@ static void parse_ini(void)
 {
 	FILE *fid;
 
-	snprintf(filename, sizeof(filename), "/dev_hdd0/game/%s/prev_status.ini",
+	snprintf(filename, sizeof(filename), "/dev_hdd0/game/%s/settings",
 		 hdd_folder_home);
 	fid = fopen(filename, "r");
 	if (!fid)
