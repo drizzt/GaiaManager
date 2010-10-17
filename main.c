@@ -13,6 +13,7 @@
 
 #include <time.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <sys/stat.h>
 #include <sys/process.h>
@@ -51,6 +52,8 @@
 #endif
 
 #define MAX_LIST 512
+
+#define SETTINGS_FILE "/dev_hdd0/game/" FOLDER_NAME "/settings.cfg"
 
 enum BmModes {
 	GAME = 0,
@@ -236,6 +239,7 @@ static char bluray_game[64];	// name of the game
 static int ftp_flags = 0;
 static int unload_mod = 0;
 static int dialog_ret = 0;
+static bool want_to_quit = false;	// true when I need to quit
 
 static int png_w = 0, png_h = 0;
 
@@ -1156,13 +1160,13 @@ static void parse_ini(void)
 {
 	FILE *fid;
 
-	snprintf(filename, sizeof(filename), "/dev_hdd0/game/%s/settings",
-		 hdd_folder_home);
-	fid = fopen(filename, "r");
+	fid = fopen(SETTINGS_FILE, "r");
 	if (!fid)
 		return;
 
 	while (fgets(filename, sizeof(filename), fid) != NULL) {
+		if (filename[strlen(filename) - 1] == '\n')
+			filename[strlen(filename) - 1] = '\0';
 		if (strncmp(filename, "patchmode = ", 12) == 0)
 			patchmode = strtoull(&filename[12], NULL, 10);
 		else if (strncmp(filename, "disc_less = ", 12) == 0)
@@ -1171,13 +1175,19 @@ static void parse_ini(void)
 			direct_boot = atoi(&filename[14]);
 		else if (strncmp(filename, "ftp_flags = ", 12) == 0)
 			ftp_flags = atoi(&filename[12]);
+		else if (strncmp(filename, "hdd_folder = ", 13) == 0)
+			strncpy(hdd_folder, &filename[13], sizeof(hdd_folder) - 1);
 	}
 
 	fclose(fid);
 }
 #endif
 
-static void update_game_folder(char *ebootbin)
+static void update_game_folder(char *ebootbin
+#ifndef WITHOUT_SAVE_STATUS
+__attribute__ ((unused))
+#endif
+)
 {
 	int ret, dir_fixed = 0;
 	char old_hdd_folder[64] = {0,};
@@ -1256,6 +1266,7 @@ static void update_game_folder(char *ebootbin)
 				       (void *) 0x0000aaab, NULL);
 		wait_dialog();
 	}
+#ifdef WITHOUT_SAVE_STATUS
 	// modify EBOOT.BIN
 	if (dir_fixed && ebootbin) {
 		FILE *fp;
@@ -1305,6 +1316,7 @@ static void update_game_folder(char *ebootbin)
 			fclose(fp);
 		}
 	}
+#endif
 	reset_game_list(1, 0);
 }
 
@@ -1320,13 +1332,13 @@ static void quit(void)
 
 #ifndef WITHOUT_SAVE_STATUS
 	// save previous status
-	snprintf(filename, sizeof(filename), "/dev_hdd0/game/%s/prev_status.ini", hdd_folder_home);
-	fid = fopen(filename, "w");
+	fid = fopen(SETTINGS_FILE, "w");
 	if (fid) {
 		fprintf(fid, "patchmode = %llu\n", patchmode);
 		fprintf(fid, "disc_less = %d\n", disc_less);
 		fprintf(fid, "direct_boot = %d\n", direct_boot);
 		fprintf(fid, "ftp_flags = %d\n", ftp_flags);
+		fprintf(fid, "hdd_folder = %s\n", hdd_folder);
 		fclose(fid);
 	}
 #endif
@@ -1347,7 +1359,7 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 	(void) userdata;
 	switch (status) {
 	case CELL_SYSUTIL_REQUEST_EXITGAME:
-		quit();
+		want_to_quit = true;
 		break;
 	case CELL_SYSUTIL_DRAWING_BEGIN:
 	case CELL_SYSUTIL_DRAWING_END:
@@ -1684,6 +1696,14 @@ int main(int argc, char *argv[])
 #ifndef WITHOUT_SAVE_STATUS
 	parse_ini();
 
+	sprintf(filename, "hdd_folder: '%s'\nchar: %d\nsize: %d\n", hdd_folder, hdd_folder[strlen(hdd_folder)-1], strlen(hdd_folder));
+	cellMsgDialogOpen2
+	(type_dialog_ok, filename,
+	 dialog_fun1,
+	 (void *) 0x0000aaaa, NULL);
+
+wait_dialog();
+
 	if (ftp_flags % 2) {
 		int old_ftp_flags = ftp_flags;
 		ftp_flags = 0;
@@ -1762,7 +1782,10 @@ int main(int argc, char *argv[])
 	restorecall36((char *) "/dev_bdvd");	// select bluray
 
 	/* main loop */
-	while (pad_read() != 0) {
+	while ((pad_read() != 0) || want_to_quit) {
+		if (want_to_quit)
+			quit();
+
 		// scan for plug/unplug devices
 
 		int count_devices = 0;
@@ -1837,6 +1860,11 @@ int main(int argc, char *argv[])
 							menu_list
 							    [max_menu_list].flags
 							    = (1 << 11);
+
+							parse_param_sfo_id(filename,
+									menu_list[max_menu_list].title_id);
+							menu_list
+								[max_menu_list].title_id[63] = 0;
 
 							max_menu_list++;
 
