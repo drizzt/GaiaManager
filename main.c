@@ -534,6 +534,20 @@ static int load_modules(void)
 
 static int unload_modules(void)
 {
+#ifndef WITHOUT_SAVE_STATUS
+	FILE *fid;
+
+	// save previous status
+	fid = fopen(SETTINGS_FILE, "w");
+	if (fid) {
+		fprintf(fid, "patchmode = %llu\n", patchmode);
+		fprintf(fid, "disc_less = %d\n", disc_less);
+		fprintf(fid, "direct_boot = %d\n", direct_boot);
+		fprintf(fid, "ftp_flags = %d\n", ftp_flags);
+		fprintf(fid, "hdd_folder = %s\n", hdd_folder);
+		fclose(fid);
+	}
+#endif
 
 	ftp_off();
 
@@ -1322,26 +1336,12 @@ __attribute__ ((unused))
 
 static void quit(void)
 {
-	FILE *fid;
 	if (mode_list == GAME) {
 		restorecall36((char *) "/app_home");
 		restorecall36((char *) "/dev_bdvd");	// restore bluray
 	} else {
 		restorecall36((char *) "/dev_usb000");	// restore
 	}
-
-#ifndef WITHOUT_SAVE_STATUS
-	// save previous status
-	fid = fopen(SETTINGS_FILE, "w");
-	if (fid) {
-		fprintf(fid, "patchmode = %llu\n", patchmode);
-		fprintf(fid, "disc_less = %d\n", disc_less);
-		fprintf(fid, "direct_boot = %d\n", direct_boot);
-		fprintf(fid, "ftp_flags = %d\n", ftp_flags);
-		fprintf(fid, "hdd_folder = %s\n", hdd_folder);
-		fclose(fid);
-	}
-#endif
 
 	unload_modules();
 
@@ -3005,10 +3005,7 @@ int main(int argc, char *argv[])
 
 			if (mode_list == GAME && (menu_list[game_sel].flags & 2048)) {
 				flip();
-				restorecall36((char *) "/app_home");
-				restorecall36((char *) "/dev_bdvd");	// restore bdvd
-				ret = unload_modules();
-				exit(0);
+				quit();
 			}
 
 			if (mode_list == HOMEBREW) {

@@ -39,6 +39,10 @@ ifneq ($(strip $(WITH_COVERS_DIR)),)
 PPU_CPPFLAGS += -D'COVERS_DIR="$(WITH_COVERS_DIR)"'
 endif
 
+ifneq ($(strip $(WITHOUT_SAVE_STATUS)),)
+PPU_CPPFLAGS += -DWITHOUT_SAVE_STATUS
+endif
+
 ifeq ($(strip $(WITH_SOUND)),)
 PPU_CPPFLAGS += -DWITHOUT_SOUND
 
