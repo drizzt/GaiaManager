@@ -1696,14 +1696,6 @@ int main(int argc, char *argv[])
 #ifndef WITHOUT_SAVE_STATUS
 	parse_ini();
 
-	sprintf(filename, "hdd_folder: '%s'\nchar: %d\nsize: %d\n", hdd_folder, hdd_folder[strlen(hdd_folder)-1], strlen(hdd_folder));
-	cellMsgDialogOpen2
-	(type_dialog_ok, filename,
-	 dialog_fun1,
-	 (void *) 0x0000aaaa, NULL);
-
-wait_dialog();
-
 	if (ftp_flags % 2) {
 		int old_ftp_flags = ftp_flags;
 		ftp_flags = 0;
@@ -1964,24 +1956,29 @@ wait_dialog();
 				if (mode_list == GAME) {
 					struct stat st;
 					sprintf(filename,
-						"/dev_hdd0/%s/%s.PNG",
-						COVERS_DIR,
-						menu_list
-						[game_sel].title_id);
+						"%s/COVER.PNG", menu_list[game_sel].path);
 					if (stat(filename, &st) < 0) {
 						sprintf(filename,
-							"%s/../../%s/%s.PNG",
-							menu_list
-							[game_sel].path,
+							"/dev_hdd0/%s/%s.PNG",
 							COVERS_DIR,
 							menu_list
 							[game_sel].title_id);
 						if (stat(filename, &st) <
 						    0) {
 							sprintf(filename,
-								"%s/PS3_GAME/ICON0.PNG",
+								"%s/../../%s/%s.PNG",
 								menu_list
-								[game_sel].path);
+								[game_sel].path,
+								COVERS_DIR,
+								menu_list
+								[game_sel].title_id);
+							if (stat(filename, &st) <
+								0) {
+								sprintf(filename,
+									"%s/PS3_GAME/ICON0.PNG",
+									menu_list
+									[game_sel].path);
+							}
 						}
 					}
 				} else
@@ -3006,7 +3003,7 @@ wait_dialog();
 		if (new_pad & BUTTON_CROSS && game_sel >= 0
 		    && *max_list > 0) {
 
-			if (menu_list[game_sel].flags & 2048) {
+			if (mode_list == GAME && (menu_list[game_sel].flags & 2048)) {
 				flip();
 				restorecall36((char *) "/app_home");
 				restorecall36((char *) "/dev_bdvd");	// restore bdvd
