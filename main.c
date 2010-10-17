@@ -287,7 +287,7 @@ static void parse_ini(void);
 #endif
 static void update_game_folder(char *ebootbin);
 static void quit(void);
-static void reset_game_list(int force);
+static void reset_game_list(int force, int sel);
 static void set_hermes_mode(bool enable);
 static void copy_from_bluray(void);
 
@@ -1305,7 +1305,7 @@ static void update_game_folder(char *ebootbin)
 			fclose(fp);
 		}
 	}
-	reset_game_list(1);
+	reset_game_list(1, 0);
 }
 
 static void quit(void)
@@ -1359,12 +1359,12 @@ static void gfxSysutilCallback(uint64_t status, uint64_t param,
 	}
 }
 
-static void reset_game_list(int force)
+static void reset_game_list(int force, int sel)
 {
 	old_fi = -1;
 	counter_png = 0;
 	forcedevices = force;
-	game_sel = 0;
+	game_sel = sel;
 }
 
 static void set_hermes_mode(bool enable)
@@ -1436,7 +1436,7 @@ static void copy_from_bluray(void)
 				       "/dev_bdvd/PS3_DISC.SFB", id)) {
 
 			// reset to update datas
-			reset_game_list(1 << curr_device);
+			reset_game_list(1 << curr_device, 0);
 
 			if (curr_device == 0) {
 				sprintf(name, "/dev_hdd0/game/%s/",
@@ -2011,7 +2011,7 @@ int main(int argc, char *argv[])
 		} else
 			down_count = 8;
 		if (old_pad & BUTTON_L3) {
-			reset_game_list(1);
+			reset_game_list(1, 0);
 		}
 
 		if (old_pad & BUTTON_RIGHT) {
@@ -2179,9 +2179,6 @@ int main(int argc, char *argv[])
 
 				time_start = time(NULL);
 
-				// reset to update datas
-				reset_game_list(1 << n);
-
 				abort_copy = 0;
 				initConsole();
 				file_counter = 0;
@@ -2195,6 +2192,9 @@ int main(int argc, char *argv[])
 					       [game_sel].path);
 
 				rmdir((char *) menu_tmp_list[game_sel].path);	// delete this folder
+
+				// reset to update datas
+				reset_game_list(1 << n, 0);
 
 				int seconds =
 				    (int) (time(NULL) - time_start);
@@ -2400,7 +2400,7 @@ int main(int argc, char *argv[])
 			if (dialog_ret == 1) {
 
 				// reset to update datas
-				reset_game_list(1 << curr_device);
+				reset_game_list(1 << curr_device, game_sel);
 				time_start = time(NULL);
 
 				abort_copy = 0;
@@ -2709,7 +2709,7 @@ int main(int argc, char *argv[])
 						       id)) {
 
 					// reset to update datas
-					reset_game_list(1 << curr_device);
+					reset_game_list(1 << curr_device, 0);
 
 					if (curr_device == 0) {
 						sprintf(name,
