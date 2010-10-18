@@ -20,10 +20,10 @@
 #include <sys/memory.h>
 #include <sys/timer.h>
 #include <sys/types.h>
-#include <sys/return_code.h>
+#include <sys/syscall.h>
 
 #include <cell/gcm.h>
-#include <cell/pad.h>
+#include <cell/pad/libpad.h>
 #include <cell/keyboard.h>
 #include <cell/sysmodule.h>
 #include <cell/dbgfont.h>
@@ -377,7 +377,7 @@ int pad_read(void)
 
 	ret = cellPadGetData(0, &databuf);
 
-	if (ret != CELL_PAD_OK) {
+	if (ret != CELL_OK) {
 		old_pad = new_pad = 0;
 		return 1;
 	}
@@ -446,7 +446,6 @@ static void ftp_off(void)
 	if (ftp_flags & 2) {
 		uint64_t result;
 
-		/*if(!(ftp_flags & 4)) */
 		cellFtpServiceStop(&result);
 
 		cellFtpServiceUnregisterHandler();
@@ -836,12 +835,10 @@ static uint32_t syscall35(const char *srcpath, const char *dstpath)
 
 static void syscall36(const char *path)
 {
-	const char *hook_root = "/dev_bdvd";
-	if (disc_less == 1) {
-		hook_root = "/app_home";
-	}
-	if (syscall35(hook_root, path) != 0) {
+	if (syscall35("/dev_bdvd", path) != 0) {
 		system_call_1(36, (uint32_t) path);
+	} else {
+		syscall35("/app_home", path);
 	}
 }
 
