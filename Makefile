@@ -10,7 +10,7 @@ PPU_INCDIRS	+= -I$(CELL_SDK)/target/ppu/include/sysutil
 PPU_CFLAGS  += -g
 
 
-PPU_LDLIBS 	+= -lftp  -lnet_stub -lnetctl_stub\
+PPU_LDLIBS 	+= -lftp  -lnet_stub -lrtc_stub -lnetctl_stub\
                     -lpngdec_stub -lm -ldbgfont_gcm -lgcm_cmd -lgcm_sys_stub\
 		    -lio_stub -lsysmodule_stub -lsysutil_stub -lfs_stub
 

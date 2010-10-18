@@ -113,3 +113,25 @@ v1.16 changelog
 - patched mode returns and now works for hermes V3 and previous versions that include peek/poke calls (v > psgroove 1.1)
 
 Notes: patched mode in hermes V3 is an aggressive mode for those of you who still have problems with hermes v3 normal mode, again do not use patched mode in normal games without issue or for normal operations like FTP/COPY.
+
+v1.16.2 changelog
+------------------
+
+- Device names are now changed to more user friendly ones.
+
+v1.17 changelog
+----------------
+
+- Open manager has been built with the new SDK 3.40, Note that unlike some others that couldn't figure out how to build it with the libftp, it now builds with 3.40 without any problem.
+
+- PL3 is now fully supported and syscall35 is used although no compatibility is gained from this.
+
+- Previous payloads are still supported (PSGroove > 1.1), open manager detects your current payload and acts accordingly, therefore patched mode is still available for older payloads.
+
+
+v1.17.1 changelog
+-----------------
+
+- Reverted back to using SDK 1.92. There was two reasons for this. First to make it compatible with older firmwares like 3.15 and second, there is no reason to update the SDK just yet.
+
+- mounting to app_home now works without problem. 

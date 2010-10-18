@@ -14,10 +14,10 @@
 #include <sys/process.h>
 #include <sys/memory.h>
 #include <sys/timer.h>
-#include <sys/return_code.h>
+#include <sys/syscall.h>
 
 #include <cell/gcm.h>
-#include <cell/pad.h>
+#include <cell/pad/libpad.h>
 #include <cell/keyboard.h>
 #include <cell/sysmodule.h>
 #include <cell/dbgfont.h>
@@ -25,8 +25,8 @@
 #include <cell/cell_fs.h>
 
 
+
 #include <sysutil/sysutil_sysparam.h>
-#include <sysutil/sysutil_discgame.h>
 #include <sysutil/sysutil_msgdialog.h>
 
 
@@ -87,6 +87,66 @@ u32 new_pad=0,old_pad=0;
 
 static int pad_read( void )
 {
+	//SDK 3.4 code
+	/*int ret;
+	
+	u32		padd;
+
+	CellPadData databuf;
+	CellPadInfo2 infobuf;
+	static u32 old_info = 0;
+	
+	
+	cmd_pad= 0;
+
+	ret = cellPadGetInfo2( &infobuf );
+	if ( ret != 0 ) 
+		{
+		old_pad=new_pad = 0;
+		return 1;
+		}
+
+	if ( infobuf.port_status[0] == CELL_PAD_STATUS_DISCONNECTED ) 
+		{
+		old_pad=new_pad = 0;
+		return 1;
+		}
+
+	if((infobuf.system_info & CELL_PAD_INFO_INTERCEPTED) && (!(old_info & CELL_PAD_INFO_INTERCEPTED)))
+		{
+		old_info = infobuf.system_info;
+		}
+	else 
+		if((!(infobuf.system_info & CELL_PAD_INFO_INTERCEPTED)) && (old_info & CELL_PAD_INFO_INTERCEPTED))
+			{
+			old_info = infobuf.system_info;
+			old_pad=new_pad = 0;
+			return 1;
+			}
+
+	ret = cellPadGetData( 0, &databuf );
+
+	if (ret != CELL_OK) 
+		{
+		old_pad=new_pad = 0;
+		return 1;
+		}
+
+	if (databuf.len == 0) 
+		{
+		new_pad = 0;
+		return 1;
+		}
+
+	padd = ( databuf.button[2] | ( databuf.button[3] << 8 ) );
+
+	new_pad=padd & (~old_pad);
+	old_pad= padd;
+
+	return 1;*/
+
+
+	//SDK 1.92 code
 	int ret;
 	
 	u32		padd;
@@ -125,7 +185,7 @@ static int pad_read( void )
 
 	ret = cellPadGetData( 0, &databuf );
 
-	if (ret != CELL_PAD_OK) 
+	if (ret != CELL_OK) 
 		{
 		old_pad=new_pad = 0;
 		return 1;
@@ -197,8 +257,6 @@ void ftp_off()
 	if(ftp_flags & 2)
 		{
 		uint64_t result;
-
-	    /*if(!(ftp_flags & 4)) */
 		cellFtpServiceStop(&result);
 
 		cellFtpServiceUnregisterHandler();
@@ -470,21 +528,45 @@ return ok;
 /* syscalls                                         */
 /****************************************************/
 
-void syscall36( char * path)
+uint32_t syscall35(const char *old_path, const char *new_path)
 {
-	system_call_1(36, (uint64_t) path);
+	system_call_2(35, (uint32_t) old_path, (uint32_t) new_path);
+	return_to_user_prog(uint32_t);
+}
+//void syscall36( char * path)
+//{
+//	system_call_1(36, (uint64_t) path);
+//}
+void syscall36(const char* path)
+{
+
+	if (syscall35("/dev_bdvd", path) != 0) {
+		system_call_1(36, (uint32_t) path);
+	}
+	else
+	{
+		syscall35("/app_home", path);
+	}
+}
+
+void restorebind(const char* path)
+{
+	if (syscall35(path, path) != 0)
+	{
+		system_call_1(36, (uint32_t) path);
+	}
 }
 
 void pokeq( uint64_t addr, uint64_t val) /*patch for controller*/
 { 
-system_call_2(7, addr, val); 
+	system_call_2(7, addr, val); 
 } 
-uint64_t peekq(uint64_t addr)
-{
-	uint64_t out;
-	system_call_2(6,addr,out);
-	return out;
-}
+//uint64_t peekq(uint64_t addr)
+//{
+//	uint64_t out;
+//	system_call_2(6,addr,out);
+//	return out;
+//}
 
 
 /****************************************************/
@@ -1730,11 +1812,30 @@ int main(int argc, char **argv)
 	if(png_out_mapmem( text_bmp, frame_buf_size)) exit(-1);
 	
 	uint64_t patchmode = 2;  //0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)
-	if(sys8_enable(0) > 0)
+
+	int payload_type = 0;  // 0->psgroove  1->hermesV3  2->PL3
+
+	if (syscall35("/dev_hdd0", "/dev_hdd0") == 0)
+	{
+		payload_type = 2;
+	}
+	else
+	{
+		if(sys8_enable(0) > 0)
+		{
+			payload_type = 1;
+		}
+		else
+		{
+			payload_type = 0;
+		}
+	}
+	
+	if(payload_type == 1)
 	{
 		sys8_perm_mode(patchmode);
 	}
-	else
+	else if(payload_type == 0)
 	{
 		pokeq(0x80000000000505d0ULL, memvaloriginal);
 	}
@@ -1820,7 +1921,9 @@ update_game_folder:
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_ok, "Panic!!!\nI cannot find the folder to install games!!!", dialog_fun2, (void*)0x0000aaab, NULL );
 				wait_dialog();
-				syscall36( (char *) "/dev_bdvd"); // restore bluray
+				//syscall36( (char *) "/dev_bdvd"); // restore bluray
+				restorebind("/app_home");
+				restorebind("/dev_bdvd"); // restore bluray
 				ret = unload_modules();
 				exit(0);
 				}
@@ -2130,26 +2233,26 @@ skip_find_device:
 	}
 	if ((new_pad & BUTTON_R2))
 	{
-		if(sys8_enable(0) < 0)
+		switch(payload_type)
 		{
-			if(peekq(0x80000000000505d0ULL) == memvaloriginal)
+		case 0:
+			if (patchmode == 2)
 			{
-				pokeq(0x80000000000505d0ULL, memvalnew);
 				patchmode = 0; //patched
+				pokeq(0x80000000000505d0ULL, memvalnew);
 			}
 			else
 			{
-			pokeq(0x80000000000505d0ULL, memvaloriginal);
-			patchmode = 2; //normal
-			//reset game list
-			old_fi=-1;
-			counter_png=0;
-			forcedevices=(1);
-			game_sel=0;
-			} 
-		}
-		else
-		{
+				patchmode = 2; //normal
+				pokeq(0x80000000000505d0ULL, memvaloriginal);
+				//reset game list
+				old_fi=-1;
+				counter_png=0;
+				forcedevices=(1);
+				game_sel=0;
+			}
+			break;
+		case 1:
 			if (patchmode == 2)
 			{
 				patchmode = 0; //patched
@@ -2159,7 +2262,17 @@ skip_find_device:
 			{
 				patchmode = 2; //normal
 				sys8_perm_mode(patchmode);
+				//reset game list
+				old_fi=-1;
+				counter_png=0;
+				forcedevices=(1);
+				game_sel=0;
 			}
+			break;
+		case 2:
+			//discless
+
+			break;
 		}
 		
 		
@@ -2730,7 +2843,9 @@ copy_from_bluray:
 		if(menu_list[game_sel].flags & 2048)
 			{
 			flip();
-			syscall36( (char *) "/dev_bdvd"); // restore bdvd
+			//syscall36( (char *) "/dev_bdvd"); // restore bdvd
+			restorebind("/app_home");
+			restorebind("/dev_bdvd"); // restore bluray
 			ret = unload_modules();
 			exit(0);
 			}
@@ -2744,7 +2859,8 @@ copy_from_bluray:
 			
 			flip();
 
-			syscall36( (char *) "/dev_usb000"); // restore
+			//syscall36( (char *) "/dev_usb000"); // restore
+			restorebind("/dev_usb000");
 			ret = unload_modules();
 
 			sys_game_process_exitspawn(filename, NULL, NULL, 0, 0, prio, flags);
@@ -2829,14 +2945,18 @@ skip_1:
 				}
 
 			setRenderColor();
-			if(patchmode == 0)
+			if(payload_type != 2)
 			{
-				cellDbgFontPrintf( 0.5f, 0.07f, 1.2f,0xffffffff,"Patched mode");
+				if(patchmode == 0)
+				{
+					cellDbgFontPrintf( 0.5f, 0.07f, 1.2f,0xffffffff,"Patched mode");
+				}
+				else
+				{
+					cellDbgFontPrintf( 0.5f, 0.07f, 1.2f,0xffffffff,"Normal mode");
+				}	
 			}
-			else
-			{
-				cellDbgFontPrintf( 0.5f, 0.07f, 1.2f,0xffffffff,"Normal mode");
-			}			
+					
 			// square for screen
 			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 
@@ -2872,9 +2992,18 @@ skip_1:
 		
 	}
 	if(mode_list==0)
-		syscall36( (char *) "/dev_bdvd"); // restore bluray
+	{
+		//syscall36( (char *) "/dev_bdvd"); // restore bluray
+		restorebind("/app_home");
+		restorebind("/dev_bdvd");
+	}
+		
 	else
-		syscall36( (char *) "/dev_usb000"); // restore
+	{
+
+		//syscall36( (char *) "/dev_usb000"); // restore
+		restorebind("/dev_usb000");
+	}
 
 	ret = unload_modules();
 	
