@@ -636,7 +636,7 @@ static void draw_text_bool(float x, float y, float size, bool on)
 
 
 void draw_device_list(u32 flags, int hermes, int payload_type,
-		      int direct_boot, int ftp)
+		      int direct_boot, int ftp, int chg_dst_hdd)
 {
 	float y = 0.84f;
 	char str[256];
@@ -718,6 +718,9 @@ void draw_device_list(u32 flags, int hermes, int payload_type,
 		cellDbgFontPrintf(0.775, 0.72, 0.8, 0xffffffff,
 				  "Direct Boot:");
 		draw_text_bool(0.895, 0.72, 0.8, direct_boot);
+		cellDbgFontPrintf(0.775, 0.88, 0.8, 0xffffffff,
+				  "Ext HD Hack:");
+		draw_text_bool(0.895, 0.88, 0.8, chg_dst_hdd);
 	} else {
 		cellDbgFontPrintf(0.775, 0.472, 0.8, 0xffffffff,
 				  "Delete Selected");

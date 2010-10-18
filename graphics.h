@@ -32,7 +32,7 @@ extern void display_png(int x, int y, int width, int height, int tx,
 			int ty);
 
 extern void draw_device_list(u32 flags, int hermes, int payload_type,
-			     int direct_boot, int ftp);
+			     int direct_boot, int ftp, int chg_dst_hdd);
 
 extern int initConsole(void);
 extern int termConsole(void);

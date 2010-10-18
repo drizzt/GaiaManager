@@ -60,6 +60,11 @@ enum BmModes {
 	HOMEBREW = 1
 };
 
+typedef struct {
+	path_open_entry entries[2];
+	char arena[0x2000];
+} path_open_table;
+
 #ifndef WITHOUT_SOUND
 static int fm = -1;
 static char soundfile[512];
@@ -208,6 +213,7 @@ static int max_menu_list = 0;
 static int region = 1;
 static int direct_boot = 0;
 static int disc_less = 0;
+static int chg_dst_hdd = 0; // var state mount redirection 2010-10-16
 static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
 
 static uint64_t mem_orig = 0x386000014E800020ULL;
@@ -1690,6 +1696,8 @@ int main(int argc, char *argv[])
 	cellSysutilGetSystemParamInt(CELL_SYSUTIL_SYSTEMPARAM_ID_LANG,
 				     &region);
 
+	// disable redirection table
+	sys8_path_table(0ULL);
 
 	cellNetCtlInit();
 
@@ -3000,6 +3008,15 @@ int main(int argc, char *argv[])
 			else
 				ftp_on();
 		}
+
+		if ((new_pad & BUTTON_SELECT) && (mode_list == GAME)) {
+			struct stat s;
+			if (stat("/dev_usb", &s) == 0)
+				chg_dst_hdd ^= 1;
+			else
+				chg_dst_hdd = 0;
+		}
+
 		if (new_pad & BUTTON_CROSS && game_sel >= 0
 		    && *max_list > 0) {
 
@@ -3051,6 +3068,50 @@ int main(int argc, char *argv[])
 					if (stat(filename, &s) >= 0) {
 						syscall36(menu_list
 							  [game_sel].path);
+
+						if (chg_dst_hdd) {
+							if (stat("/dev_usb", &s) < 0){
+								chg_dst_hdd = 0;
+							} else {
+								path_open_table open_table;
+								uint64_t dest_table_addr;
+								// disable table
+								sys8_path_table(0ULL);
+								// calculate dest_table addr from payload start to back
+								dest_table_addr = 0x80000000007FF000ULL -
+										  ((sizeof(path_open_table) + 15) & ~15);
+								// fix the start addresses
+								open_table.entries[0].compare_addr =
+									((uint32_t) &open_table.arena[0]) -
+									((uint32_t) &open_table) + dest_table_addr;
+
+								open_table.entries[0].replace_addr=
+									((uint32_t) &open_table.arena[0x800]) -
+									((uint32_t) &open_table) + dest_table_addr;
+
+								open_table.entries[1].compare_addr= 0ULL; // the last entry is always 0
+
+								// Create DIR for Mount
+								cellFsMkdir("/dev_usb/GAMEI", CELL_FS_DEFAULT_CREATE_MODE_1);
+								cellFsChmod("/dev_usb/GAMEI", 0777);
+
+								// copy the paths
+								strncpy(&open_table.arena[0], "/dev_hdd0/game", 0x100);	// compare 1
+								strncpy(&open_table.arena[0x800], "/dev_usb/GAMEI", 0x800);	// replace 1: replaces all content
+
+								// fix the string len
+								open_table.entries[0].compare_len= strlen(&open_table.arena[0]);		// 1
+								open_table.entries[0].replace_len= strlen(&open_table.arena[0x800]);
+
+								// copy the datas to  the destination address
+
+								sys8_memcpy(dest_table_addr, (uint32_t) &open_table, sizeof(path_open_table));
+
+								// set the new path table
+								sys8_path_table( dest_table_addr);
+							}
+						}
+
 						if (direct_boot == 1) {
 							ret =
 							    unload_modules
@@ -3178,7 +3239,7 @@ int main(int argc, char *argv[])
 					 payload_type ==
 					 1 ? disc_less : !patchmode,
 					 payload_type, direct_boot,
-					 ftp_flags & 2);
+					 ftp_flags & 2, chg_dst_hdd);
 		else
 			draw_device_list((fdevices |
 					  ((game_sel >= 0
@@ -3191,7 +3252,7 @@ int main(int argc, char *argv[])
 					 payload_type ==
 					 1 ? disc_less : !patchmode,
 					 payload_type, direct_boot,
-					 ftp_flags & 2);
+					 ftp_flags & 2, chg_dst_hdd);
 
 
 		cellDbgFontDrawGcm();
