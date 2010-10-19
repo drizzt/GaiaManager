@@ -20,10 +20,10 @@
 #include <sys/memory.h>
 #include <sys/timer.h>
 #include <sys/types.h>
-#include <sys/return_code.h>
+#include <sys/syscall.h>
 
 #include <cell/gcm.h>
-#include <cell/pad.h>
+#include <cell/pad/libpad.h>
 #include <cell/keyboard.h>
 #include <cell/sysmodule.h>
 #include <cell/dbgfont.h>
@@ -212,7 +212,7 @@ static int max_menu_list = 0;
 
 static int region = 1;
 static int direct_boot = 0;
-static int disc_less = 0;
+//static int disc_less = 0;
 static int chg_dst_hdd = 0; // var state mount redirection 2010-10-16
 static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
 
@@ -280,7 +280,7 @@ static void playBootSound(uint64_t ui __attribute__ ((unused)));
 #endif
 static int load_png_texture(u8 * data, char *name);
 static uint32_t syscall35(const char *srcpath, const char *dstpath);
-static void syscall36(const char *path);
+void syscall36(const char *path);	// for some strange reasons it does not work as static
 static void restorecall36(const char *path);
 //static uint64_t peekq(uint64_t addr);
 static void pokeq(uint64_t addr, uint64_t val);
@@ -383,7 +383,7 @@ int pad_read(void)
 
 	ret = cellPadGetData(0, &databuf);
 
-	if (ret != CELL_PAD_OK) {
+	if (ret != CELL_OK) {
 		old_pad = new_pad = 0;
 		return 1;
 	}
@@ -452,7 +452,6 @@ static void ftp_off(void)
 	if (ftp_flags & 2) {
 		uint64_t result;
 
-		/*if(!(ftp_flags & 4)) */
 		cellFtpServiceStop(&result);
 
 		cellFtpServiceUnregisterHandler();
@@ -547,7 +546,7 @@ static int unload_modules(void)
 	fid = fopen(SETTINGS_FILE, "w");
 	if (fid) {
 		fprintf(fid, "patchmode = %llu\n", patchmode);
-		fprintf(fid, "disc_less = %d\n", disc_less);
+//		fprintf(fid, "disc_less = %d\n", disc_less);
 		fprintf(fid, "direct_boot = %d\n", direct_boot);
 		fprintf(fid, "ftp_flags = %d\n", ftp_flags);
 		fprintf(fid, "hdd_folder = %s\n", hdd_folder);
@@ -840,14 +839,13 @@ static uint32_t syscall35(const char *srcpath, const char *dstpath)
 	return_to_user_prog(uint32_t);
 }
 
-static void syscall36(const char *path)
+// for some strange reasons syscall36 does not work as static
+void syscall36(const char *path)
 {
-	const char *hook_root = "/dev_bdvd";
-	if (disc_less == 1) {
-		hook_root = "/app_home";
-	}
-	if (syscall35(hook_root, path) != 0) {
+	if (syscall35("/dev_bdvd", path) != 0) {
 		system_call_1(36, (uint32_t) path);
+	} else {
+		syscall35("/app_home", path);
 	}
 }
 
@@ -1189,8 +1187,8 @@ static void parse_ini(void)
 			filename[strlen(filename) - 1] = '\0';
 		if (strncmp(filename, "patchmode = ", 12) == 0)
 			patchmode = strtoull(&filename[12], NULL, 10);
-		else if (strncmp(filename, "disc_less = ", 12) == 0)
-			disc_less = atoi(&filename[12]);
+//		else if (strncmp(filename, "disc_less = ", 12) == 0)
+//			disc_less = atoi(&filename[12]);
 		else if (strncmp(filename, "direct_boot = ", 14) == 0)
 			direct_boot = atoi(&filename[14]);
 		else if (strncmp(filename, "ftp_flags = ", 12) == 0)
@@ -2996,8 +2994,8 @@ int main(int argc, char *argv[])
 		if ((new_pad & BUTTON_L1) && mode_list == GAME) {
 			if (payload_type == 0)
 				set_hermes_mode(patchmode);	// toggle patch mode
-			else if (payload_type == 1)
-				disc_less ^= 1;
+//			else if (payload_type == 1)
+//				disc_less ^= 1;
 		}
 		if ((new_pad & BUTTON_L2) && mode_list == GAME) {
 			direct_boot ^= 1;
@@ -3236,8 +3234,8 @@ int main(int argc, char *argv[])
 					    && max_menu_list >
 					    0) ? (menu_list[game_sel].flags
 						  << 16) : 0)),
-					 payload_type ==
-					 1 ? disc_less : !patchmode,
+					 /*payload_type ==
+					 1 ? disc_less :*/ !patchmode,
 					 payload_type, direct_boot,
 					 ftp_flags & 2, chg_dst_hdd);
 		else
@@ -3249,8 +3247,8 @@ int main(int argc, char *argv[])
 									 <<
 									 31)
 					   : 1U << 31)),
-					 payload_type ==
-					 1 ? disc_less : !patchmode,
+					 /*payload_type ==
+					 1 ? disc_less :*/ !patchmode,
 					 payload_type, direct_boot,
 					 ftp_flags & 2, chg_dst_hdd);
 
