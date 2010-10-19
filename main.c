@@ -274,7 +274,7 @@ static void playBootSound(uint64_t ui __attribute__ ((unused)));
 #endif
 static int load_png_texture(u8 * data, char *name);
 static uint32_t syscall35(const char *srcpath, const char *dstpath);
-static void syscall36(const char *path);
+void syscall36(const char *path);	// for some strange reasons it does not work as static
 static void restorecall36(const char *path);
 //static uint64_t peekq(uint64_t addr);
 static void pokeq(uint64_t addr, uint64_t val);
@@ -833,7 +833,8 @@ static uint32_t syscall35(const char *srcpath, const char *dstpath)
 	return_to_user_prog(uint32_t);
 }
 
-static void syscall36(const char *path)
+// for some strange reasons syscall36 does not work as static
+void syscall36(const char *path)
 {
 	if (syscall35("/dev_bdvd", path) != 0) {
 		system_call_1(36, (uint32_t) path);
