@@ -24,3 +24,5 @@ extern uint32_t new_pad, old_pad;
 extern int pad_read(void);
 
 #endif
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */

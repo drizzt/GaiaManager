@@ -102,3 +102,5 @@ uint64_t sys8_path_table(uint64_t addr_table)
 
 	return syscall8(9ULL, addr_table, 0ULL, 0ULL);
 }
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */

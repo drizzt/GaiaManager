@@ -52,3 +52,5 @@ extern void drawResultWindow(int result, int busy);
 extern int DPrintf(const char *string, ...);
 
 #endif
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */

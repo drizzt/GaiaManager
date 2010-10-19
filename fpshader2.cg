@@ -14,3 +14,5 @@ f2fConnector main(v2fConnector v2f, uniform texobj2D texture)
 
 	return f2f;
 }
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */

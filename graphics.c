@@ -890,3 +890,5 @@ void display_png(int x, int y, int width, int height, int tx, int ty)
 	cellGcmSetDrawArrays(gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_TRIANGLE_STRIP, vert_texture_indx, 4);
 	vert_texture_indx += 4;
 }
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */

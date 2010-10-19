@@ -11,3 +11,5 @@ extern int my_game_test(char *path);
 extern int my_game_delete(char *path);
 
 #endif
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */

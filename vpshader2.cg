@@ -18,3 +18,5 @@ v2fConnector main(a2vConnector a2v)
 
 	return v2f;
 }
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */

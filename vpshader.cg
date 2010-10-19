@@ -4,3 +4,5 @@ void main(float4 position:POSITION, float4 color:COLOR, out float4 oPosition:POS
 	oPosition = position;
 	oColor = color;
 }
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */
