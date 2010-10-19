@@ -4,7 +4,6 @@
 #include <cell/gcm.h>
 #include <cell/dbgfont.h>
 
-
 typedef unsigned int u32;
 typedef unsigned short u16;
 typedef unsigned char u8;
@@ -15,7 +14,6 @@ typedef unsigned char u8;
 #define DISPLAY_WIDTH  1920
 #define DISPLAY_HEIGHT 1080
 
-
 typedef struct {
 	unsigned flags;
 	char title[64];
@@ -23,16 +21,13 @@ typedef struct {
 	char path[768];
 } t_menu_list;
 
-extern void draw_square(float x, float y, float w, float h, float z,
-			u32 rgba);
+extern void draw_square(float x, float y, float w, float h, float z, u32 rgba);
 
 extern int set_texture(u8 * buffer, u32 x_size, u32 y_size);
 
-extern void display_png(int x, int y, int width, int height, int tx,
-			int ty);
+extern void display_png(int x, int y, int width, int height, int tx, int ty);
 
-extern void draw_device_list(u32 flags, int hermes, int payload_type,
-			     int direct_boot, int ftp);
+extern void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot, int ftp);
 
 extern int initConsole(void);
 extern int termConsole(void);

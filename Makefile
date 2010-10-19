@@ -1,7 +1,7 @@
 CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
-PPU_SRCS = main.c fileutils.c graphics.c syscall8.c $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
+PPU_SRCS = main.c fileutils.c graphics.c syscall8.c
 PPU_TARGET = open_manager.elf
 
 GITHEAD := $(shell git describe --abbrev=4 --tags 2>/dev/null)
@@ -22,6 +22,7 @@ FPSHADER_SRCS = fpshader.cg fpshader2.cg
 
 VPSHADER_PPU_OBJS = $(patsubst %.cg, $(OBJS_DIR)/%.ppu.o, $(VPSHADER_SRCS))
 FPSHADER_PPU_OBJS = $(patsubst %.cg, $(OBJS_DIR)/%.ppu.o, $(FPSHADER_SRCS))
+PPU_EMBEDDED_SRCS = $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
 
 PACKAGE_NAME = $(shell sed -n 's/^Product_ID[[:space:]]*=[[:space:]]*//p' openmanager.conf)
 FOLDER_NAME = $(shell echo $(PACKAGE_NAME) | sed -n 's/^[[:alnum:]]*-\([[:alnum:]]*\)_.*/\1/p')
@@ -65,8 +66,11 @@ include $(CELL_MK_DIR)/sdk.target.mk
 
 PPU_OBJS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
 
-all : EBOOT.BIN $(PKG_TARGET) docs
-docs : readme.html readme.pdf
+.PYHONY all : EBOOT.BIN $(PKG_TARGET) docs
+.PHONY docs : readme.html readme.pdf
+
+.PHONY indent : *.c *.h *.cg
+	indent $^
 
 $(VPSHADER_PPU_OBJS): $(OBJS_DIR)/%.ppu.o : %.vpo
 	@mkdir -p $(dir $(@))

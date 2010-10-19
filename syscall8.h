@@ -26,8 +26,6 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-
-
 #ifndef _SYS8_H_
 #define _SYS8_H_
 
@@ -36,7 +34,6 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 /* 
 
@@ -50,8 +47,8 @@ payload V3 is loaded at 0x80000000007ff000
 	typedef struct {
 		uint64_t compare_addr;	// kernel address to compare string
 		uint64_t replace_addr;	// kernel address to replace string
-		int compare_len;	// len of compare string
-		int replace_len;	// len of replace string
+		int compare_len;		// len of compare string
+		int replace_len;		// len of replace string
 
 	} path_open_entry;
 
@@ -147,9 +144,7 @@ replace_len= strlen(replace_addr);
 
 */
 
-
-	uint64_t sys8_call(uint64_t addr, uint64_t param1,
-			   uint64_t param2);
+	uint64_t sys8_call(uint64_t addr, uint64_t param1, uint64_t param2);
 
 /*
 	sys8_alloc: kernel function to alloc memory
@@ -195,7 +190,6 @@ replace_len= strlen(replace_addr);
 
 	int sys8_perm_mode(uint64_t mode);
 
-
 /*
 	sys8_path_table: function to add one table for path redirections in hook_open
 
@@ -206,7 +200,6 @@ replace_len= strlen(replace_addr);
 */
 
 	uint64_t sys8_path_table(uint64_t addr_table);
-
 
 /*
 
@@ -291,7 +284,6 @@ To test path redirections:
 	strncpy(&open_table.arena[0x200], "/app_home/PS3_GAME/ICO", 0x100);          // compare 3
 	strncpy(&open_table.arena[0x1800], "/dev_usb000/PS3_GAME/ICON0.PNG", 0x800); // replace 3: // replace all ICONxxxx by ICON0.PNG
 
-
     // fix the string len
 
 	open_table.entries[0].compare_len= strlen(&open_table.arena[0]);		// 1
@@ -312,7 +304,6 @@ To test path redirections:
 
 
 */
-
 
 #ifdef __cplusplus
 }
