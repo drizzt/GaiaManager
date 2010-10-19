@@ -2466,8 +2466,10 @@ int main(int argc, char *argv[])
 
 		if (mode_list == GAME) {
 
-			if (game_sel >= 0 && max_menu_list > 0)
+			if (game_sel >= 0 && max_menu_list > 0) {
 				draw_list(menu_list, max_menu_list, game_sel | (0x10000 * ((menu_list[0].flags & 2048) != 0)));
+				cellDbgFontPrintf(0.775, 0.10, 0.8, 0xff00ffff, menu_list[game_sel].title_id);
+			}
 			//else cellDbgFontPrintf( 0.08f, 0.1f, 1.2f, 0xffffffff, "Put games from BR-DISC");
 		} else {
 			if (game_sel >= 0 && max_menu_homebrew_list > 0)
