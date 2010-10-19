@@ -66,10 +66,10 @@ include $(CELL_MK_DIR)/sdk.target.mk
 
 PPU_OBJS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
 
-.PYHONY all : EBOOT.BIN $(PKG_TARGET) docs
-.PHONY docs : readme.html readme.pdf
+all : EBOOT.BIN $(PKG_TARGET) docs
+docs : readme.html readme.pdf
 
-.PHONY indent : *.c *.h *.cg
+indent : *.c *.h *.cg
 	indent $^
 
 $(VPSHADER_PPU_OBJS): $(OBJS_DIR)/%.ppu.o : %.vpo

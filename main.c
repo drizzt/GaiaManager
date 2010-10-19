@@ -194,8 +194,8 @@ static t_menu_list menu_list[MAX_LIST];
 static int max_menu_list = 0;
 
 static int region = 1;
-static int direct_boot = 0;
-//static int disc_less = 0;
+static bool direct_boot = false;
+static bool disc_less = false;
 static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
 
 static uint64_t mem_orig = 0x386000014E800020ULL;
@@ -274,7 +274,7 @@ static void parse_ini(void);
 static void update_game_folder(char *ebootbin);
 static void quit(void);
 static void reset_game_list(int force, int sel);
-static void set_hermes_mode(bool enable);
+static void set_hermes_mode(uint64_t mode);
 static void copy_from_bluray(void);
 
 static int load_libfont_module(void)
@@ -514,7 +514,7 @@ static int unload_modules(void)
 	fid = fopen(SETTINGS_FILE, "w");
 	if (fid) {
 		fprintf(fid, "patchmode = %llu\n", patchmode);
-//      fprintf(fid, "disc_less = %d\n", disc_less);
+		fprintf(fid, "disc_less = %d\n", disc_less);
 		fprintf(fid, "direct_boot = %d\n", direct_boot);
 		fprintf(fid, "ftp_flags = %d\n", ftp_flags);
 		fprintf(fid, "hdd_folder = %s\n", hdd_folder);
@@ -786,7 +786,7 @@ void syscall36(const char *path)
 {
 	if (syscall35("/dev_bdvd", path) != 0) {
 		system_call_1(36, (uint32_t) path);
-	} else {
+	} else if (disc_less) {
 		syscall35("/app_home", path);
 	}
 }
@@ -1109,8 +1109,8 @@ static void parse_ini(void)
 			filename[strlen(filename) - 1] = '\0';
 		if (strncmp(filename, "patchmode = ", 12) == 0)
 			patchmode = strtoull(&filename[12], NULL, 10);
-//      else if (strncmp(filename, "disc_less = ", 12) == 0)
-//          disc_less = atoi(&filename[12]);
+		else if (strncmp(filename, "disc_less = ", 12) == 0)
+			disc_less = atoi(&filename[12]);
 		else if (strncmp(filename, "direct_boot = ", 14) == 0)
 			direct_boot = atoi(&filename[14]);
 		else if (strncmp(filename, "ftp_flags = ", 12) == 0)
@@ -1280,14 +1280,12 @@ static void reset_game_list(int force, int sel)
 	game_sel = sel;
 }
 
-static void set_hermes_mode(bool enable)
+static void set_hermes_mode(uint64_t mode)
 {
-	patchmode = enable ? 0 : 2;
-
 	if (sys8_enable(0) > 0) {
-		sys8_perm_mode(patchmode);
+		sys8_perm_mode(mode);
 	} else {
-		pokeq(0x80000000000505d0ULL, enable ? mem_patched : mem_orig);
+		pokeq(0x80000000000505d0ULL, mode == 0 ? mem_patched : mem_orig);
 	}
 }
 
@@ -1536,10 +1534,12 @@ int main(int argc, char *argv[])
 
 	setRenderColor();
 
-	if (syscall35("/dev_hdd0", "/dev_hdd0") == 0)
+	if (syscall35("/dev_hdd0", "/dev_hdd0") == 0) {
 		payload_type = 1;
-	else
-		set_hermes_mode(!patchmode);
+	} else {
+		// Disable mem patch on startup
+		set_hermes_mode(2ULL);
+	}
 
 	if (!memcmp(hdd_folder, "ASDFGHJKLM", 10) && hdd_folder[10] == 'N')
 		update_game_folder(argv[0]);
@@ -2344,13 +2344,14 @@ int main(int argc, char *argv[])
 			}
 		}
 		if ((new_pad & BUTTON_L1) && mode_list == GAME) {
-			if (payload_type == 0)
-				set_hermes_mode(patchmode);	// toggle patch mode
-//          else if (payload_type == 1)
-//              disc_less ^= 1;
+			if (payload_type == 0) {
+				patchmode = patchmode == 2 ? 0 : 2;	// toggle patch mode
+			} else if (payload_type == 1) {
+				disc_less ^= true;
+			}
 		}
 		if ((new_pad & BUTTON_L2) && mode_list == GAME) {
-			direct_boot ^= 1;
+			direct_boot ^= true;
 		}
 		if (new_pad & BUTTON_R1) {
 			if (ftp_flags & 2)
@@ -2395,7 +2396,10 @@ int main(int argc, char *argv[])
 
 					if (stat(filename, &s) >= 0) {
 						syscall36(menu_list[game_sel].path);
-						if (direct_boot == 1) {
+						if (payload_type == 0)
+							set_hermes_mode(patchmode);
+
+						if (direct_boot) {
 							ret = unload_modules();
 							sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 3071,
 														SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
@@ -2413,13 +2417,8 @@ int main(int argc, char *argv[])
 						ret = cellMsgDialogOpen2(type_dialog_yes_no, string1, dialog_fun1, (void *) 0x0000aaaa, NULL);
 						wait_dialog();
 						if (dialog_ret == 1) {
-							uint64_t old_patchmode = patchmode;
-							if (payload_type == 0)
-								set_hermes_mode(false);
 							sprintf(filename, "%s", menu_list[game_sel].path);
 							fix_perm_recursive(filename);
-							if (payload_type == 0)
-								set_hermes_mode(!old_patchmode);
 						}
 					}
 				}
@@ -2478,17 +2477,14 @@ int main(int argc, char *argv[])
 
 		if (mode_list == GAME)
 			draw_device_list((fdevices |
-							  ((game_sel >= 0 && max_menu_list > 0) ? (menu_list[game_sel].flags << 16) : 0)),
-							 /*payload_type ==
-							  * 1 ? disc_less : */ !patchmode,
-							 payload_type, direct_boot, ftp_flags & 2);
+							  ((game_sel >= 0
+								&& max_menu_list > 0) ? (menu_list[game_sel].flags << 16) : 0)),
+							 payload_type == 1 ? disc_less : !patchmode, payload_type, direct_boot, ftp_flags & 2);
 		else
 			draw_device_list((fdevices | ((game_sel >= 0 && max_menu_homebrew_list > 0)
 										  ? (menu_homebrew_list[game_sel].flags << 16) | (1U << 31)
-										  : 1U << 31)),
-							 /*payload_type ==
-							  * 1 ? disc_less : */ !patchmode,
-							 payload_type, direct_boot, ftp_flags & 2);
+										  : 1U << 31)), payload_type == 1 ? disc_less : !patchmode, payload_type,
+							 direct_boot, ftp_flags & 2);
 
 		cellDbgFontDrawGcm();
 
