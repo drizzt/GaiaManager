@@ -845,7 +845,7 @@ void syscall36(const char *path)
 
 static void restorecall36(const char *path)
 {
-	if (syscall35(path, path) != 0) {
+	if (syscall35(path, NULL) != 0) {
 		system_call_1(36, (uint32_t) path);
 	}
 }
