@@ -711,10 +711,12 @@ void draw_device_list(u32 flags, int hermes, int payload_type,
 				  "Refresh List");
 		cellDbgFontPrintf(0.775, 0.635, 0.8, 0xffffffff,
 				  "Check Selected");
-		cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff,
+		if (payload_type == 0) {
+			cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff,
 				  payload_type ==
 				  1 ? "Disc Less:" : "Mem Patch:");
-		draw_text_bool(0.895, 0.68, 0.8, hermes);
+			draw_text_bool(0.895, 0.68, 0.8, hermes);
+		}
 		cellDbgFontPrintf(0.775, 0.72, 0.8, 0xffffffff,
 				  "Direct Boot:");
 		draw_text_bool(0.895, 0.72, 0.8, direct_boot);

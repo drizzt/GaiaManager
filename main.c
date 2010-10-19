@@ -207,7 +207,7 @@ static int max_menu_list = 0;
 
 static int region = 1;
 static int direct_boot = 0;
-static int disc_less = 0;
+//static int disc_less = 0;
 static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
 
 static uint64_t mem_orig = 0x386000014E800020ULL;
@@ -540,7 +540,7 @@ static int unload_modules(void)
 	fid = fopen(SETTINGS_FILE, "w");
 	if (fid) {
 		fprintf(fid, "patchmode = %llu\n", patchmode);
-		fprintf(fid, "disc_less = %d\n", disc_less);
+//		fprintf(fid, "disc_less = %d\n", disc_less);
 		fprintf(fid, "direct_boot = %d\n", direct_boot);
 		fprintf(fid, "ftp_flags = %d\n", ftp_flags);
 		fprintf(fid, "hdd_folder = %s\n", hdd_folder);
@@ -1181,8 +1181,8 @@ static void parse_ini(void)
 			filename[strlen(filename) - 1] = '\0';
 		if (strncmp(filename, "patchmode = ", 12) == 0)
 			patchmode = strtoull(&filename[12], NULL, 10);
-		else if (strncmp(filename, "disc_less = ", 12) == 0)
-			disc_less = atoi(&filename[12]);
+//		else if (strncmp(filename, "disc_less = ", 12) == 0)
+//			disc_less = atoi(&filename[12]);
 		else if (strncmp(filename, "direct_boot = ", 14) == 0)
 			direct_boot = atoi(&filename[14]);
 		else if (strncmp(filename, "ftp_flags = ", 12) == 0)
@@ -2986,8 +2986,8 @@ int main(int argc, char *argv[])
 		if ((new_pad & BUTTON_L1) && mode_list == GAME) {
 			if (payload_type == 0)
 				set_hermes_mode(patchmode);	// toggle patch mode
-			else if (payload_type == 1)
-				disc_less ^= 1;
+//			else if (payload_type == 1)
+//				disc_less ^= 1;
 		}
 		if ((new_pad & BUTTON_L2) && mode_list == GAME) {
 			direct_boot ^= 1;
@@ -3173,8 +3173,8 @@ int main(int argc, char *argv[])
 					    && max_menu_list >
 					    0) ? (menu_list[game_sel].flags
 						  << 16) : 0)),
-					 payload_type ==
-					 1 ? disc_less : !patchmode,
+					 /*payload_type ==
+					 1 ? disc_less :*/ !patchmode,
 					 payload_type, direct_boot,
 					 ftp_flags & 2);
 		else
@@ -3186,8 +3186,8 @@ int main(int argc, char *argv[])
 									 <<
 									 31)
 					   : 1U << 31)),
-					 payload_type ==
-					 1 ? disc_less : !patchmode,
+					 /*payload_type ==
+					 1 ? disc_less :*/ !patchmode,
 					 payload_type, direct_boot,
 					 ftp_flags & 2);
 
