@@ -123,6 +123,8 @@ static CellGcmTexture text_param;
 
 static u32 local_heap = 0;
 
+extern const char VERSION[];
+
 static void *localAlloc(const u32 size)
 {
 	u32 align = (size + 1023) & (~1023);
@@ -603,8 +605,8 @@ void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot, 
 
 	char sizer[255];
 	char path[255];
-	char ipaddr[64];
 	union CellNetCtlInfo info;
+	char ipaddr[sizeof(info.ip_address)];
 
 	for (n = 0; n < 12; n++) {
 
@@ -645,8 +647,19 @@ void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot, 
 		}
 	}
 
-	cellNetCtlGetInfo(CELL_NET_CTL_INFO_IP_ADDRESS, &info);
-	sprintf(ipaddr, "%16s", info.ip_address);
+	if (cellNetCtlGetInfo(CELL_NET_CTL_INFO_IP_ADDRESS, &info) < 0) {
+		strcpy(ipaddr, "DISCONNECTED");
+	} else {
+		char *p = info.ip_address;
+		size_t iplen = sizeof(info.ip_address);
+
+		while (*p == ' ') {
+			p++;
+			iplen--;
+		}
+
+		memcpy(ipaddr, p, iplen);
+	}
 
 	cellDbgFontPrintf(0.775, 0.432, 0.8, 0xffffffff, "Launch Selected");
 
@@ -671,7 +684,7 @@ void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot, 
 	cellDbgFontPrintf(0.775, 0.80, 0.8, 0xffffffff, "OM Mode:");
 	cellDbgFontPrintf(0.86, 0.80, 0.8, 0xffffffff, (flags >> 31) & 1 ? "HOMEBREW" : "GAME");
 	cellDbgFontPrintf(0.775, 0.84, 0.8, 0xffffffff, "IP");
-	cellDbgFontPrintf(0.771, 0.84, 0.8, 0xff00ffff, ipaddr);
+	cellDbgFontPrintf(0.80, 0.84, 0.8, 0xff00ffff, ipaddr);
 
 	draw_text_stroke(0.36, 0.095, 0.8, 0xffdddddd, VERSION);
 }

@@ -1,7 +1,7 @@
 CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
-PPU_SRCS = main.c fileutils.c graphics.c syscall8.c
+PPU_SRCS = main.c fileutils.c graphics.c syscall8.c version.c
 PPU_TARGET = open_manager.elf
 
 GITHEAD := $(shell git describe --abbrev=4 --tags 2>/dev/null)
@@ -13,7 +13,7 @@ GITHEAD := $(GITHEAD)-dirty
 endif
 
 PPU_LDLIBS = -lfont_stub -lfontFT_stub -lfreetype_stub -lpthread -latrac3plus_stub -lmixer -laudio_stub -lftp -lrtc_stub -lnet_stub -lnetctl_stub -lpngdec_stub -lm -ldbgfont_gcm -lgcm_cmd -lgcm_sys_stub -lio_stub -lsysmodule_stub -lsysutil_stub -lfs_stub
-PPU_CPPFLAGS += -Werror -D'FOLDER_NAME="$(FOLDER_NAME)"' -D'VERSION="$(GITHEAD)"'
+PPU_CPPFLAGS += -Werror -D'FOLDER_NAME="$(FOLDER_NAME)"'
 
 PPU_INCDIRS += -I$(CELL_SDK)/target/ppu/include/sysutil
 
@@ -103,3 +103,7 @@ readme.html: readme.mkd
 
 readme.pdf: readme.mkd
 	maruku --pdf -o $@ $<
+
+$(OBJS_DIR)/version.ppu.o : PPU_CPPFLAGS += -DGITHEAD=\"$(GITHEAD)\"
+
+.PHONY: $(OBJS_DIR)/version.ppu.o
