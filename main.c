@@ -1579,7 +1579,8 @@ int main(int argc, char *argv[])
 
 		if (new_pad & BUTTON_SELECT && mode_list == GAME) {
 			dialog_ret = 0;
-			snprintf(filename, sizeof(filename), "Do you want to download missing covers (in /dev_hdd0/%s)?\nIt could takes awhile...\nPlease wait",
+			snprintf(filename, sizeof(filename),
+					 "Do you want to download missing covers (in /dev_hdd0/%s)?\nIt could takes awhile...\nPlease wait",
 					 COVERS_DIR);
 			ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 			wait_dialog();
@@ -1589,7 +1590,7 @@ int main(int argc, char *argv[])
 				for (n = 0; n < max_menu_list; n++) {
 					struct stat s;
 					snprintf(filename, sizeof(filename), "/dev_hdd0/%s/%s.PNG", COVERS_DIR, menu_list[n].title_id);
-				    if (stat(filename, &s) == 0) 
+					if (stat(filename, &s) == 0)
 						continue;
 
 					download_cover(menu_list[n].title_id, filename);

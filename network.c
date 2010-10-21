@@ -11,7 +11,7 @@
 #include "dialog.h"
 #include "network.h"
 
-#define BASE_URI "http://www.ibeglab.org/drizzt/gaiamanager/gallery/photos/COVERS"
+#define COVERS_BASE_URI "http://74.53.27.210/~ibegcrew/drizzt/gaiamanager/gallery/photos/COVERS"
 
 bool download_cover(const char *title_id, const char *fileName)
 {
@@ -26,11 +26,11 @@ bool download_cover(const char *title_id, const char *fileName)
 	size_t poolSize = 0;
 	void *uriPool = NULL;
 	void *httpPool = NULL;
-	char serverName[sizeof(BASE_URI) + 10 + 4];
+	char serverName[sizeof(COVERS_BASE_URI) + 10 + 4];
 
 	FILE *fid;
 
-	snprintf(serverName, sizeof(serverName), "%s/%s.PNG", BASE_URI, title_id);
+	snprintf(serverName, sizeof(serverName), "%s/%s.PNG", COVERS_BASE_URI, title_id);
 
 	httpPool = malloc(8 * 1024);
 	if (!httpPool) {
