@@ -10,3 +10,5 @@ extern void dialog_fun2(int button_type, void *userData __attribute__ ((unused))
 extern void wait_dialog(void);
 
 #endif
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */

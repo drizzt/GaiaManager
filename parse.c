@@ -102,7 +102,6 @@ int parse_param_sfo(char *file, const char *field, char *title_name)
 void change_param_sfo_version(char *file)
 {
 	FILE *fp;
-	float ver;
 
 	fp = fopen(file, "rb");
 	if (fp != NULL) {
@@ -134,12 +133,13 @@ void change_param_sfo_version(char *file)
 				break;
 
 			if (!strcmp((char *) &mem[str], "PS3_SYSTEM_VER")) {
-				ver = strtof((char *) &mem[pos], NULL);
+				double ver;
+				ver = strtod((char *) &mem[pos], NULL);
 				if (ver > 3.41) {
 					char msg[128];
 					snprintf(msg, sizeof(msg),
-							 "This game requires PS3_SYSTEM_VER = %s\nDo you want to try fixing PARAM.SFO forcing 3.41 version?",
-							 &mem[pos]);
+							 "This game requires PS3_SYSTEM_VER %.2f\nDo you want to try fixing PARAM.SFO by forcing 3.41 version?",
+							 ver);
 					dialog_ret = 0;
 					cellMsgDialogOpen2(type_dialog_yes_no, msg, dialog_fun1, (void *) 0x0000aaaa, NULL);
 					wait_dialog();
@@ -162,3 +162,5 @@ void change_param_sfo_version(char *file)
 			free(mem);
 	}
 }
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */

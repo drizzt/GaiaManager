@@ -6,3 +6,5 @@ extern int parse_param_sfo(char *file, const char *field, char *title_name);
 extern void change_param_sfo_version(char *file);
 
 #endif
+
+/* vim: set ts=4 sw=4 sts=4 tw=120 */
