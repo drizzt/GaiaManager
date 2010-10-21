@@ -1,7 +1,7 @@
 CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
-PPU_SRCS = main.c fileutils.c graphics.c syscall8.c version.c
+PPU_SRCS = main.c fileutils.c graphics.c parse.c syscall8.c version.c
 PPU_TARGET = open_manager.elf
 
 GITHEAD := $(shell git describe --abbrev=4 --tags 2>/dev/null)
