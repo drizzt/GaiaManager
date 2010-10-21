@@ -2398,13 +2398,13 @@ int main(int argc, char *argv[])
 					sprintf(filename, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
 
 					if (stat(filename, &s) >= 0) {
-						char name[1024];
-						snprintf(name, sizeof(name), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
-						change_param_sfo_version(name);
-						syscall36(menu_list[game_sel].path);
-						if (payload_type == 0)
+						if (payload_type == 0) {
+							char name[1024];
+							snprintf(name, sizeof(name), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
+							change_param_sfo_version(name);
+							syscall36(menu_list[game_sel].path);
 							set_hermes_mode(patchmode);
-
+						}
 						if (direct_boot) {
 							ret = unload_modules();
 							sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 3071,
