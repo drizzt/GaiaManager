@@ -32,7 +32,6 @@
 
 #include <sysutil/sysutil_sysparam.h>
 #include <sysutil/sysutil_msgdialog.h>
-#include <sysutil/sysutil_oskdialog.h>
 #include <cell/font.h>
 #include <sys/ppu_thread.h>
 
@@ -43,9 +42,11 @@
 #include <libftp.h>
 
 #include "config.h"
+#include "dialog.h"
 #include "fileutils.h"
 #include "main.h"
 #include "graphics.h"
+#include "parse.h"
 #include "syscall8.h"
 #ifndef WITHOUT_SOUND
 #include "at3plus.h"
@@ -226,18 +227,9 @@ static char filename[1024];
 static char bluray_game[64];	// name of the game
 static int ftp_flags = 0;
 static int unload_mod = 0;
-static int dialog_ret = 0;
 static bool want_to_quit = false;	// true when I need to quit
 
 static int png_w = 0, png_h = 0;
-
-static u32 type_dialog_yes_no =
-	CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_YESNO |
-	CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON | CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NO;
-
-static u32 type_dialog_ok =
-	CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_OK |
-	CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF | CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_OK;
 
 time_t time_start;				// time counter init
 
@@ -248,7 +240,6 @@ static void ftp_on(void);
 static void ftp_off(void);
 static int load_modules(void);
 static int unload_modules(void);
-static void wait_dialog(void);
 static void *png_malloc(u32 size, void *a);
 static int png_free(void *ptr, void *a);
 static int png_out_mapmem(u8 * buffer, size_t buf_size);
@@ -261,9 +252,6 @@ void syscall36(const char *path);	// for some strange reasons it does not work a
 static void restorecall36(const char *path);
 //static uint64_t peekq(uint64_t addr);
 static void pokeq(uint64_t addr, uint64_t val);
-static int parse_ps3_disc(char *path, char *id);
-static int parse_param_sfo(char *file, const char *field, char *title_name);
-static void change_param_sfo_version(char *file);
 static void fix_perm_recursive(const char *start_path);
 static void sort_entries(t_menu_list * list, int *max);
 static void delete_entries(t_menu_list * list, int *max, u32 flag);
@@ -555,56 +543,9 @@ static int unload_modules(void)
 
 SYS_PROCESS_PARAM(1001, 0x10000)
 
-static void dialog_fun1(int button_type, void *userData __attribute__ ((unused)))
-{
-
-	switch (button_type) {
-	case CELL_MSGDIALOG_BUTTON_YES:
-		dialog_ret = 1;
-		break;
-	case CELL_MSGDIALOG_BUTTON_NO:
-	case CELL_MSGDIALOG_BUTTON_ESCAPE:
-	case CELL_MSGDIALOG_BUTTON_NONE:
-		dialog_ret = 2;
-		break;
-	default:
-		break;
-	}
-}
-
-static void dialog_fun2(int button_type, void *userData __attribute__ ((unused)))
-{
-
-	switch (button_type) {
-	case CELL_MSGDIALOG_BUTTON_OK:
-	case CELL_MSGDIALOG_BUTTON_ESCAPE:
-	case CELL_MSGDIALOG_BUTTON_NONE:
-
-		dialog_ret = 1;
-		break;
-	default:
-		break;
-	}
-}
-
-static void wait_dialog(void)
-{
-
-	while (!dialog_ret) {
-		cellSysutilCheckCallback();
-		flip();
-	}
-
-	cellMsgDialogAbort();
-	setRenderColor();
-	sys_timer_usleep(100000);
-
-}
-
 /****************************************************/
 /* PNG SECTION                                      */
 /****************************************************/
-
 typedef struct CtrlMallocArg {
 	u32 mallocCallCounts;
 
@@ -845,158 +786,6 @@ static void fix_perm_recursive(const char *start_path)
 		}
 		err = cellFsClosedir(dir_fd);
 	}
-}
-
-static int parse_ps3_disc(char *path, char *id)
-{
-	FILE *fp;
-	int n;
-
-	fp = fopen(path, "rb");
-	if (fp != NULL) {
-		unsigned len;
-		unsigned char *mem = NULL;
-
-		fseek(fp, 0, SEEK_END);
-		len = ftell(fp);
-
-		mem = (unsigned char *) malloc(len + 16);
-		if (!mem) {
-			fclose(fp);
-			return -2;
-		}
-
-		memset(mem, 0, len + 16);
-
-		fseek(fp, 0, SEEK_SET);
-
-		fread((void *) mem, len, 1, fp);
-
-		fclose(fp);
-
-		for (n = 0x20; n < 0x200; n += 0x20) {
-			if (!strcmp((char *) &mem[n], "TITLE_ID")) {
-				n = (mem[n + 0x12] << 8) | mem[n + 0x13];
-				memcpy(id, &mem[n], 16);
-
-				return 0;
-			}
-		}
-	}
-
-	return -1;
-}
-
-static int parse_param_sfo(char *file, const char *field, char *title_name)
-{
-	FILE *fp;
-
-	fp = fopen(file, "rb");
-	if (fp != NULL) {
-		unsigned len, pos, str;
-		unsigned char *mem = NULL;
-
-		fseek(fp, 0, SEEK_END);
-		len = ftell(fp);
-
-		mem = (unsigned char *) malloc(len + 16);
-		if (!mem) {
-			fclose(fp);
-			return -2;
-		}
-
-		memset(mem, 0, len + 16);
-
-		fseek(fp, 0, SEEK_SET);
-		fread((void *) mem, len, 1, fp);
-
-		fclose(fp);
-
-		str = (mem[8] + (mem[9] << 8));
-		pos = (mem[0xc] + (mem[0xd] << 8));
-
-		int indx = 0;
-// liomajor fix
-		while (str < len) {
-			if (mem[str] == 0)
-				break;
-
-			if (!strcmp((char *) &mem[str], field)) {
-				strncpy(title_name, (char *) &mem[pos], 63);
-				free(mem);
-				return 0;
-			}
-			while (mem[str])
-				str++;
-			str++;
-			pos += (mem[0x1c + indx] + (mem[0x1d + indx] << 8));
-			indx += 16;
-		}
-		if (mem)
-			free(mem);
-	}
-
-	return -1;
-}
-
-static void change_param_sfo_version(char *file)
-{
-	FILE *fp;
-	float ver;
-
-	fp = fopen(file, "r+b");
-	if (fp != NULL) {
-		unsigned len, pos, str;
-		unsigned char *mem = NULL;
-
-		fseek(fp, 0, SEEK_END);
-		len = ftell(fp);
-
-		mem = (unsigned char *) malloc(len + 16);
-		if (!mem) {
-			fclose(fp);
-			return;
-		}
-
-		memset(mem, 0, len + 16);
-
-		fseek(fp, 0, SEEK_SET);
-		fread((void *) mem, len, 1, fp);
-
-		str = (mem[8] + (mem[9] << 8));
-		pos = (mem[0xc] + (mem[0xd] << 8));
-
-		int indx = 0;
-
-		while (str < len) {
-			if (mem[str] == 0)
-				break;
-
-			if (!strcmp((char *) &mem[str], "PS3_SYSTEM_VER")) {
-				ver = strtof((char *) &mem[pos], NULL);
-				if (ver > 3.41) {
-					char msg[128];
-					snprintf(msg, sizeof(msg), "This game requires PS3_SYSTEM_VER = %s\nDo you want to try fixing PARAM.SFO forcing 3.41 version?", &mem[pos]);
-					dialog_ret = 0;
-					cellMsgDialogOpen2(type_dialog_yes_no, msg, dialog_fun1, (void *) 0x0000aaaa, NULL);
-					if (dialog_ret == 0)
-						break;
-					memcpy(&mem[pos], "03.410", 6);
-					fseek(fp, 0, SEEK_SET);
-					fwrite(mem, len, 1, fp);
-				}
-				break;
-			}
-			while (mem[str])
-				str++;
-			str++;
-			pos += (mem[0x1c + indx] + (mem[0x1d + indx] << 8));
-			indx += 16;
-		}
-		if (mem)
-			free(mem);
-	}
-	fclose(fp);
 }
 
 static void sort_entries(t_menu_list * list, int *max)
@@ -2398,12 +2187,11 @@ int main(int argc, char *argv[])
 					sprintf(filename, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
 
 					if (stat(filename, &s) >= 0) {
-						if (payload_type == 0) {
-							char name[1024];
-							snprintf(name, sizeof(name), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
-							change_param_sfo_version(name);
+						char name[1024];
+						snprintf(name, sizeof(name), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
+						change_param_sfo_version(name);
+						if (payload_type == 0)
 							set_hermes_mode(patchmode);
-						}
 						syscall36(menu_list[game_sel].path);
 						if (direct_boot) {
 							ret = unload_modules();

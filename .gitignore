@@ -8,6 +8,7 @@ waveout.c
 *.[fv]po
 *.self
 *.elf
+*~
 objs/
 readme.aux
 readme.log
