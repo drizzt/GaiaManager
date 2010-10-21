@@ -45,6 +45,7 @@
 #include "dialog.h"
 #include "fileutils.h"
 #include "main.h"
+#include "network.h"
 #include "graphics.h"
 #include "parse.h"
 #include "syscall8.h"
@@ -387,12 +388,12 @@ static void ftp_handler(CellFtpServiceEvent event, void *data __attribute__ ((un
 
 static void ftp_on(void)
 {
-	int ret;
+//  int ret;
 
 	if (!(ftp_flags & 1)) {
-		ret = sys_net_initialize_network();
-		if (ret < 0)
-			return;
+//      ret = sys_net_initialize_network();
+//      if (ret < 0)
+//          return;
 		ftp_flags |= 1;
 	}
 
@@ -482,12 +483,18 @@ static int load_modules(void)
 	else
 		unload_mod |= 16;
 
+	ret = cellSysmoduleLoadModule(CELL_SYSMODULE_HTTP);
+	if (ret != CELL_OK)
+		return ret;
+	else
+		unload_mod |= 32;
+
 #ifndef WITHOUT_SOUND
 	ret = cellSysmoduleLoadModule(CELL_SYSMODULE_ATRAC3PLUS);
 	if (ret != CELL_OK)
 		return ret;
 	else
-		unload_mod |= 32;
+		unload_mod |= 64;
 #endif
 
 	return ret;
@@ -519,9 +526,12 @@ static int unload_modules(void)
 	free(host_addr);
 
 #ifndef WITHOUT_SOUND
-	if (unload_mod & 32)
+	if (unload_mod & 64)
 		cellSysmoduleUnloadModule(CELL_SYSMODULE_ATRAC3PLUS);
 #endif
+
+	if (unload_mod & 32)
+		cellSysmoduleUnloadModule(CELL_SYSMODULE_HTTP);
 
 	if (unload_mod & 16)
 		cellSysmoduleUnloadModule(CELL_SYSMODULE_NET);
@@ -1288,6 +1298,8 @@ int main(int argc, char *argv[])
 
 	cellNetCtlInit();
 
+	sys_net_initialize_network();
+
 #ifndef WITHOUT_SAVE_STATUS
 	parse_ini();
 
@@ -1564,6 +1576,26 @@ int main(int argc, char *argv[])
 
 		if ((new_pad & BUTTON_START) && (old_pad & BUTTON_SELECT))
 			update_game_folder(argv[0]);
+
+		if (new_pad & BUTTON_SELECT && mode_list == GAME) {
+			dialog_ret = 0;
+			snprintf(filename, sizeof(filename), "Do you want to download missing covers (in /dev_hdd0/%s)?\nIt could takes awhile...\nPlease wait",
+					 COVERS_DIR);
+			ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+			wait_dialog();
+
+			if (dialog_ret == 1) {
+				int n;
+				for (n = 0; n < max_menu_list; n++) {
+					struct stat s;
+					snprintf(filename, sizeof(filename), "/dev_hdd0/%s/%s.PNG", COVERS_DIR, menu_list[n].title_id);
+				    if (stat(filename, &s) == 0) 
+						continue;
+
+					download_cover(menu_list[n].title_id, filename);
+				}
+			}
+		}
 
 		if (new_pad & BUTTON_R2) {
 			game_sel = 0;
