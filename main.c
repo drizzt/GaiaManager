@@ -2402,9 +2402,9 @@ int main(int argc, char *argv[])
 							char name[1024];
 							snprintf(name, sizeof(name), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
 							change_param_sfo_version(name);
-							syscall36(menu_list[game_sel].path);
 							set_hermes_mode(patchmode);
 						}
+						syscall36(menu_list[game_sel].path);
 						if (direct_boot) {
 							ret = unload_modules();
 							sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 3071,
