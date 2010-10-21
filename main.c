@@ -975,6 +975,12 @@ static void change_param_sfo_version(char *file)
 			if (!strcmp((char *) &mem[str], "PS3_SYSTEM_VER")) {
 				ver = strtof((char *) &mem[pos], NULL);
 				if (ver > 3.41) {
+					char msg[128];
+					snprintf(msg, sizeof(msg), "This game requires PS3_SYSTEM_VER = %s\nDo you want to try fixing PARAM.SFO forcing 3.41 version?", &mem[pos]);
+					dialog_ret = 0;
+					cellMsgDialogOpen2(type_dialog_yes_no, msg, dialog_fun1, (void *) 0x0000aaaa, NULL);
+					if (dialog_ret == 0)
+						break;
 					memcpy(&mem[pos], "03.410", 6);
 					fseek(fp, 0, SEEK_SET);
 					fwrite(mem, len, 1, fp);
