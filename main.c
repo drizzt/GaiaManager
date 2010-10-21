@@ -46,7 +46,6 @@
 #include "fileutils.h"
 #include "main.h"
 #include "graphics.h"
-#include "parse.h"
 #include "syscall8.h"
 #ifndef WITHOUT_SOUND
 #include "at3plus.h"
@@ -262,6 +261,9 @@ void syscall36(const char *path);	// for some strange reasons it does not work a
 static void restorecall36(const char *path);
 //static uint64_t peekq(uint64_t addr);
 static void pokeq(uint64_t addr, uint64_t val);
+static int parse_ps3_disc(char *path, char *id);
+static int parse_param_sfo(char *file, const char *field, char *title_name);
+static void change_param_sfo_version(char *file);
 static void fix_perm_recursive(const char *start_path);
 static void sort_entries(t_menu_list * list, int *max);
 static void delete_entries(t_menu_list * list, int *max, u32 flag);
@@ -843,6 +845,151 @@ static void fix_perm_recursive(const char *start_path)
 		}
 		err = cellFsClosedir(dir_fd);
 	}
+}
+
+static int parse_ps3_disc(char *path, char *id)
+{
+	FILE *fp;
+	int n;
+
+	fp = fopen(path, "rb");
+	if (fp != NULL) {
+		unsigned len;
+		unsigned char *mem = NULL;
+
+		fseek(fp, 0, SEEK_END);
+		len = ftell(fp);
+
+		mem = (unsigned char *) malloc(len + 16);
+		if (!mem) {
+			fclose(fp);
+			return -2;
+		}
+
+		memset(mem, 0, len + 16);
+
+		fseek(fp, 0, SEEK_SET);
+
+		fread((void *) mem, len, 1, fp);
+
+		fclose(fp);
+
+		for (n = 0x20; n < 0x200; n += 0x20) {
+			if (!strcmp((char *) &mem[n], "TITLE_ID")) {
+				n = (mem[n + 0x12] << 8) | mem[n + 0x13];
+				memcpy(id, &mem[n], 16);
+
+				return 0;
+			}
+		}
+	}
+
+	return -1;
+}
+
+static int parse_param_sfo(char *file, const char *field, char *title_name)
+{
+	FILE *fp;
+
+	fp = fopen(file, "rb");
+	if (fp != NULL) {
+		unsigned len, pos, str;
+		unsigned char *mem = NULL;
+
+		fseek(fp, 0, SEEK_END);
+		len = ftell(fp);
+
+		mem = (unsigned char *) malloc(len + 16);
+		if (!mem) {
+			fclose(fp);
+			return -2;
+		}
+
+		memset(mem, 0, len + 16);
+
+		fseek(fp, 0, SEEK_SET);
+		fread((void *) mem, len, 1, fp);
+
+		fclose(fp);
+
+		str = (mem[8] + (mem[9] << 8));
+		pos = (mem[0xc] + (mem[0xd] << 8));
+
+		int indx = 0;
+// liomajor fix
+		while (str < len) {
+			if (mem[str] == 0)
+				break;
+
+			if (!strcmp((char *) &mem[str], field)) {
+				strncpy(title_name, (char *) &mem[pos], 63);
+				free(mem);
+				return 0;
+			}
+			while (mem[str])
+				str++;
+			str++;
+			pos += (mem[0x1c + indx] + (mem[0x1d + indx] << 8));
+			indx += 16;
+		}
+		if (mem)
+			free(mem);
+	}
+
+	return -1;
+}
+
+static void change_param_sfo_version(char *file)
+{
+	FILE *fp;
+	float ver;
+
+	fp = fopen(file, "r+b");
+	if (fp != NULL) {
+		unsigned len, pos, str;
+		unsigned char *mem = NULL;
+
+		fseek(fp, 0, SEEK_END);
+		len = ftell(fp);
+
+		mem = (unsigned char *) malloc(len + 16);
+		if (!mem) {
+			fclose(fp);
+			return;
+		}
+
+		memset(mem, 0, len + 16);
+
+		fseek(fp, 0, SEEK_SET);
+		fread((void *) mem, len, 1, fp);
+
+		str = (mem[8] + (mem[9] << 8));
+		pos = (mem[0xc] + (mem[0xd] << 8));
+
+		int indx = 0;
+
+		while (str < len) {
+			if (mem[str] == 0)
+				break;
+
+			if (!strcmp((char *) &mem[str], "PS3_SYSTEM_VER")) {
+				ver = strtof((char *) &mem[pos], NULL);
+				if (ver > 3.41) {
+					memcpy(&mem[pos], "03.410", 6);
+					fwrite(mem, len, 1, fp);
+				}
+				break;
+			}
+			while (mem[str])
+				str++;
+			str++;
+			pos += (mem[0x1c + indx] + (mem[0x1d + indx] << 8));
+			indx += 16;
+		}
+		if (mem)
+			free(mem);
+	}
+	fclose(fp);
 }
 
 static void sort_entries(t_menu_list * list, int *max)
