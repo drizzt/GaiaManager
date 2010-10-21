@@ -976,6 +976,7 @@ static void change_param_sfo_version(char *file)
 				ver = strtof((char *) &mem[pos], NULL);
 				if (ver > 3.41) {
 					memcpy(&mem[pos], "03.410", 6);
+					fseek(fp, 0, SEEK_SET);
 					fwrite(mem, len, 1, fp);
 				}
 				break;
