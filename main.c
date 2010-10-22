@@ -2261,6 +2261,12 @@ int main(int argc, char *argv[])
 							   CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B |
 							   CELL_GCM_CLEAR_A);
 
+		setRenderColor();
+		// square for screen
+		set_texture(text_bg, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+		setRenderTexture();
+		display_png(0, 0, 1920, 1080, 1920, 1080);
+
 		if (game_sel >= 0 && *max_list > 0) {
 			int dispy = 152;
 
@@ -2287,13 +2293,6 @@ int main(int argc, char *argv[])
 			display_png(105, dispy, 1315, 49, 1315, 49);
 
 		}
-
-		setRenderColor();
-
-		// square for screen
-		set_texture(text_bg, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-		setRenderTexture();
-		display_png(0, 0, 1920, 1080, 1920, 1080);
 
 		if (mode_list == GAME) {
 

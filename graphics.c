@@ -370,9 +370,12 @@ void setDrawEnv(void)
 	cellGcmSetViewport(gCellGcmCurrentContext, x, y, w, h, min, max, scale, offset);
 	cellGcmSetClearColor(gCellGcmCurrentContext, 0xff000000);
 
-	cellGcmSetDepthTestEnable(gCellGcmCurrentContext, CELL_GCM_TRUE);
-	cellGcmSetDepthFunc(gCellGcmCurrentContext, CELL_GCM_LESS);
+//	cellGcmSetDepthTestEnable(gCellGcmCurrentContext, CELL_GCM_TRUE);
+//	cellGcmSetDepthFunc(gCellGcmCurrentContext, CELL_GCM_LESS);
 
+	cellGcmSetBlendFunc(gCellGcmCurrentContext,CELL_GCM_SRC_ALPHA, CELL_GCM_ONE_MINUS_SRC_ALPHA,CELL_GCM_SRC_ALPHA, CELL_GCM_ONE_MINUS_SRC_ALPHA);
+	cellGcmSetBlendEquation(gCellGcmCurrentContext,CELL_GCM_FUNC_ADD, CELL_GCM_FUNC_ADD);
+	cellGcmSetBlendEnable(gCellGcmCurrentContext,CELL_GCM_TRUE);
 }
 
 void setRenderColor(void)
