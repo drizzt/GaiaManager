@@ -45,3 +45,8 @@ a img {
   border-style: none;
   text-decoration: none;
 }
+
+.footer {
+  padding: 0px 10px;
+  word-spacing: 10px;
+}
