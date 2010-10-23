@@ -1187,6 +1187,7 @@ int main(int argc, char *argv[])
 	u8 *text_bmp = NULL;
 	u8 *text_h = NULL;
 	u8 *text_bg = NULL;
+	u8 *text_pic1 = NULL;
 	//char INPUT_FILE[] = "/dev_bdvd/PS3_GAME/SND0.AT3";
 	ret = load_modules();
 	load_libfont_module();
@@ -1225,6 +1226,7 @@ int main(int argc, char *argv[])
 	text_bmp = (u8 *) memalign(0x100000, frame_buf_size);
 	text_bg = (u8 *) memalign(0x100000, frame_buf_size);
 	text_h = (u8 *) memalign(0x100000, frame_buf_size);
+	text_pic1 = (u8 *) memalign(0x100000, frame_buf_size);
 	if (!text_bmp)
 		exit(-1);
 
@@ -1233,6 +1235,8 @@ int main(int argc, char *argv[])
 	if (png_out_mapmem(text_bg, frame_buf_size))
 		exit(-1);
 	if (png_out_mapmem(text_h, frame_buf_size))
+		exit(-1);
+	if (png_out_mapmem(text_pic1, frame_buf_size))
 		exit(-1);
 
 	cellSysutilRegisterCallback(0, gfxSysutilCallback, NULL);
@@ -1395,6 +1399,39 @@ int main(int argc, char *argv[])
 				old_fi = game_sel;
 				if (mode_list == GAME) {
 					struct stat st;
+
+					mkdir("/dev_hdd0/game/" FOLDER_NAME "/cache/", S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+					sprintf(filename, "/dev_hdd0/game/%s/cache/%s-PIC1.PNG", hdd_folder_home,
+							menu_list[game_sel].title_id);
+					if (stat(filename, &st) < 0) {
+						FILE *fp;
+						char *buf = NULL;
+						long len;
+
+						snprintf(string1, sizeof(string1), "%s/PS3_GAME/PIC1.PNG", menu_list[game_sel].path);
+						if ((fp = fopen(string1, "rb")) == NULL)
+							break;
+						fseek(fp, 0, SEEK_END);
+						len = ftell(fp);
+						if ((buf = (char *) malloc(len)) == NULL) {
+							fclose(fp);
+							break;
+						}
+						fseek(fp, 0, SEEK_SET);
+						fread(buf, len, 1, fp);
+						fclose(fp);
+
+						if ((fp = fopen(filename, "wb")) == NULL) {
+							free(buf);
+							break;
+						}
+						fwrite(buf, len, 1, fp);
+						fclose(fp);
+						free(buf);
+					}
+
+					load_png_texture(text_pic1, filename);
+
 					sprintf(filename, "%s/COVER.PNG", menu_list[game_sel].path);
 					if (stat(filename, &st) < 0) {
 						sprintf(filename, "/dev_hdd0/%s/%s.PNG", COVERS_DIR, menu_list[game_sel].title_id);
@@ -1880,7 +1917,8 @@ int main(int argc, char *argv[])
 
 		if ((new_pad & BUTTON_SQUARE) && mode_list == GAME) {
 			dialog_ret = 0;
-			ret = cellMsgDialogOpen2(type_dialog_yes_no, text_cover_msg[region], dialog_fun1, (void *) 0x0000aaaa, NULL);
+			ret =
+				cellMsgDialogOpen2(type_dialog_yes_no, text_cover_msg[region], dialog_fun1, (void *) 0x0000aaaa, NULL);
 			wait_dialog();
 
 			if (dialog_ret == 1) {
@@ -1987,6 +2025,10 @@ int main(int argc, char *argv[])
 		cellGcmSetClearSurface(gCellGcmCurrentContext,
 							   CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B |
 							   CELL_GCM_CLEAR_A);
+
+		set_texture(text_pic1, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+		setRenderTexture();
+		display_png(0, 0, 1920, 1080, 1920, 1080);
 
 		setRenderColor();
 		// square for screen
