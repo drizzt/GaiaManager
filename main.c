@@ -1974,7 +1974,8 @@ int main(int argc, char *argv[])
 		if ((new_pad & BUTTON_SQUARE) && mode_list == GAME) {
 			dialog_ret = 0;
 			snprintf(filename, sizeof(filename),
-					 "Do you want to download missing covers (in /dev_hdd0/%s)?\nIt could takes awhile...\nPlease wait",
+					 "Do you want to download missing covers (in /dev_hdd0/%s)?\n"
+					 "WARNING: It will edit PARAM.SFO without doing any backup\nIt could takes awhile...\nPlease wait",
 					 COVERS_DIR);
 			ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 			wait_dialog();
