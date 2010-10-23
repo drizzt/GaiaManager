@@ -17,7 +17,7 @@ const char *const text_delfailed[] = { "Delete failed dump in", "Delete failed d
 };
 
 const char *const text_nosplit[] = { "You cannot launch split games", "You cannot launch split games",
-	"Vous ne pouvez pas jouer à des jeux split",
+	"Vous ne pouvez pas jouer à des jeux Couper",
 	"No puedes jugar a juegos divididos",
 	"Sie konnen keine geteilten Spiele starten",
 	"Non puoi avviare giochi divisi",
@@ -45,7 +45,7 @@ const char *const text_to[] = { "to", "to", "vers", "a", "zu kopieren", "a", "to
 
 const char *const text_eboot[] = { "EBOOT.BIN has been successfully updated",
 	"EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN a été mis à jour",
+	"EBOOT.BIN a été mis à jour avec succès",
 	"EBOOT.BIN ha sido parcheado.",
 	"EBOOT.BIN wurde erfolgreich aktualisiert",
 	"EBOOT.BIN e stato aggiornato con successo",
@@ -63,7 +63,7 @@ const char *const text_eboot[] = { "EBOOT.BIN has been successfully updated",
 
 const char *const text_launcher[] = { "You can launch this utility pressing SELECT+START the next time",
 	"You can launch this utility pressing SELECT+START the next time",
-	"Vous pouvez lancer cet utilitaire en appuyant sur SELECT + START la prochaine fois",
+	"Vous pouvez lancer cet utilitaire en appuyant sur SELECT+START la prochaine fois",
 	"Puedes ejecutar esta utilidad presionando SELECT+START la proxima vez.",
 	"Sie konnen das Spiel ab jetzt mit SELECT+START starten",
 	"Puoi lanciare questa utility premendo SELECT+START la prossima volta",
@@ -90,7 +90,7 @@ const char *const text_notfound[] = { "EBOOT.BIN not found", "EBOOT.BIN not foun
 };
 
 # if 0
-const char *const text_wantexit[] = { "Want to exit?", "Want to exit?", "Vous-voulez quitter?", "Quieres salir?",
+const char *const text_wantexit[] = { "Want to exit?", "Want to exit?", "Voulez-vous quitter?", "Quieres salir?",
 	"Wollen Sie beenden?", "Vuoi uscire?", "Want to exit?",
 	"Quer sair?", "Want to exit?",
 	"Want to exit?", "Want to exit?", "Want to exit?", "Want to exit?",
@@ -99,7 +99,7 @@ const char *const text_wantexit[] = { "Want to exit?", "Want to exit?", "Vous-vo
 };
 #endif
 
-const char *const text_wantdel[] = { "Want to delete from", "Want to delete from", "Vous-voulez le supprimer de",
+const char *const text_wantdel[] = { "Want to delete from", "Want to delete from", "Voulez-vous le supprimer de",
 	"Quieres borrar desde", "Wollen Sie von loschen",
 	"Vuoi cancellare da", "Want to delete from",
 	"Quer apagar de", "Want to delete from", "Want to delete from",
@@ -109,7 +109,7 @@ const char *const text_wantdel[] = { "Want to delete from", "Want to delete from
 	"Want to delete from"
 };
 
-const char *const text_wantuse[] = { "Want to use", "Want to use", "Vous-voulez utiliser", "Quieres usar",
+const char *const text_wantuse[] = { "Want to use", "Want to use", "Voulez-vous utiliser", "Quieres usar",
 	"Mochten Sie", "Vuoi usare", "Want to use", "Quer usar",
 	"Want to use", "Want to use",
 	"Want to use", "Want to use", "Want to use", "Vill du anvanda",
@@ -130,7 +130,7 @@ const char *const text_toinstall[] = { "to install the game?", "to install the g
 const char *const text_cover_msg[] = {
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Vous-voulez télécharger les jaquettes manquantes(dans /dev_hdd0/" COVERS_DIR ")?\ncela peut prendre un certain temps...\nVeuillez-Patientez",
+	"Vous-voulez telecharger les jaquettes manquantes(dans /dev_hdd0/" COVERS_DIR ")?\nCela peut prendre un certain temps...\nVeuillez-Patientez",
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
 	"Voi scaricare le cover mancanti(in /dev_hdd0/" COVERS_DIR ")?\nPotrebbe volerci un po'...\nAttendere prego",
@@ -148,13 +148,13 @@ const char *const text_cover_msg[] = {
 
 // OSD Graphics - only use ASCII characters
 
-const char *const text_launch[] = { "Launch Selected", "Launch Selected", "Lancer Le Jeu", "Launch Selected",
+const char *const text_launch[] = { "Launch Selected", "Launch Selected", "Lancer Selection", "Launch Selected",
 	"Launch Selected", "Lancia Selezione", "Launch Selected", "Launch Selected", "Launch Selected",
 	"Launch Selected", "Launch Selected", "Launch Selected", "Launch Selected", "Launch Selected",
 	"Launch Selected", "Launch Selected"
 };
 
-const char *const text_download[] = { "Download Covers", "Download Covers", "Download Covers", "Download Covers",
+const char *const text_download[] = { "Download Covers", "Download Covers", "Telechar Jaquettes", "Download Covers",
 	"Download Covers", "Scarica Cover", "Download Covers", "Download Covers", "Download Covers",
 	"Download Covers", "Download Covers", "Download Covers", "Download Covers", "Download Covers",
 	"Download Covers", "Download Covers"
