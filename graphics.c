@@ -9,6 +9,7 @@
 
 #include <sysutil/sysutil_sysparam.h>
 
+#include "i18n.h"
 #include "graphics.h"
 #include <cell/cell_fs.h>
 #include <netex/libnetctl.h>
@@ -41,36 +42,6 @@ u32 depth_offset;
 uint32_t blockSize;
 uint64_t freeSize;
 float freeSpace;
-
-//                              Jap,            English,        French,         Spanish,        German,                 Italian,        Dutch,          Portugues,      Russian,        Korean,         Chinese,        Chinese,        Finnish,        Swedish,        Danish,         Norwegian
-char text_launch[][64] = { "X - To Launch", "X - Launch", "X - To Launch", "X - Ejecutar",
-	"X - Starten", "X - Lancia", "X - To Launch", "X - Iniciar", "X - To Launch",
-	"X - To Launch", "X - To Launch", "X - To Launch", "X - To Launch", "X - Kor",
-	"X - To Launch", "X - To Launch"
-};
-
-char text_copy[][64] = { "O - Copy", "O - Copy", "O - Copy", "O - Copiar", "O - Kopieren",
-	"O - Copia", "O - Copy", "O - Copiar", "O - Copy", "O - Copy", "O - Copy",
-	"O - Copy", "O - Copy", "O - Kopiera", "O - Copy", "O - Copy"
-};
-
-char text_exit[][64] = { "/\\ - Exit", "/\\ - Exit", "/\\ - Exit", "/\\ - Salir",
-	"/\\ - Beenden", "/\\ - Esci", "/\\ - Exit", "/\\ - Sair", "/\\ - Exit",
-	"/\\ - Exit", "/\\ - Exit", "/\\ - Exit", "/\\ - Exit", "/\\ - Avsluta",
-	"/\\ - Exit", "/\\ - Exit"
-};
-
-char text_delete[][64] = { "[] - Delete", "[] - Delete", "[] - Delete", "[] - Borrar",
-	"[] - Loschen", "[] - Cancella", "[] - Delete", "[] - Apagar", "[] - Delete",
-	"[] - Delete", "[] - Delete", "[] - Delete", "[] - Delete", "[] - Ta bort",
-	"[] - Delete", "[] - Delete"
-};
-
-char text_refresh[][64] = { "[] - Refresh", "[] - Refresh", "[] - Refresh", "[] - Refrescar",
-	"[] - Aktualisieren", "[] - Aggiorna", "[] - Refresh", "[] - Actualizar",
-	"[] - Refresh", "[] - Refresh", "	[] - Refresh", "[] - Refresh",
-	"[] - Refresh", "[] - Uppdatera", "[] - Refresh", "[] - Refresh"
-};
 
 extern u32 _binary_vpshader_vpo_start;
 extern u32 _binary_vpshader_vpo_end;
@@ -665,28 +636,29 @@ void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot, 
 		memcpy(ipaddr, p, iplen);
 	}
 
-	cellDbgFontPrintf(0.775, 0.432, 0.8, 0xffffffff, "Launch Selected");
+	cellDbgFontPrintf(0.775, 0.432, 0.8, 0xffffffff, text_launch[region]);
 
 	// on GAME mode
 	if (((flags >> 31) & 1) == 0) {
-		cellDbgFontPrintf(0.775, 0.472, 0.8, 0xffffffff, "Download Covers");
-		cellDbgFontPrintf(0.775, 0.515, 0.8, 0xffffffff, "Copy Selected");
-		cellDbgFontPrintf(0.775, 0.555, 0.8, 0xffffffff, "Delete Selected");
-		cellDbgFontPrintf(0.775, 0.595, 0.8, 0xffffffff, "Refresh List");
-		cellDbgFontPrintf(0.775, 0.635, 0.8, 0xffffffff, "Check Selected");
-		cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff, payload_type == 1 ? "Disc Less:" : "Mem Patch:");
+		cellDbgFontPrintf(0.775, 0.472, 0.8, 0xffffffff, text_download[region]);
+		cellDbgFontPrintf(0.775, 0.515, 0.8, 0xffffffff, text_copy[region]);
+		cellDbgFontPrintf(0.775, 0.555, 0.8, 0xffffffff, text_delete[region]);
+		cellDbgFontPrintf(0.775, 0.595, 0.8, 0xffffffff, text_refresh[region]);
+		cellDbgFontPrintf(0.775, 0.635, 0.8, 0xffffffff, text_check[region]);
+		cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff,
+						  payload_type == 1 ? text_discless[region] : text_mempatch[region]);
 		draw_text_bool(0.895, 0.68, 0.8, hermes);
-		cellDbgFontPrintf(0.775, 0.72, 0.8, 0xffffffff, "Direct Boot:");
+		cellDbgFontPrintf(0.775, 0.72, 0.8, 0xffffffff, text_directboot[region]);
 		draw_text_bool(0.895, 0.72, 0.8, direct_boot);
 	} else {
-		cellDbgFontPrintf(0.775, 0.472, 0.8, 0xffffffff, "Delete Selected");
-		cellDbgFontPrintf(0.775, 0.515, 0.8, 0xffffffff, "Refresh List");
+		cellDbgFontPrintf(0.775, 0.472, 0.8, 0xffffffff, text_delete[region]);
+		cellDbgFontPrintf(0.775, 0.515, 0.8, 0xffffffff, text_refresh[region]);
 	}
 
-	cellDbgFontPrintf(0.775, 0.76, 0.8, 0xffffffff, "FTP Server:");
+	cellDbgFontPrintf(0.775, 0.76, 0.8, 0xffffffff, text_ftpserver[region]);
 	draw_text_bool(0.895, 0.76, 0.8, ftp);
-	cellDbgFontPrintf(0.775, 0.80, 0.8, 0xffffffff, "OM Mode:");
-	cellDbgFontPrintf(0.86, 0.80, 0.8, 0xffffffff, (flags >> 31) & 1 ? "HOMEBREW" : "GAME");
+	cellDbgFontPrintf(0.775, 0.80, 0.8, 0xffffffff, text_ommode[region]);
+	cellDbgFontPrintf(0.86, 0.80, 0.8, 0xffffffff, (flags >> 31) & 1 ? text_homebrew[region] : text_game[region]);
 	cellDbgFontPrintf(0.775, 0.84, 0.8, 0xffffffff, "IP");
 	cellDbgFontPrintf(0.80, 0.84, 0.8, 0xff00ffff, ipaddr);
 

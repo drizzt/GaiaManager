@@ -44,6 +44,7 @@
 #include "config.h"
 #include "dialog.h"
 #include "fileutils.h"
+#include "i18n.h"
 #include "main.h"
 #include "network.h"
 #include "graphics.h"
@@ -70,132 +71,10 @@ static sys_ppu_thread_t soundThread = 0;
 
 static char hdd_folder[64] = "ASDFGHJKLMN";	// folder for games (deafult string is changed the first time it is loaded
 static char hdd_folder_home[64] = FOLDER_NAME;	// folder for homebrew
-//                              Jap,            English,        French,         Spanish,        German,         Italian,        Dutch,          Portugues,      Russian, Korean, Chinese, Chinese, Finnish, Swedish, Danish, Norwegian
-static const char text_delfailed[][128] = { "Delete failed dump in", "Delete failed dump in",
-	"Delete failed dump in", "Borrar dump fallido en",
-	"Loschen fehlgeschlagener Kopie in",
-	"Delete failed dump in", "Delete failed dump in",
-	"Apagar descarga falhada no",
-	"Delete failed dump in", "Delete failed dump in",
-	"Delete failed dump in", "Delete failed dump in",
-	"Delete failed dump in", "Raderingen misslyckades, information i",
-	"Delete failed dump in",
-	"Delete failed dump in"
-};
-
-static const char text_nosplit[][128] = { "You cannot launch split games", "You cannot launch split games",
-	"You cannot launch split games",
-	"No puedes jugar a juegos divididos",
-	"Sie konnen keine geteilten Spiele starten",
-	"Non puoi avviare giochi divisi",
-	"You cannot launch split games",
-	"Nao pode iniciar jogos divididos",
-	"You cannot launch split games", "You cannot launch split games",
-	"You cannot launch split games",
-	"You cannot launch split games", "You cannot launch split games",
-	"Du kan inte kora delade spel",
-	"You cannot launch split games", "You cannot launch split games"
-};
-
-static const char text_wantcopy[][128] = { "Want to copy from", "Want to copy from", "Want to copy from",
-	"Quieres copiar desde", "Wollen Sie von", "Vuoi copiare da",
-	"Want to copy from", "Quer copiar de",
-	"Want to copy from", "Want to copy from", "Want to copy from",
-	"Want to copy from",
-	"Want to copy from", "Vill du kopiera fran", "Want to copy from",
-	"Want to copy from"
-};
-
-static const char text_to[][12] = { "to", "to", "to", "a", "zu kopieren", "a", "to", "para", "to", "to",
-	"to", "to", "to", "till", "to", "to"
-};
-
-static const char text_eboot[][96] = { "EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN ha sido parcheado.",
-	"EBOOT.BIN wurde erfolgreich aktualisiert",
-	"EBOOT.BIN e stato aggiornato con successo",
-	"EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN foi actualizado com sucesso",
-	"EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN has been successfully updated",
-	"Eboot.bin har uppdaterats utan problem.",
-	"EBOOT.BIN has been successfully updated",
-	"EBOOT.BIN has been successfully updated"
-};
-
-static const char text_launcher[][96] = { "You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
-	"Puedes ejecutar esta utilidad presionando SELECT+START la proxima vez.",
-	"Sie konnen das Spiel ab jetzt mit SELECT+START starten",
-	"Puoi lanciare questa utility premendo SELECT+START la prossima volta",
-	"You can launch this utility pressing SELECT+START the next time",
-	"Pode iniciar este utilit�rio pressionando SELECT+START na proxima vez",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
-	"Du kan nu starta detta program genom att trycka SELECT+START nasta gang.",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time"
-};
-
-static const char text_notfound[][32] = { "EBOOT.BIN not found", "EBOOT.BIN not found", "EBOOT.BIN not found",
-	"EBOOT.BIN no encontrado", "EBOOT.BIN wurde nicht gefunden",
-	"EBOOT.BIN non trovato",
-	"EBOOT.BIN not found", "EBOOT.BIN n�o encontrado",
-	"EBOOT.BIN not found", "EBOOT.BIN not found",
-	"EBOOT.BIN not found", "EBOOT.BIN not found",
-	"EBOOT.BIN not found", "EBOOT.BIN hittades inte",
-	"EBOOT.BIN not found", "EBOOT.BIN not found"
-};
-
-static const char text_wantexit[][32] = { "Want to exit?", "Want to exit?", "Want to exit?", "Quieres salir?",
-	"Wollen Sie beenden?", "Vuoi uscire?", "Want to exit?",
-	"Quer sair?", "Want to exit?",
-	"Want to exit?", "Want to exit?", "Want to exit?", "Want to exit?",
-	"Vill du avsluta?",
-	"Want to exit?", "Want to exit?"
-};
-
-static const char text_wantdel[][32] = { "Want to delete from", "Want to delete from", "Want to delete from",
-	"Quieres borrar desde", "Wollen Sie von loschen",
-	"Want to delete from", "Want to delete from",
-	"Quer apagar de", "Want to delete from", "Want to delete from",
-	"Want to delete from",
-	"Want to delete from", "Want to delete from",
-	"Vill du radera fran", "Want to delete from",
-	"Want to delete from"
-};
-
-static const char text_wantuse[][32] = { "Want to use", "Want to use", "Want to use", "Quieres usar",
-	"Mochten Sie", "Vuoi usare", "Want to use", "Quer usar",
-	"Want to use", "Want to use",
-	"Want to use", "Want to use", "Want to use", "Vill du anvanda",
-	"Want to use", "Want to use"
-};
-
-static const char text_toinstall[][64] = { "to install the game?", "to install the game?",
-	"to install the game?", "para instalar el juego?",
-	"fur die Spiele-Installation verwenden?",
-	"per installare il gioco?", "to install the game?",
-	"para instalar o jogo?", "to install the game?",
-	"to install the game?", "to install the game?",
-	"to install the game?", "to install the game?",
-	"till att installera spel?", "to install the game?",
-	"to install the game?"
-};
 
 static t_menu_list menu_list[MAX_LIST];
 static int max_menu_list = 0;
 
-static int region = 1;
 static bool direct_boot = false;
 static bool disc_less = false;
 static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
@@ -1973,10 +1852,7 @@ int main(int argc, char *argv[])
 
 		if ((new_pad & BUTTON_SQUARE) && mode_list == GAME) {
 			dialog_ret = 0;
-			snprintf(filename, sizeof(filename),
-					 "Do you want to download missing covers (in /dev_hdd0/%s)?\nIt could takes awhile...\nPlease wait",
-					 COVERS_DIR);
-			ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+			ret = cellMsgDialogOpen2(type_dialog_yes_no, text_cover_msg[region], dialog_fun1, (void *) 0x0000aaaa, NULL);
 			wait_dialog();
 
 			if (dialog_ret == 1) {
