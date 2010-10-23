@@ -132,6 +132,7 @@ void syscall36(const char *path);	// for some strange reasons it does not work a
 static void restorecall36(const char *path);
 //static uint64_t peekq(uint64_t addr);
 static void pokeq(uint64_t addr, uint64_t val);
+static void cleanup(void);
 static void fix_perm_recursive(const char *start_path);
 static void sort_entries(t_menu_list * list, int *max);
 static void delete_entries(t_menu_list * list, int *max, u32 flag);
@@ -395,6 +396,8 @@ static int unload_modules(void)
 		fclose(fid);
 	}
 #endif
+
+	cleanup();
 
 	ftp_off();
 
@@ -804,6 +807,30 @@ static void parse_ini(void)
 }
 #endif
 
+static void cleanup(void)
+{
+	struct dirent *entry;
+	DIR *dir = opendir("/dev_hdd0/home");
+
+	unlink("/dev_hdd0/vsh/pushlist/patch.dat");
+	unlink("/dev_hdd0/vsh/pushlist/game.dat");
+
+	if (!dir)
+		return;
+
+	while ((entry = readdir(dir)) != NULL) {
+		if (entry->d_name[0] == '.')
+			continue;
+		if (!(entry->d_type & DT_DIR))
+			continue;
+
+		sprintf(filename, "/dev_hdd0/home/%s/etc/boot_history.dat", entry->d_name);
+		unlink(filename);
+	}
+
+	closedir(dir);
+}
+
 static void update_game_folder(char *ebootbin
 #ifndef WITHOUT_SAVE_STATUS
 							   __attribute__ ((unused))
@@ -1173,6 +1200,7 @@ int main(int argc, char *argv[])
 #endif
 
 	//fix_perm_recursive("/dev_hdd0/game/OMAN46756/cache2/");
+	cleanup();
 	cellSysutilGetSystemParamInt(CELL_SYSUTIL_SYSTEMPARAM_ID_LANG, &region);
 
 	cellNetCtlInit();
