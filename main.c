@@ -1577,31 +1577,6 @@ int main(int argc, char *argv[])
 		if ((new_pad & BUTTON_START) && (old_pad & BUTTON_SELECT))
 			update_game_folder(argv[0]);
 
-		if (new_pad & BUTTON_SELECT && mode_list == GAME) {
-			dialog_ret = 0;
-			snprintf(filename, sizeof(filename),
-					 "Do you want to download missing covers (in /dev_hdd0/%s)?\nIt could takes awhile...\nPlease wait",
-					 COVERS_DIR);
-			ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
-			wait_dialog();
-
-			if (dialog_ret == 1) {
-				int n;
-				snprintf(filename, sizeof(filename), "/dev_hdd0/%s", COVERS_DIR);
-				mkdir(filename, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-				for (n = 0; n < max_menu_list; n++) {
-					struct stat s;
-					snprintf(filename, sizeof(filename), "/dev_hdd0/%s/%s.PNG", COVERS_DIR, menu_list[n].title_id);
-					if (stat(filename, &s) == 0)
-						continue;
-
-					download_cover(menu_list[n].title_id, filename);
-					// reset to update datas
-					reset_game_list(1, 0);
-				}
-			}
-		}
-
 		if (new_pad & BUTTON_R2) {
 			game_sel = 0;
 			if (mode_list == GAME) {
@@ -1996,179 +1971,27 @@ int main(int argc, char *argv[])
 		}
 // copy from bluray
 
-		if ((new_pad & BUTTON_SQUARE) && ((fdevices >> 11) & 1)
-			&& mode_list == GAME) {
-
-			char name[1024];
-			int curr_device = 0;
-			CellFsStat fstatus;
-			char id[16];
-
-			int n;
-
-			for (n = 0; n < 11; n++) {
-				dialog_ret = 0;
-
-				if ((fdevices >> n) & 1) {
-
-					if (n == 0)
-						sprintf(filename, "%s\n\n%s BDVD %s HDD0?", bluray_game, text_wantcopy[region],
-								text_to[region]);
-					else
-						sprintf(filename, "%s\n\n%s BDVD %s USB00%c?", bluray_game, text_wantcopy[region],
-								text_to[region], 47 + n);
-
-					ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
-
-					wait_dialog();
-
-					if (dialog_ret == 1) {
-						curr_device = n;
-						break;
-					}			// exit
-				}
-			}
+		if ((new_pad & BUTTON_SQUARE) && mode_list == GAME) {
+			dialog_ret = 0;
+			snprintf(filename, sizeof(filename),
+					 "Do you want to download missing covers (in /dev_hdd0/%s)?\nIt could takes awhile...\nPlease wait",
+					 COVERS_DIR);
+			ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+			wait_dialog();
 
 			if (dialog_ret == 1) {
+				int n;
+				snprintf(filename, sizeof(filename), "/dev_hdd0/%s", COVERS_DIR);
+				mkdir(filename, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+				for (n = 0; n < max_menu_list; n++) {
+					struct stat s;
+					snprintf(filename, sizeof(filename), "/dev_hdd0/%s/%s.PNG", COVERS_DIR, menu_list[n].title_id);
+					if (stat(filename, &s) == 0)
+						continue;
 
-				if (curr_device == 0)
-					sprintf(name, "/dev_hdd0");
-				else
-					sprintf(name, "/dev_usb00%c", 47 + curr_device);
-
-				if (cellFsStat(name, &fstatus) == CELL_FS_SUCCEEDED && !parse_ps3_disc((char *)
-																					   "/dev_bdvd/PS3_DISC.SFB", id)) {
-
+					download_cover(menu_list[n].title_id, filename);
 					// reset to update datas
-					reset_game_list(1 << curr_device, 0);
-
-					if (curr_device == 0) {
-						sprintf(name, "/dev_hdd0/game/%s/", hdd_folder);
-						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-						sprintf(name, "/dev_hdd0/game/%s/%s", hdd_folder, GAMES_DIR);
-						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-						sprintf(name, "/dev_hdd0/game/%s/%s/%s", hdd_folder, GAMES_DIR, id);
-						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-					} else {
-						sprintf(name, "/dev_usb00%c/%s", 47 + curr_device, GAMES_DIR);
-						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-						sprintf(name, "/dev_usb00%c/%s", 47 + curr_device, GAMES_DIR);
-						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-						sprintf(name, "/dev_usb00%c/%s/%s", 47 + curr_device, GAMES_DIR, id);
-						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-					}
-
-					time_start = time(NULL);
-					abort_copy = 0;
-					initConsole();
-					file_counter = 0;
-					new_pad = 0;
-
-					if (curr_device != 0)
-						copy_mode = 1;	// break files >= 4GB
-					else
-						copy_mode = 0;
-
-					copy_is_split = 0;
-
-					my_game_copy((char *) "/dev_bdvd", (char *) name);
-
-					int seconds = (int) (time(NULL) - time_start);
-					int vflip = 0;
-
-					if (copy_is_split && !abort_copy) {
-
-						if (curr_device == 0) {
-							sprintf(filename, "/dev_hdd0/game/%s/%s/_%s", hdd_folder, GAMES_DIR, id);
-						} else {
-							sprintf(filename, "/dev_usb00%c/%s/_%s", 47 + curr_device, GAMES_DIR, id);
-						}
-
-						ret = rename(name, filename);
-
-						if (curr_device == 0)
-							sprintf(filename, "%s\n\nSplit game copied in HDD0 (non bootable)", id);
-						else
-							sprintf(filename, "%s\n\nSplit game copied in USB00%c (non bootable)", id,
-									47 + curr_device);
-
-						dialog_ret = 0;
-						ret = cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
-						wait_dialog();
-
-					}
-
-					while (1) {
-
-						if (abort_copy)
-							sprintf(string1, "Aborted!!!  Time: %2.2i:%2.2i:%2.2i\n", seconds / 3600,
-									(seconds / 60) % 60, seconds % 60);
-						else {
-							sprintf(string1, "Done! Files Copied: %i Time: %2.2i:%2.2i:%2.2i Vol: %1.2f GB\n",
-									file_counter, seconds / 3600, (seconds / 60) % 60, seconds % 60, ((double)
-																									  global_device_bytes)
-									/ (1024.0 * 1024. * 1024.0));
-						}
-
-						cellGcmSetClearSurface(gCellGcmCurrentContext,
-											   CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B
-											   | CELL_GCM_CLEAR_A);
-
-						draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x000000ff);
-
-						cellDbgFontPrintf(0.07f, 0.07f, 1.2f, 0xffffffff, string1);
-
-						if (vflip & 32)
-							cellDbgFontPrintf(0.5f - 0.15f, 1.0f - 0.07 * 2.0f, 1.2f, 0xffffffff, "Press X to Exit");
-						vflip++;
-
-						cellDbgFontDrawGcm();
-
-						flip();
-
-						pad_read();
-						if (new_pad & BUTTON_CROSS) {
-							new_pad = 0;
-							break;
-						}
-
-					}
-
-					if (abort_copy) {
-						if (curr_device == 0)
-							sprintf(filename, "%s\n\n%s HDD0?", id, text_delfailed[region]);
-						else
-							sprintf(filename, "%s\n\n%s USB00%c?", id, text_delfailed[region], 47 + curr_device);
-
-						dialog_ret = 0;
-						ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
-
-						wait_dialog();
-
-						if (dialog_ret == 1) {
-							time_start = time(NULL);
-							file_counter = 0;
-							abort_copy = 0;
-							my_game_delete((char *)
-										   name);
-
-							rmdir((char *) name);	// delete this folder
-
-						} else {
-							if (curr_device == 0) {
-								sprintf(filename, "/dev_hdd0/game/%s/%s/_%s", hdd_folder, GAMES_DIR, id);
-							} else {
-								sprintf(filename, "/dev_usb00%c/%s/_%s", 47 + curr_device, GAMES_DIR, id);
-							}
-
-							ret = rename(name, filename);
-
-						}
-					}
-
-					termConsole();
-					game_sel = 0;
-
+					reset_game_list(1, 0);
 				}
 			}
 		}

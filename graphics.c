@@ -370,12 +370,13 @@ void setDrawEnv(void)
 	cellGcmSetViewport(gCellGcmCurrentContext, x, y, w, h, min, max, scale, offset);
 	cellGcmSetClearColor(gCellGcmCurrentContext, 0xff000000);
 
-//	cellGcmSetDepthTestEnable(gCellGcmCurrentContext, CELL_GCM_TRUE);
-//	cellGcmSetDepthFunc(gCellGcmCurrentContext, CELL_GCM_LESS);
+//  cellGcmSetDepthTestEnable(gCellGcmCurrentContext, CELL_GCM_TRUE);
+//  cellGcmSetDepthFunc(gCellGcmCurrentContext, CELL_GCM_LESS);
 
-	cellGcmSetBlendFunc(gCellGcmCurrentContext,CELL_GCM_SRC_ALPHA, CELL_GCM_ONE_MINUS_SRC_ALPHA,CELL_GCM_SRC_ALPHA, CELL_GCM_ONE_MINUS_SRC_ALPHA);
-	cellGcmSetBlendEquation(gCellGcmCurrentContext,CELL_GCM_FUNC_ADD, CELL_GCM_FUNC_ADD);
-	cellGcmSetBlendEnable(gCellGcmCurrentContext,CELL_GCM_TRUE);
+	cellGcmSetBlendFunc(gCellGcmCurrentContext, CELL_GCM_SRC_ALPHA, CELL_GCM_ONE_MINUS_SRC_ALPHA, CELL_GCM_SRC_ALPHA,
+						CELL_GCM_ONE_MINUS_SRC_ALPHA);
+	cellGcmSetBlendEquation(gCellGcmCurrentContext, CELL_GCM_FUNC_ADD, CELL_GCM_FUNC_ADD);
+	cellGcmSetBlendEnable(gCellGcmCurrentContext, CELL_GCM_TRUE);
 }
 
 void setRenderColor(void)
@@ -668,7 +669,7 @@ void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot, 
 
 	// on GAME mode
 	if (((flags >> 31) & 1) == 0) {
-		cellDbgFontPrintf(0.775, 0.472, 0.8, 0xffffffff, "Backup BDVD");
+		cellDbgFontPrintf(0.775, 0.472, 0.8, 0xffffffff, "Download Covers");
 		cellDbgFontPrintf(0.775, 0.515, 0.8, 0xffffffff, "Copy Selected");
 		cellDbgFontPrintf(0.775, 0.555, 0.8, 0xffffffff, "Delete Selected");
 		cellDbgFontPrintf(0.775, 0.595, 0.8, 0xffffffff, "Refresh List");
