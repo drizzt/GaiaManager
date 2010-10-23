@@ -138,8 +138,8 @@ void change_param_sfo_version(char *file)
 				if (ver > 3.41) {
 					char msg[128];
 					snprintf(msg, sizeof(msg),
-							 "This game requires PS3_SYSTEM_VER %.2f\nDo you want to try fixing PARAM.SFO by forcing 3.41 version?",
-							 ver);
+							 "This game requires PS3_SYSTEM_VER %.2f\nDo you want to try fixing PARAM.SFO by forcing 3.41 version?\n"
+							 "WARNING: It will edit PARAM.SFO without doing any backup", ver);
 					dialog_ret = 0;
 					cellMsgDialogOpen2(type_dialog_yes_no, msg, dialog_fun1, (void *) 0x0000aaaa, NULL);
 					wait_dialog();
