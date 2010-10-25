@@ -1880,7 +1880,8 @@ int main(int argc, char *argv[])
 
 		if ((new_pad & BUTTON_SQUARE) && mode_list == GAME) {
 			dialog_ret = 0;
-			ret = cellMsgDialogOpen2(type_dialog_yes_no, text_cover_msg[region], dialog_fun1, (void *) 0x0000aaaa, NULL);
+			ret =
+				cellMsgDialogOpen2(type_dialog_yes_no, text_cover_msg[region], dialog_fun1, (void *) 0x0000aaaa, NULL);
 			wait_dialog();
 
 			if (dialog_ret == 1) {

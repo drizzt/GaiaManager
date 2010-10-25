@@ -7,6 +7,26 @@
 #include "parse.h"
 #include "dialog.h"
 
+/** Gets the version of the firmware installed in the ps3 were we are running.
+  * @return A double with the version number (eg: 3.15)
+  */
+static double get_system_version(void)
+{
+	FILE *fp;
+	//we read the version from the file version.txt in the flash
+	fp = fopen("/dev_flash/vsh/etc/version.txt", "rb");
+	if (fp != NULL) {
+		char buf[20];
+		//read the first line which is the only one we are interested into.
+		fgets(buf, 20, fp);
+		fclose(fp);
+		//skip "version:" and start parsing from there.
+		return strtod(buf + 8, NULL);
+	}
+	//if there was an error return version 0 (shouldn't happen)
+	return 0;
+}
+
 int parse_ps3_disc(char *path, char *id)
 {
 	FILE *fp;
@@ -133,18 +153,23 @@ void change_param_sfo_version(char *file)
 				break;
 
 			if (!strcmp((char *) &mem[str], "PS3_SYSTEM_VER")) {
-				double ver;
+				double ver;		///< Used to store the version required in the param.sfo
+				double sys_ver;	///< Used to store the version currently installed in the ps3
 				ver = strtod((char *) &mem[pos], NULL);
-				if (ver > 3.41) {
-					char msg[128];
+				sys_ver = get_system_version();
+				if (ver > sys_ver) {
+					char msg[170];
 					snprintf(msg, sizeof(msg),
-							 "This game requires PS3_SYSTEM_VER %.2f\nDo you want to try fixing PARAM.SFO by forcing 3.41 version?\n"
-							 "WARNING: It will edit PARAM.SFO without doing any backup", ver);
+							 "This game requires PS3_SYSTEM_VER %.2f.\nDo you want to try fixing PARAM.SFO by forcing %.2f version?\n"
+							 "WARNING: It will edit PARAM.SFO without doing any backup.", ver, sys_ver);
 					dialog_ret = 0;
 					cellMsgDialogOpen2(type_dialog_yes_no, msg, dialog_fun1, (void *) 0x0000aaaa, NULL);
 					wait_dialog();
 					if (dialog_ret == 1) {
-						memcpy(&mem[pos], "03.410", 6);
+						char ver_patch[10];
+						//format the version to be patched so it is xx.xxx
+						snprintf(ver_patch, sizeof(ver_patch), "%02.3f", sys_ver);
+						memcpy(&mem[pos], ver_patch, 6);
 						fp = fopen(file, "wb");
 						fwrite(mem, len, 1, fp);
 						fclose(fp);
