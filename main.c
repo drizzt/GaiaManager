@@ -1949,27 +1949,9 @@ int main(int argc, char *argv[])
 					wait_dialog();
 				} else {
 					struct stat s;
-					sprintf(filename, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
 
-					if (stat(filename, &s) >= 0) {
-						char name[1024];
-						snprintf(name, sizeof(name), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
-						change_param_sfo_version(name);
-						if (payload_type == 0)
-							set_hermes_mode(patchmode);
-						syscall36(menu_list[game_sel].path);
-						if (direct_boot) {
-							ret = unload_modules();
-							sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 3071,
-														SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
-							exit(0);
-							break;
-						}
-						ret = unload_modules();
-						exit(0);
-						break;
-
-					} else {
+					if (stat(menu_list[game_sel].path, &s) < 0
+						|| (s.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)) != (S_IRWXU | S_IRWXG | S_IRWXO)) {
 						sprintf(string1, "%s\n\n%s\n\nDo you want to try fixing permissions?",
 								menu_list[game_sel].title, text_notfound[region]);
 						dialog_ret = 0;
@@ -1980,6 +1962,22 @@ int main(int argc, char *argv[])
 							fix_perm_recursive(filename);
 						}
 					}
+					snprintf(filename, sizeof(filename), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
+					change_param_sfo_version(filename);
+					if (payload_type == 0)
+						set_hermes_mode(patchmode);
+					sprintf(filename, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
+					syscall36(menu_list[game_sel].path);
+					if (direct_boot) {
+						ret = unload_modules();
+						sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 3071,
+													SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+						exit(0);
+						break;
+					}
+					ret = unload_modules();
+					exit(0);
+					break;
 				}
 			}
 
