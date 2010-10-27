@@ -50,3 +50,11 @@ a img {
   padding: 0px 10px;
   word-spacing: 10px;
 }
+
+.warning {
+  border: 5px ridge yellow;
+  padding: 2px;
+  display: inline-block;
+  background-color: black;
+  color: red;
+}
