@@ -1310,12 +1310,12 @@ int main(int argc, char *argv[])
 				} else
 					fdevices &= ~(1 << find_device);
 
-				// limit to 3 the devices selectables
+				// limit to 5 the devices selectables
 				if (((fdevices >> find_device) & 1)
 					&& find_device != 11) {
 					count_devices++;
 
-					if (count_devices > 3)
+					if (count_devices > 5)
 						fdevices &= ~(1 << find_device);
 
 				}
