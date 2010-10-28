@@ -12,6 +12,7 @@ extern const char *const text_wantdel[];
 extern const char *const text_wantuse[];
 extern const char *const text_toinstall[];
 extern const char *const text_cover_msg[];
+extern const char *const text_fix_permission[];
 // Graphics
 extern const char *const text_launch[];
 extern const char *const text_copy[];

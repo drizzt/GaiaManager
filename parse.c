@@ -175,6 +175,15 @@ void change_param_sfo_version(char *file)
 						fclose(fp);
 					}
 				}
+				if (!strcmp((char *) &mem[str], "ATTRIBUTE")) {
+					if (mem[pos] != 0x5) {
+						mem[pos] = 0x5;
+						fp = fopen(file, "wb");
+						fwrite(mem, len, 1, fp);
+						fclose(fp);
+					}
+					break;
+				}
 				break;
 			}
 			while (mem[str])
