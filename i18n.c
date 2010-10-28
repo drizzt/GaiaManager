@@ -147,6 +147,25 @@ const char *const text_cover_msg[] = {
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait"
 };
 
+const char *const text_fix_permission[] = {
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Vuoi cercare di aggiustare i permessi?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?",
+	"Do you want to try fixing permissions?"
+};
+
 // OSD Graphics - only use ASCII characters
 
 const char *const text_launch[] = { "Launch Selected", "Launch Selected", "Lancer Selection", "Launch Selected",
