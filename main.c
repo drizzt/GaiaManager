@@ -1951,10 +1951,11 @@ int main(int argc, char *argv[])
 					struct stat s;
 
 					// Check if game dir permission is 0700 but only on internal HDD
-					if ((menu_list[game_sel].flags & 1) || stat(menu_list[game_sel].path, &s) < 0
-						|| (s.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)) != (S_IRWXU | S_IRWXG | S_IRWXO)) {
-						sprintf(string1, "%s\n\n%s\n\n%s",
-								menu_list[game_sel].title, text_notfound[region], text_fix_permission[region]);
+					if ((menu_list[game_sel].flags & 1)
+						&& (stat(menu_list[game_sel].path, &s) < 0
+							|| (s.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)) != (S_IRWXU | S_IRWXG | S_IRWXO))) {
+						sprintf(string1, "%s\n\n%s\n\n%s", menu_list[game_sel].title, text_notfound[region],
+								text_fix_permission[region]);
 						dialog_ret = 0;
 						ret = cellMsgDialogOpen2(type_dialog_yes_no, string1, dialog_fun1, (void *) 0x0000aaaa, NULL);
 						wait_dialog();
