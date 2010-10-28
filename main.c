@@ -1950,7 +1950,8 @@ int main(int argc, char *argv[])
 				} else {
 					struct stat s;
 
-					if (stat(menu_list[game_sel].path, &s) < 0
+					// Check if game dir permission is 0700 but only on internal HDD
+					if ((menu_list[game_sel].flags & 1) || stat(menu_list[game_sel].path, &s) < 0
 						|| (s.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)) != (S_IRWXU | S_IRWXG | S_IRWXO)) {
 						sprintf(string1, "%s\n\n%s\n\n%s",
 								menu_list[game_sel].title, text_notfound[region], text_fix_permission[region]);
