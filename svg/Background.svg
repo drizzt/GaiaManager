@@ -136,7 +136,7 @@
        id="linearGradient3915"
        xlink:href="#linearGradient3891"
        inkscape:collect="always"
-       gradientTransform="matrix(1,0,0,0.07186245,-2.5079697,956.22547)" />
+       gradientTransform="matrix(1.2978411,0,0,0.07152252,-33.200371,956.40997)" />
     <linearGradient
        y2="24.954355"
        x2="217.73775"
@@ -209,12 +209,12 @@
      id="namedview3041"
      showgrid="false"
      inkscape:zoom="0.98"
-     inkscape:cx="478.66035"
-     inkscape:cy="920.74467"
+     inkscape:cx="591.60038"
+     inkscape:cy="283.0966"
      inkscape:window-x="-2"
      inkscape:window-y="-3"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer4" />
+     inkscape:current-layer="layer3" />
   <g
      inkscape:groupmode="layer"
      id="layer2"
@@ -249,13 +249,13 @@
      inkscape:label="Layer"
      style="display:inline">
     <rect
-       style="fill:url(#linearGradient3915);fill-opacity:1.0;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;display:inline"
+       style="fill:url(#linearGradient3915);fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:2.27306128;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;display:inline"
        id="rect3050-6"
-       width="1325.1937"
-       height="57.725685"
-       x="101"
-       y="966.36804"
-       ry="12.636682" />
+       width="1719.891"
+       height="57.452625"
+       x="101.13653"
+       y="966.50458"
+       ry="12.576906" />
   </g>
   <g
      inkscape:groupmode="layer"
