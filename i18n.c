@@ -134,7 +134,7 @@ const char *const text_cover_msg[] = {
 		")?\nCela peut prendre un certain temps...\nVeuillez-Patientez",
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Voi scaricare le cover mancanti (in /dev_hdd0/" COVERS_DIR ")?\nPotrebbe volerci un po'...\nAttendere prego",
+	"Vuoi scaricare le cover mancanti (in /dev_hdd0/" COVERS_DIR ")?\nPotrebbe volerci un po'...\nAttendere prego",
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
 	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
