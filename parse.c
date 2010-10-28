@@ -157,7 +157,7 @@ void change_param_sfo_version(char *file)
 				double sys_ver;	///< Used to store the version currently installed in the ps3
 				ver = strtod((char *) &mem[pos], NULL);
 				sys_ver = get_system_version();
-				if (ver > sys_ver) {
+				if (sys_ver && ver > sys_ver) {
 					char msg[170];
 					snprintf(msg, sizeof(msg),
 							 "This game requires PS3_SYSTEM_VER %.2f.\nDo you want to try fixing PARAM.SFO by forcing %.2f version?\n"
