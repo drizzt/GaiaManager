@@ -1966,9 +1966,9 @@ int main(int argc, char *argv[])
 					}
 					snprintf(filename, sizeof(filename), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
 					change_param_sfo_version(filename);
+					sprintf(filename, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
 					if (payload_type == 0)
 						set_hermes_mode(patchmode);
-					sprintf(filename, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
 					syscall36(menu_list[game_sel].path);
 					if (direct_boot) {
 						ret = unload_modules();
