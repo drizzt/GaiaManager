@@ -1227,7 +1227,7 @@ int main(int argc, char *argv[])
 	text_bg = (u8 *) memalign(0x100000, frame_buf_size);
 	text_h = (u8 *) memalign(0x100000, frame_buf_size);
 	text_pic1 = (u8 *) memalign(0x100000, frame_buf_size);
-	if (!text_bmp)
+	if (!text_bmp || !text_bg || !text_h || !text_pic1)
 		exit(-1);
 
 	if (png_out_mapmem(text_bmp, frame_buf_size))
@@ -1409,25 +1409,28 @@ int main(int argc, char *argv[])
 						long len;
 
 						snprintf(string1, sizeof(string1), "%s/PS3_GAME/PIC1.PNG", menu_list[game_sel].path);
-						if ((fp = fopen(string1, "rb")) == NULL)
-							break;
-						fseek(fp, 0, SEEK_END);
-						len = ftell(fp);
-						if ((buf = (char *) malloc(len)) == NULL) {
+						if ((fp = fopen(string1, "rb"))) {
+							fseek(fp, 0, SEEK_END);
+							len = ftell(fp);
+							if ((buf = (char *) malloc(len)) == NULL) {
+								fclose(fp);
+								break;
+							}
+							fseek(fp, 0, SEEK_SET);
+							fread(buf, len, 1, fp);
 							fclose(fp);
-							break;
-						}
-						fseek(fp, 0, SEEK_SET);
-						fread(buf, len, 1, fp);
-						fclose(fp);
 
-						if ((fp = fopen(filename, "wb")) == NULL) {
+							if ((fp = fopen(filename, "wb")) == NULL) {
+								free(buf);
+								continue;
+							}
+							fwrite(buf, len, 1, fp);
+							fclose(fp);
 							free(buf);
-							break;
+						} else {
+							// Empty text_pic1
+							memset(text_pic1, 0, frame_buf_size);
 						}
-						fwrite(buf, len, 1, fp);
-						fclose(fp);
-						free(buf);
 					}
 
 					load_png_texture(text_pic1, filename);
