@@ -69,9 +69,6 @@ PPU_OBJS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
 all : EBOOT.BIN $(PKG_TARGET) docs
 docs : readme.html readme.pdf
 
-indent : *.c *.h *.cg
-	indent $^
-
 $(VPSHADER_PPU_OBJS): $(OBJS_DIR)/%.ppu.o : %.vpo
 	@mkdir -p $(dir $(@))
 	$(PPU_OBJCOPY)  -I binary -O elf64-powerpc-celloslv2 -B powerpc $< $@

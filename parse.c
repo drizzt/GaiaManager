@@ -7,6 +7,35 @@
 #include "parse.h"
 #include "dialog.h"
 
+#define IDX(val, i) ((unsigned int) ((unsigned char *) &val)[i])
+#define LE16_TO_BE(val) ( (unsigned short) (    \
+          IDX(val, 0) +                         \
+          (IDX(val, 1) << 8)))
+#define LE32_TO_BE(val) ( (unsigned int) (      \
+          IDX(val, 0) +                         \
+          (IDX(val, 1) << 8) +                  \
+          (IDX(val, 2) << 16) +                 \
+          (IDX(val, 3) << 24)))
+
+/* Header of a SFO file */
+typedef struct {
+  int magic;
+  int version;
+  int key_table_offset;
+  int data_table_offset;
+  int items;
+} sfo_header_t;
+
+/* Item of a SFO file */
+typedef struct {
+  short key_offset;
+  char unknown;
+  char type;
+  int size;
+  int padded_size;
+  int data_offset;
+} sfo_key_item_t;
+
 /** Gets the version of the firmware installed in the ps3 were we are running.
   * @return A double with the version number (eg: 3.15)
   */
@@ -157,7 +186,7 @@ void change_param_sfo_version(char *file)
 				double sys_ver;	///< Used to store the version currently installed in the ps3
 				ver = strtod((char *) &mem[pos], NULL);
 				sys_ver = get_system_version();
-				if (ver > sys_ver) {
+				if (sys_ver && ver > sys_ver) {
 					char msg[170];
 					snprintf(msg, sizeof(msg),
 							 "This game requires PS3_SYSTEM_VER %.2f.\nDo you want to try fixing PARAM.SFO by forcing %.2f version?\n"
@@ -168,7 +197,7 @@ void change_param_sfo_version(char *file)
 					if (dialog_ret == 1) {
 						char ver_patch[10];
 						//format the version to be patched so it is xx.xxx
-						snprintf(ver_patch, sizeof(ver_patch), "%02.3f", sys_ver);
+						snprintf(ver_patch, sizeof(ver_patch), "%06.3f", sys_ver);
 						memcpy(&mem[pos], ver_patch, 6);
 						fp = fopen(file, "wb");
 						fwrite(mem, len, 1, fp);
