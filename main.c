@@ -397,8 +397,6 @@ static int unload_modules(void)
 	}
 #endif
 
-	cleanup();
-
 	ftp_off();
 
 	cellPadEnd();
@@ -955,6 +953,7 @@ static void quit(void)
 		restorecall36((char *) "/dev_usb000");	// restore
 	}
 
+	cleanup();
 	unload_modules();
 
 	sys_process_exit(1);
@@ -1927,6 +1926,8 @@ int main(int argc, char *argv[])
 				int prio = 1001;
 				uint64_t flags = SYS_PROCESS_PRIMARY_STACK_SIZE_64K;
 
+				cleanup();
+
 				sprintf(filename, "%s/EBOOT.BIN", menu_homebrew_list[game_sel].path);
 
 				flip();
@@ -1949,6 +1950,8 @@ int main(int argc, char *argv[])
 					wait_dialog();
 				} else {
 					struct stat s;
+
+					cleanup();
 
 					// Check if game dir permission is 0700 but only on internal HDD
 					if ((menu_list[game_sel].flags & 1)
