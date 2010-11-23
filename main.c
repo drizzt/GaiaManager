@@ -317,7 +317,7 @@ static void ftp_off(void)
 	}
 
 	if (ftp_flags & 1) {
-		sys_net_finalize_network();
+//		sys_net_finalize_network();
 		ftp_flags &= ~1;
 	}
 }
@@ -415,6 +415,8 @@ static int unload_modules(void)
 		fclose(fid);
 	}
 #endif
+
+	sys_net_finalize_network();
 
 	ftp_off();
 
