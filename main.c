@@ -171,6 +171,8 @@ int pad_read(void)
 
 	u32 padd;
 
+	u32 paddLX, paddLY, paddRX, paddRY;
+
 	CellPadData databuf;
 #if (CELL_SDK_VERSION<=0x210001)
 	CellPadInfo infobuf;
@@ -233,6 +235,23 @@ int pad_read(void)
 	}
 
 	padd = (databuf.button[2] | (databuf.button[3] << 8));
+
+	/* @drizzt Add support for analog sticks
+	 * TODO: Add support for right analog stick */
+	paddRX = databuf.button[4];
+	paddRY = databuf.button[5];
+	paddLX = databuf.button[6];
+	paddLY = databuf.button[7];
+
+	if (paddLX < 0x10)
+		padd |= BUTTON_LEFT;
+	else if (paddLX > 0xe0)
+		padd |= BUTTON_RIGHT;
+
+	if (paddLY < 0x10)
+		padd |= BUTTON_UP;
+	else if (paddLY > 0xe0)
+		padd |= BUTTON_DOWN;
 
 	new_pad = padd & (~old_pad);
 	old_pad = padd;
@@ -396,8 +415,6 @@ static int unload_modules(void)
 		fclose(fid);
 	}
 #endif
-
-	cleanup();
 
 	ftp_off();
 
@@ -955,6 +972,7 @@ static void quit(void)
 		restorecall36((char *) "/dev_usb000");	// restore
 	}
 
+	cleanup();
 	unload_modules();
 
 	sys_process_exit(1);
@@ -1967,6 +1985,8 @@ int main(int argc, char *argv[])
 				int prio = 1001;
 				uint64_t flags = SYS_PROCESS_PRIMARY_STACK_SIZE_64K;
 
+				cleanup();
+
 				sprintf(filename, "%s/EBOOT.BIN", menu_homebrew_list[game_sel].path);
 
 				flip();
@@ -1989,6 +2009,8 @@ int main(int argc, char *argv[])
 					wait_dialog();
 				} else {
 					struct stat s;
+
+					cleanup();
 
 					// Check if game dir permission is 0700 but only on internal HDD
 					if ((menu_list[game_sel].flags & 1)
