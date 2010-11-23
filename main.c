@@ -1535,7 +1535,7 @@ int main(int argc, char *argv[])
 
 			num_directories = file_counter = num_files_big = num_files_split = 0;
 
-			my_game_test(menu_list[game_sel].path);
+			my_game_test(menu_list[game_sel].path, true);
 
 			DPrintf("Directories: %i Files: %i\nBig files: %i Split files: %i\n\n", num_directories, file_counter,
 					num_files_big, num_files_split);
@@ -1757,7 +1757,9 @@ int main(int argc, char *argv[])
 				file_counter = 0;
 				new_pad = 0;
 
+#if 0
 				DPrintf("Starting... \n copy %s\n to %s\n\n", menu_list[game_sel].path, name);
+#endif
 
 				if (curr_device != 0)
 					copy_mode = 1;	// break files >= 4GB

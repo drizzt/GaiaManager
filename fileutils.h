@@ -7,7 +7,7 @@ extern int file_counter;
 extern int64_t global_device_bytes;
 
 extern int my_game_copy(char *path, char *path2);
-extern int my_game_test(char *path);
+extern int my_game_test(char *path, bool interactive);
 extern int my_game_delete(char *path);
 
 #endif

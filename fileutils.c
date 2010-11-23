@@ -1,10 +1,13 @@
 #include <dirent.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <cell/cell_fs.h>
+#include <sysutil/sysutil_msgdialog.h>
 
+#include "dialog.h"
 #include "fileutils.h"
 #include "graphics.h"
 #include "main.h"
@@ -53,7 +56,7 @@ int abort_copy = 0;				// abort process
 int file_counter = 0;			// to count files
 int copy_mode = 0;				// 0- normal 1-> pack files >= 4GB
 int copy_is_split = 0;			// return 1 if files is split
-int64_t global_device_bytes = 0;
+int64_t global_device_bytes = 0, copy_global_bytes = 0;
 
 static char string1[256];
 
@@ -246,11 +249,15 @@ static int fast_copy_process()
 
 	static int id_r = -1, id_w = -1;
 
+	static int last_copy_percent, last_file_percent;
+
 	int error = 0;
 
 	int i_reading = 0;
 
 	int64_t write_end = 0, write_size = 0;
+
+//  static int inc;
 
 	while (current_fast_file_w < fast_num_files || fast_writing) {
 
@@ -521,7 +528,7 @@ static int fast_copy_process()
 					fast_files[current_fast_file_w].pathw[fast_files[current_fast_file_w].pos_path]
 						= 0;
 				}
-
+#if 0
 				if (write_size < 1024LL) {
 				}
 				//DPrintf("Wrote %lli B %s\n\n", write_size, fast_files[current_fast_file_w].pathw);
@@ -529,6 +536,7 @@ static int fast_copy_process()
 					DPrintf("Wrote %lli KB %s\n\n", write_size / 1024LL, fast_files[current_fast_file_w].pathw);
 				else
 					DPrintf("Wrote %lli MB %s\n\n", write_size / 0x100000LL, fast_files[current_fast_file_w].pathw);
+#endif
 
 				fast_files[current_fast_file_w].fl = 4;	//end of proccess
 
@@ -536,6 +544,7 @@ static int fast_copy_process()
 				current_fast_file_w++;
 				//if(current_fast_file_r<current_fast_file_w) current_fast_file_w=current_fast_file_r;
 				file_counter++;
+				cellMsgDialogProgressBarReset(CELL_MSGDIALOG_PROGRESSBAR_INDEX_DOUBLE_UPPER);
 			} else
 				// split big files
 			if (fast_files[current_fast_file_w].bigfile_mode == 1
@@ -568,27 +577,54 @@ static int fast_copy_process()
 
 		}
 
-		int seconds = (int) (time(NULL) - time_start);
+		sprintf(string1, "copying %s to %s", fast_files[current_fast_file_r].pathr, fast_files[current_fast_file_r].pathw);
+		cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_DOUBLE_UPPER, string1);
 
-		sprintf(string1, "Copying. File: %i Time: %2.2i:%2.2i:%2.2i %2.2i/100 Vol: %1.2f GB\n", file_counter,
+		//int seconds = (int) (time(NULL) - time_start);
+		
+		int copy_percent = (int) (global_device_bytes * 100 / copy_global_bytes);
+		int file_percent = (int) (write_end * 100 / write_size);
+
+		/*sprintf(string1, "Copying. File: %i Time: %2.2i:%2.2i:%2.2i %2.2i/100 Vol: %1.2f/%1.2f GB %d\n", file_counter,
 				seconds / 3600, (seconds / 60) % 60, seconds % 60, (int) (write_end * 100ULL / write_size),
-				((double) global_device_bytes) / (1024.0 * 1024. * 1024.0));
+				((double) global_device_bytes) / (1024.0 * 1024. * 1024.0),
+				(double) copy_global_bytes / (1024.0 * 1024. * 1024.0), copy_percent);
+		*/
 
+		/* New file or new copy session*/
+		if (copy_percent < last_copy_percent) {
+			last_copy_percent = 0;
+		} else if (copy_percent > last_copy_percent) {
+			last_copy_percent = copy_percent;
+			cellMsgDialogProgressBarInc(CELL_MSGDIALOG_PROGRESSBAR_INDEX_DOUBLE_UPPER, 1);
+		}
+
+		if (file_percent < last_file_percent) {
+			last_file_percent = 0;
+		} else if (file_percent > last_file_percent) {
+			last_file_percent = file_percent;
+			cellMsgDialogProgressBarInc(CELL_MSGDIALOG_PROGRESSBAR_INDEX_DOUBLE_LOWER, 1);
+		}
+
+//		cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_DOUBLE_UPPER, string1);
+#if 1
 		cellGcmSetClearSurface(gCellGcmCurrentContext,
 							   CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B |
 							   CELL_GCM_CLEAR_A);
 
 		draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 
-		cellDbgFontPrintf(0.07f, 0.07f, 1.2f, 0xffffffff, string1);
+//		cellDbgFontPrintf(0.07f, 0.07f, 1.2f, 0xffffffff, string1);
 
 		cellDbgFontPrintf(0.5f - 0.15f, 1.0f - 0.07 * 2.0f, 1.2f, 0xffffffff, "Hold /\\ to Abort");
 
 		cellDbgFontDrawGcm();
 
 		flip();
-
+#endif
 		pad_read();
+//		dialog_ret = 0;
+//		cellSysutilCheckCallback();
 		if (new_pad & BUTTON_TRIANGLE) {
 			abort_copy = 1;
 			DPrintf("Aborted by user \n");
@@ -707,7 +743,9 @@ static int _my_game_copy(char *path, char *path2)
 			}
 			sprintf(d1, "%s/%s", path, entry->d_name);
 			sprintf(d2, "%s/%s", path2, entry->d_name);
+#if 0
 			DPrintf("D1: %s\nD2: %s", path, path2);
+#endif
 
 			//if(strcmp(path2, "/dev_bdvd/PS3_UPDATE") == 0)
 			//{
@@ -722,7 +760,9 @@ static int _my_game_copy(char *path, char *path2)
 		} else {
 			if (strcmp(entry->d_name, "PS3UPDAT.PUP") == 0) {
 			} else {
+#if 0
 				DPrintf("EPATH: %s\nEPATH2: %s\nENTRY %s", path, path2, entry->d_name);
+#endif
 				if (fast_copy_add(path, path2, entry->d_name) < 0) {
 					abort_copy = 666;
 					closedir(dir);
@@ -746,20 +786,33 @@ static int _my_game_copy(char *path, char *path2)
 
 int my_game_copy(char *path, char *path2)
 {
-	global_device_bytes = 0;
-
 	if (fast_copy_async(path, path2, 1) < 0) {
 		abort_copy = 665;
 		return -1;
 	}
 
-	int ret = _my_game_copy(path, path2);
+	int ret = my_game_test(path, false);
 
-	int ret2 = fast_copy_process();
+	copy_global_bytes = global_device_bytes;
+	global_device_bytes = 0;
+
+	sprintf(string1, "Copying %s\n to %s...", path, path2);
+	cellMsgDialogOpen2(CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE |
+					   CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF | CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NONE |
+					   CELL_MSGDIALOG_TYPE_PROGRESSBAR_DOUBLE, string1, NULL, NULL, NULL);
+
+	cellMsgDialogProgressBarReset(CELL_MSGDIALOG_PROGRESSBAR_INDEX_DOUBLE_LOWER);
+	cellMsgDialogProgressBarReset(CELL_MSGDIALOG_PROGRESSBAR_INDEX_DOUBLE_UPPER);
+
+	int ret2 = _my_game_copy(path, path2);
+
+	int ret3 = fast_copy_process();
 
 	fast_copy_async(path, path2, 0);
 
-	if (ret < 0 || ret2 < 0)
+	cellMsgDialogAbort();
+
+	if (ret < 0 || ret2 < 0 || ret3 < 0)
 		return -1;
 
 	return 0;
@@ -767,7 +820,7 @@ int my_game_copy(char *path, char *path2)
 
 // test if files >= 4GB
 
-int my_game_test(char *path)
+int my_game_test(char *path, bool interactive)
 {
 	DIR *dir;
 	dir = opendir(path);
@@ -798,7 +851,7 @@ int my_game_test(char *path)
 				return -1;
 			}
 			sprintf(d1, "%s/%s", path, entry->d_name);
-			my_game_test(d1);
+			my_game_test(d1, interactive);
 			free(d1);
 
 			if (abort_copy)
@@ -853,32 +906,33 @@ int my_game_test(char *path)
 
 			global_device_bytes += size;
 
-			sprintf(string1, "Test File: %i Time: %2.2i:%2.2i:%2.2i Vol: %1.2f GB\n", file_counter, seconds / 3600,
-					(seconds / 60) % 60, seconds % 60, ((double) global_device_bytes) / (1024.0 * 1024. * 1024.0));
+			if (interactive) {
+				sprintf(string1, "Test File: %i Time: %2.2i:%2.2i:%2.2i Vol: %1.2f GB\n", file_counter, seconds / 3600,
+						(seconds / 60) % 60, seconds % 60, ((double) global_device_bytes) / (1024.0 * 1024. * 1024.0));
 
-			cellGcmSetClearSurface(gCellGcmCurrentContext,
-								   CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B |
-								   CELL_GCM_CLEAR_A);
+				cellGcmSetClearSurface(gCellGcmCurrentContext,
+									   CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B |
+									   CELL_GCM_CLEAR_A);
 
-			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
+				draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 
-			cellDbgFontPrintf(0.07f, 0.07f, 1.2f, 0xffffffff, string1);
+				cellDbgFontPrintf(0.07f, 0.07f, 1.2f, 0xffffffff, string1);
 
-			cellDbgFontPrintf(0.5f - 0.15f, 1.0f - 0.07 * 2.0f, 1.2f, 0xffffffff, "Hold /\\ to Abort");
+				cellDbgFontPrintf(0.5f - 0.15f, 1.0f - 0.07 * 2.0f, 1.2f, 0xffffffff, "Hold /\\ to Abort");
 
-			cellDbgFontDrawGcm();
+				cellDbgFontDrawGcm();
 
-			flip();
+				flip();
 
-			pad_read();
+				pad_read();
 
-			if (abort_copy)
-				break;
+				if (abort_copy)
+					break;
 
-			if (new_pad & BUTTON_TRIANGLE) {
-				abort_copy = 1;
+				if (new_pad & BUTTON_TRIANGLE) {
+					abort_copy = 1;
+				}
 			}
-
 			if (abort_copy)
 				break;
 
