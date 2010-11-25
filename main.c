@@ -1,3 +1,15 @@
+/*
+ * Copyright (C) 2010 drizzt
+ *
+ * Authors:
+ * drizzt <drizzt@ibeglab.org>
+ * Jurai2
+ * The original OpenBM author
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ */
 
 #include <sys/spu_initialize.h>
 #include <sys/ppu_thread.h>
