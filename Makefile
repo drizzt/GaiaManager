@@ -1,7 +1,7 @@
 CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
-PPU_SRCS = main.c dialog.c fileutils.c graphics.c i18n.c network.c parse.c syscall8.c version.c
+PPU_SRCS = main.c dialog.c fileutils.c graphics.c i18n.c network.c parse.c syscall8.c vpshader.vp vpshader2.vp fpshader.fp fpshader2.fp
 PPU_TARGET = open_manager.elf
 
 GITHEAD := $(shell git describe --abbrev=4 --tags 2>/dev/null)
@@ -15,14 +15,7 @@ endif
 PPU_LDLIBS = -lfont_stub -lfontFT_stub -lfreetype_stub -lpthread -latrac3plus_stub -lmixer -laudio_stub -lftp -lrtc_stub -lnet_stub -lnetctl_stub -lpngdec_stub -lm -ldbgfont_gcm -lgcm_cmd -lgcm_sys_stub -lio_stub -lsysmodule_stub -lsysutil_stub -lfs_stub -lhttp_util_stub -lhttp_stub
 PPU_CPPFLAGS += -Werror -D'FOLDER_NAME="$(FOLDER_NAME)"'
 
-PPU_INCDIRS += -I$(CELL_SDK)/target/ppu/include/sysutil
-
-VPSHADER_SRCS = vpshader.cg vpshader2.cg
-FPSHADER_SRCS = fpshader.cg fpshader2.cg
-
-VPSHADER_PPU_OBJS = $(patsubst %.cg, $(OBJS_DIR)/%.ppu.o, $(VPSHADER_SRCS))
-FPSHADER_PPU_OBJS = $(patsubst %.cg, $(OBJS_DIR)/%.ppu.o, $(FPSHADER_SRCS))
-PPU_EMBEDDED_SRCS = $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
+PPU_EMBEDDED_SRCS = PNG/BGG.PNG PNG/BGH.PNG PNG/HIGHLIGHT.PNG
 
 PACKAGE_NAME = $(shell sed -n 's/^Product_ID[[:space:]]*=[[:space:]]*//p' openmanager.conf)
 FOLDER_NAME = $(shell echo $(PACKAGE_NAME) | sed -n 's/^[[:alnum:]]*-\([[:alnum:]]*\)_.*/\1/p')
@@ -64,18 +57,8 @@ endif
 
 include $(CELL_MK_DIR)/sdk.target.mk
 
-PPU_OBJS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS)
-
 all : EBOOT.BIN $(PKG_TARGET) docs
 docs : readme.html readme.pdf
-
-$(VPSHADER_PPU_OBJS): $(OBJS_DIR)/%.ppu.o : %.vpo
-	@mkdir -p $(dir $(@))
-	$(PPU_OBJCOPY)  -I binary -O elf64-powerpc-celloslv2 -B powerpc $< $@
-
-$(FPSHADER_PPU_OBJS): $(OBJS_DIR)/%.ppu.o : %.fpo
-	@mkdir -p $(dir $(@))
-	$(PPU_OBJCOPY)  -I binary -O elf64-powerpc-celloslv2 -B powerpc $< $@
 
 $(OBJS_DIR)/$(PPU_TARGET): $(PPU_TARGET)
 	@mkdir -p $(dir $(@))
@@ -101,6 +84,6 @@ readme.html: readme.mkd
 readme.pdf: readme.mkd
 	maruku --pdf -o $@ $<
 
-$(OBJS_DIR)/version.ppu.o : PPU_CPPFLAGS += -DGITHEAD=\"$(GITHEAD)\"
+#$(OBJS_DIR)/version.ppu.o : PPU_CPPFLAGS += -DGITHEAD=\"$(GITHEAD)\"
 
-.PHONY: $(OBJS_DIR)/version.ppu.o
+#.PHONY: $(OBJS_DIR)/version.ppu.o
