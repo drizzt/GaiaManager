@@ -71,12 +71,12 @@
 #define SETTINGS_FILE "/dev_hdd0/game/" FOLDER_NAME "/settings.cfg"
 
 /* Embedded (default) PNG files */
-extern uint32_t _binary_PNG_BGG_PNG_end[];
-extern uint32_t _binary_PNG_BGG_PNG_start[];
-extern uint32_t _binary_PNG_BGH_PNG_end[];
-extern uint32_t _binary_PNG_BGH_PNG_start[];
-extern uint32_t _binary_PNG_HIGHLIGHT_PNG_end[];
-extern uint32_t _binary_PNG_HIGHLIGHT_PNG_start[];
+extern uint32_t _binary_PNG_BGG_PNG_end;
+extern uint32_t _binary_PNG_BGG_PNG_start;
+extern uint32_t _binary_PNG_BGH_PNG_end;
+extern uint32_t _binary_PNG_BGH_PNG_start;
+extern uint32_t _binary_PNG_HIGHLIGHT_PNG_end;
+extern uint32_t _binary_PNG_HIGHLIGHT_PNG_start;
 
 enum BmModes {
 	GAME = 0,
