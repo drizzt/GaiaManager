@@ -1,3 +1,15 @@
+/*
+ * Copyright (C) 2010 drizzt
+ *
+ * Authors:
+ * drizzt <drizzt@ibeglab.org>
+ * Jurai2
+ * The original OpenBM author
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ */
 
 #include <sys/spu_initialize.h>
 #include <sys/ppu_thread.h>
@@ -57,6 +69,14 @@
 #define MAX_LIST 512
 
 #define SETTINGS_FILE "/dev_hdd0/game/" FOLDER_NAME "/settings.cfg"
+
+/* Embedded (default) PNG files */
+extern uint32_t _binary_PNG_BGG_PNG_end;
+extern uint32_t _binary_PNG_BGG_PNG_start;
+extern uint32_t _binary_PNG_BGH_PNG_end;
+extern uint32_t _binary_PNG_BGH_PNG_start;
+extern uint32_t _binary_PNG_HIGHLIGHT_PNG_end;
+extern uint32_t _binary_PNG_HIGHLIGHT_PNG_start;
 
 enum BmModes {
 	GAME = 0,
@@ -126,7 +146,7 @@ static int png_out_mapmem(u8 * buffer, size_t buf_size);
 #ifndef WITHOUT_SOUND
 static void playBootSound(uint64_t ui __attribute__ ((unused)));
 #endif
-static int load_png_texture(u8 * data, char *name);
+static int load_png_texture(u8 * data, char *name, uint32_t size);
 static uint32_t syscall35(const char *srcpath, const char *dstpath);
 void syscall36(const char *path);	// for some strange reasons it does not work as static
 static void restorecall36(const char *path);
@@ -317,7 +337,7 @@ static void ftp_off(void)
 	}
 
 	if (ftp_flags & 1) {
-//		sys_net_finalize_network();
+//      sys_net_finalize_network();
 		ftp_flags &= ~1;
 	}
 }
@@ -511,12 +531,7 @@ static void playBootSound(uint64_t ui __attribute__ ((unused)))
 	int32_t status;
 	BGMArg bgmArg;
 
-//      stop_atrac3();
-
-//      delete_atrac3plus(&bgmArg);
-
 	cellFsClose(fm);
-//      status = cellFsOpen("/dev_hdd0/game/OMAN46756/USRDIR/BOOT.AT3", CELL_FS_O_RDONLY, &fm, NULL, 0);
 	status = cellFsOpen(soundfile, CELL_FS_O_RDONLY, &fm, NULL, 0);
 	bgmArg.fd = fm;
 	status = init_atrac3plus(&bgmArg);
@@ -527,7 +542,11 @@ static void playBootSound(uint64_t ui __attribute__ ((unused)))
 }
 #endif
 
-static int load_png_texture(u8 * data, char *name)
+/* This function read a PNG to a variable (data).
+ * If size == 0 name is the filename of the PNG file to load,
+ * else name is the buffer containing the PNG data and size is its size
+ */
+static int load_png_texture(u8 * data, char *name, uint32_t size)
 {
 	int ret_file, ret, ok = -1;
 
@@ -567,8 +586,14 @@ static int load_png_texture(u8 * data, char *name)
 	if (ret_png == CELL_OK) {
 
 		memset(&src, 0, sizeof(CellPngDecSrc));
-		src.srcSelect = CELL_PNGDEC_FILE;
-		src.fileName = name;
+		if (size == 0) {
+			src.srcSelect = CELL_PNGDEC_FILE;
+			src.fileName = name;
+		} else {
+			src.srcSelect = CELL_PNGDEC_BUFFER;
+			src.streamPtr = name;
+			src.streamSize = size;
+		}
 
 		src.spuThreadEnable = CELL_PNGDEC_SPU_THREAD_DISABLE;
 
@@ -1204,6 +1229,10 @@ int main(int argc, char *argv[])
 	//int    fm = -1;
 	int one_time = 1;
 
+	size_t pngsize = 0;
+	char *pngptr = filename;
+	struct stat st;
+
 	u8 *text_bmp = NULL;
 	u8 *text_h = NULL;
 	u8 *text_bg = NULL;
@@ -1262,10 +1291,22 @@ int main(int argc, char *argv[])
 	cellSysutilRegisterCallback(0, gfxSysutilCallback, NULL);
 
 	sprintf(filename, "/dev_hdd0/game/%s/USRDIR/BGG.PNG", hdd_folder_home);
-	load_png_texture(text_bg, filename);
+	pngsize = 0;
+	pngptr = filename;
+	if (stat(filename, &st) < 0) {
+		pngsize = _binary_PNG_BGG_PNG_end - _binary_PNG_BGG_PNG_start;
+		pngptr = (char *) &_binary_PNG_BGG_PNG_start;
+	}
+	load_png_texture(text_bg, pngptr, pngsize);
 
 	sprintf(filename, "/dev_hdd0/game/%s/USRDIR/HIGHLIGHT.PNG", hdd_folder_home);
-	load_png_texture(text_h, filename);
+	pngsize = 0;
+	pngptr = filename;
+	if (stat(filename, &st) < 0) {
+		pngsize = _binary_PNG_HIGHLIGHT_PNG_end - _binary_PNG_HIGHLIGHT_PNG_start;
+		pngptr = (char *) &_binary_PNG_HIGHLIGHT_PNG_start;
+	}
+	load_png_texture(text_h, pngptr, pngsize);
 
 	setRenderColor();
 
@@ -1418,7 +1459,6 @@ int main(int argc, char *argv[])
 			if (old_fi != game_sel && game_sel >= 0 && counter_png == 0) {
 				old_fi = game_sel;
 				if (mode_list == GAME) {
-					struct stat st;
 
 					mkdir("/dev_hdd0/game/" FOLDER_NAME "/cache/", S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 					sprintf(filename, "/dev_hdd0/game/%s/cache/%s-PIC1.PNG", hdd_folder_home,
@@ -1468,7 +1508,7 @@ int main(int argc, char *argv[])
 					}
 				} else
 					sprintf(filename, "%s/ICON0.PNG", menu_homebrew_list[game_sel].path);
-				load_png_texture(text_bmp, filename);
+				load_png_texture(text_bmp, filename, 0);
 
 				counter_png = 20;
 			}
@@ -1545,19 +1585,29 @@ int main(int argc, char *argv[])
 			update_game_folder(argv[0]);
 
 		if (new_pad & BUTTON_R2) {
+			pngsize = 0;
+			pngptr = filename;
 			game_sel = 0;
+			old_fi = -1;
+			counter_png = 0;
 			if (mode_list == GAME) {
 				mode_list = HOMEBREW;
 				max_list = &max_menu_homebrew_list;
 				sprintf(filename, "/dev_hdd0/game/%s/USRDIR/BGH.PNG", hdd_folder_home);
+				if (stat(filename, &st) < 0) {
+					pngsize = _binary_PNG_BGH_PNG_end - _binary_PNG_BGH_PNG_start;
+					pngptr = (char *) &_binary_PNG_BGH_PNG_start;
+				}
 			} else {
 				mode_list = GAME;
 				max_list = &max_menu_list;
 				sprintf(filename, "/dev_hdd0/game/%s/USRDIR/BGG.PNG", hdd_folder_home);
+				if (stat(filename, &st) < 0) {
+					pngsize = _binary_PNG_BGG_PNG_end - _binary_PNG_BGG_PNG_start;
+					pngptr = (char *) &_binary_PNG_BGG_PNG_start;
+				}
 			}
-			old_fi = -1;
-			counter_png = 0;
-			load_png_texture(text_bg, filename);
+			load_png_texture(text_bg, pngptr, pngsize);
 		}
 
 		if ((new_pad & BUTTON_R3) && game_sel >= 0 && max_menu_list > 0 && mode_list == GAME) {

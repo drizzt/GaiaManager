@@ -1,3 +1,15 @@
+/*
+ * Copyright (C) 2010 drizzt
+ *
+ * Authors:
+ * drizzt <drizzt@ibeglab.org>
+ * The original OpenBM author
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ */
+
 /* SFO parsing and managing functions */
 
 #include <stdio.h>
@@ -87,10 +99,12 @@ int parse_ps3_disc(char *path, char *id)
 			if (!strcmp((char *) &mem[n], "TITLE_ID")) {
 				n = (mem[n + 0x12] << 8) | mem[n + 0x13];
 				memcpy(id, &mem[n], 16);
+				free(mem);
 
 				return 0;
 			}
 		}
+		free(mem);
 	}
 
 	return -1;

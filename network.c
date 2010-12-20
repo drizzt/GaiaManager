@@ -1,3 +1,14 @@
+/*
+ * Copyright (C) 2010 drizzt
+ *
+ * Authors:
+ * drizzt <drizzt@ibeglab.org>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ */
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +39,7 @@ bool download_cover(const char *title_id, const char *fileName)
 	void *httpPool = NULL;
 	char serverName[sizeof(COVERS_BASE_URI) + 10 + 4];
 
-	FILE *fid;
+	FILE *fid = NULL;
 
 	snprintf(serverName, sizeof(serverName), "%s/%s.PNG", COVERS_BASE_URI, title_id);
 
@@ -96,11 +107,11 @@ bool download_cover(const char *title_id, const char *fileName)
 		fwrite(buffer, localRecv, 1, fid);
 	}
 
-	fclose(fid);
-
 	ret = true;
 
   quit:
+	if (fid)
+		fclose(fid);
 	if (trans)
 		cellHttpDestroyTransaction(trans);
 	if (client)

@@ -1,3 +1,15 @@
+/*
+ * Copyright (C) 2010 drizzt
+ *
+ * Authors:
+ * drizzt <drizzt@ibeglab.org>
+ * Jurai
+ * The original OpenBM author
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -390,8 +402,8 @@ int initFont()
 	CellDbgFontConfigGcm config;
 
 	int size =
-		CELL_DBGFONT_FRAGMENT_SIZE + CELL_DBGFONT_VERTEX_SIZE * CONSOLE_WIDTH * CONSOLE_HEIGHT +
-		CELL_DBGFONT_TEXTURE_SIZE;
+		6 * (CELL_DBGFONT_FRAGMENT_SIZE + CELL_DBGFONT_VERTEX_SIZE * CONSOLE_WIDTH * CONSOLE_HEIGHT +
+			 CELL_DBGFONT_TEXTURE_SIZE);
 
 	int ret = 0;
 
