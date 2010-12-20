@@ -99,10 +99,12 @@ int parse_ps3_disc(char *path, char *id)
 			if (!strcmp((char *) &mem[n], "TITLE_ID")) {
 				n = (mem[n + 0x12] << 8) | mem[n + 0x13];
 				memcpy(id, &mem[n], 16);
+				free(mem);
 
 				return 0;
 			}
 		}
+		free(mem);
 	}
 
 	return -1;

@@ -39,7 +39,7 @@ bool download_cover(const char *title_id, const char *fileName)
 	void *httpPool = NULL;
 	char serverName[sizeof(COVERS_BASE_URI) + 10 + 4];
 
-	FILE *fid;
+	FILE *fid = NULL;
 
 	snprintf(serverName, sizeof(serverName), "%s/%s.PNG", COVERS_BASE_URI, title_id);
 
@@ -107,11 +107,11 @@ bool download_cover(const char *title_id, const char *fileName)
 		fwrite(buffer, localRecv, 1, fid);
 	}
 
-	fclose(fid);
-
 	ret = true;
 
   quit:
+	if (fid)
+		fclose(fid);
 	if (trans)
 		cellHttpDestroyTransaction(trans);
 	if (client)
