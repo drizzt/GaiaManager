@@ -19,6 +19,8 @@
 #include "parse.h"
 #include "dialog.h"
 
+#if 0
+
 #define IDX(val, i) ((unsigned int) ((unsigned char *) &val)[i])
 #define LE16_TO_BE(val) ( (unsigned short) (    \
           IDX(val, 0) +                         \
@@ -47,6 +49,7 @@ typedef struct {
   int padded_size;
   int data_offset;
 } sfo_key_item_t;
+#endif
 
 /** Gets the version of the firmware installed in the ps3 were we are running.
   * @return A double with the version number (eg: 3.15)
@@ -71,11 +74,11 @@ static double get_system_version(void)
 int parse_ps3_disc(char *path, char *id)
 {
 	FILE *fp;
-	int n;
 
 	fp = fopen(path, "rb");
 	if (fp != NULL) {
 		unsigned len;
+		int n;
 		unsigned char *mem = NULL;
 
 		fseek(fp, 0, SEEK_END);

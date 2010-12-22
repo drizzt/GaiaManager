@@ -191,7 +191,7 @@ int pad_read(void)
 
 	u32 padd;
 
-	u32 paddLX, paddLY, paddRX, paddRY;
+	u32 paddLX, paddLY; //, paddRX, paddRY;
 
 	CellPadData databuf;
 #if (CELL_SDK_VERSION<=0x210001)
@@ -258,8 +258,8 @@ int pad_read(void)
 
 	/* @drizzt Add support for analog sticks
 	 * TODO: Add support for right analog stick */
-	paddRX = databuf.button[4];
-	paddRY = databuf.button[5];
+	//paddRX = databuf.button[4];
+	//paddRY = databuf.button[5];
 	paddLX = databuf.button[6];
 	paddLY = databuf.button[7];
 
@@ -548,7 +548,7 @@ static void playBootSound(uint64_t ui __attribute__ ((unused)))
  */
 static int load_png_texture(u8 * data, char *name, uint32_t size)
 {
-	int ret_file, ret, ok = -1;
+	int ret, ok = -1;
 
 	CellPngDecMainHandle mHandle;
 	CellPngDecSubHandle sHandle;
@@ -584,6 +584,7 @@ static int load_png_texture(u8 * data, char *name, uint32_t size)
 	png_w = png_h = 0;
 
 	if (ret_png == CELL_OK) {
+		int ret_file;
 
 		memset(&src, 0, sizeof(CellPngDecSrc));
 		if (size == 0) {
@@ -881,7 +882,7 @@ static void update_game_folder(char *ebootbin
 #endif
 	)
 {
-	int ret, dir_fixed = 0;
+	int dir_fixed = 0;
 	char old_hdd_folder[64] = { 0, };
 
 	DIR *dir, *dir2;
@@ -912,7 +913,7 @@ static void update_game_folder(char *ebootbin
 
 				sprintf(filename, "%s /%s %s", text_wantuse[region], entry->d_name, text_toinstall[region]);
 
-				ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+				cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 
 				wait_dialog();
 
@@ -940,18 +941,18 @@ static void update_game_folder(char *ebootbin
 		dialog_ret = 0;
 		sprintf(filename, "/dev_hdd0/%s is the new folder for games", GAMES_DIR);
 
-		ret = cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
+		cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
 		wait_dialog();
 	}
 #ifdef WITHOUT_SAVE_STATUS
 	// modify EBOOT.BIN
 	if (dir_fixed && ebootbin) {
 		FILE *fp;
-		int n;
 
 		fp = fopen(ebootbin, "r+");
 		if (fp != NULL) {
 			int len;
+			int n;
 			char *mem = NULL;
 
 			fseek(fp, 0, SEEK_END);
@@ -1044,7 +1045,6 @@ static void set_hermes_mode(uint64_t mode)
 
 static void copy_from_bluray(void)
 {
-	int ret;
 	char name[1024];
 	int curr_device = 0;
 	CellFsStat fstatus;
@@ -1063,7 +1063,7 @@ static void copy_from_bluray(void)
 				sprintf(filename, "%s\n\n%s BDVD %s USB00%c?", bluray_game, text_wantcopy[region], text_to[region],
 						47 + n);
 
-			ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+			cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 
 			wait_dialog();
 
@@ -1129,7 +1129,7 @@ static void copy_from_bluray(void)
 					sprintf(filename, "/dev_usb00%c/%s/_%s", 47 + curr_device, GAMES_DIR, id);
 				}
 
-				ret = rename(name, filename);
+				rename(name, filename);
 
 				if (curr_device == 0)
 					sprintf(filename, "%s\n\nSplit game copied in HDD0 (non bootable)", id);
@@ -1137,7 +1137,7 @@ static void copy_from_bluray(void)
 					sprintf(filename, "%s\n\nSplit game copied in USB00%c (non bootable)", id, 47 + curr_device);
 
 				dialog_ret = 0;
-				ret = cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
+				cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
 				wait_dialog();
 
 			}
@@ -1185,7 +1185,7 @@ static void copy_from_bluray(void)
 					sprintf(filename, "%s\n\n%s USB00%c?", id, text_delfailed[region], 47 + curr_device);
 
 				dialog_ret = 0;
-				ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+				cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 
 				wait_dialog();
 
@@ -1205,7 +1205,7 @@ static void copy_from_bluray(void)
 						sprintf(filename, "/dev_usb00%c/%s/_%s", 47 + curr_device, GAMES_DIR, id);
 					}
 
-					ret = rename(name, filename);
+					rename(name, filename);
 
 				}
 			}
@@ -1225,7 +1225,6 @@ int main(int argc, char *argv[])
 {
 	sys_spu_initialize(2, 0);
 	//BGMArg bgmArg;
-	int ret;
 	//int    fm = -1;
 	int one_time = 1;
 
@@ -1238,7 +1237,7 @@ int main(int argc, char *argv[])
 	u8 *text_bg = NULL;
 	u8 *text_pic1 = NULL;
 	//char INPUT_FILE[] = "/dev_bdvd/PS3_GAME/SND0.AT3";
-	ret = load_modules();
+	load_modules();
 	load_libfont_module();
 
 	// Fix EBOOT.BIN permission
@@ -1688,7 +1687,7 @@ int main(int argc, char *argv[])
 				sprintf(filename, "%s\n\n%s USB00%c?", menu_tmp_list[game_sel].title, text_wantdel[region], 47 + n);
 
 			dialog_ret = 0;
-			ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+			cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 
 			wait_dialog();
 
@@ -1775,7 +1774,7 @@ int main(int argc, char *argv[])
 						sprintf(filename, "%s\n\n%s HDD0 %s USB00%c?", menu_list[game_sel].title, text_wantcopy[region],
 								text_to[region], 47 + n);
 
-						ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+						cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 
 						wait_dialog();
 
@@ -1815,7 +1814,7 @@ int main(int argc, char *argv[])
 				sprintf(filename, "%s\n\n%s USB00%c %s HDD0?", menu_list[game_sel].title, text_wantcopy[region], 47 + n,
 						text_to[region]);
 				dialog_ret = 0;
-				ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+				cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 
 				wait_dialog();
 
@@ -1882,7 +1881,7 @@ int main(int argc, char *argv[])
 					}
 
 					// try rename
-					ret = rename(name, filename);
+					rename(name, filename);
 
 					if (dest == 0)
 						sprintf(filename, "%s\n\nSplit game copied in HDD0 (non bootable)", menu_list[game_sel].title);
@@ -1892,7 +1891,7 @@ int main(int argc, char *argv[])
 
 					dialog_ret = 0;
 
-					ret = cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
+					cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
 
 					wait_dialog();
 
@@ -1943,7 +1942,7 @@ int main(int argc, char *argv[])
 								47 + dest);
 
 					dialog_ret = 0;
-					ret = cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
+					cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 
 					wait_dialog();
 
@@ -1976,7 +1975,7 @@ int main(int argc, char *argv[])
 									+ 1);
 						}
 
-						ret = rename(name, filename);
+						rename(name, filename);
 						//
 					}
 				}
@@ -1990,8 +1989,7 @@ int main(int argc, char *argv[])
 
 		if ((new_pad & BUTTON_SQUARE) && mode_list == GAME) {
 			dialog_ret = 0;
-			ret =
-				cellMsgDialogOpen2(type_dialog_yes_no, text_cover_msg[region], dialog_fun1, (void *) 0x0000aaaa, NULL);
+			cellMsgDialogOpen2(type_dialog_yes_no, text_cover_msg[region], dialog_fun1, (void *) 0x0000aaaa, NULL);
 			wait_dialog();
 
 			if (dialog_ret == 1) {
@@ -2046,7 +2044,7 @@ int main(int argc, char *argv[])
 // SHOULD DETERMINE USB #?
 
 				restorecall36((char *) "/dev_usb000");	// restore
-				ret = unload_modules();
+				unload_modules();
 
 				sys_game_process_exitspawn(filename, NULL, NULL, 0, 0, prio, flags);
 				exit(0);
@@ -2057,7 +2055,7 @@ int main(int argc, char *argv[])
 					sprintf(filename, "%s\n\n%s", menu_list[game_sel].title, text_nosplit[region]);
 
 					dialog_ret = 0;
-					ret = cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
+					cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
 					wait_dialog();
 				} else {
 					struct stat s;
@@ -2071,7 +2069,7 @@ int main(int argc, char *argv[])
 						sprintf(string1, "%s\n\n%s\n\n%s", menu_list[game_sel].title, text_notfound[region],
 								text_fix_permission[region]);
 						dialog_ret = 0;
-						ret = cellMsgDialogOpen2(type_dialog_yes_no, string1, dialog_fun1, (void *) 0x0000aaaa, NULL);
+						cellMsgDialogOpen2(type_dialog_yes_no, string1, dialog_fun1, (void *) 0x0000aaaa, NULL);
 						wait_dialog();
 						if (dialog_ret == 1) {
 							sprintf(filename, "%s", menu_list[game_sel].path);
@@ -2085,13 +2083,13 @@ int main(int argc, char *argv[])
 						set_hermes_mode(patchmode);
 					syscall36(menu_list[game_sel].path);
 					if (direct_boot) {
-						ret = unload_modules();
+						unload_modules();
 						sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 3071,
 													SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 						exit(0);
 						break;
 					}
-					ret = unload_modules();
+					unload_modules();
 					exit(0);
 					break;
 				}

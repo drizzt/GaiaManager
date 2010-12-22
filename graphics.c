@@ -685,8 +685,6 @@ void draw_list(t_menu_list * menu, int menu_size, int selected)
 	char ansi[256];
 
 	u32 color;
-	u32 black;
-	black = 0xff000000;
 	int flagb = selected & 0x10000;
 
 	selected &= 0xffff;
@@ -749,10 +747,6 @@ static void init_text_shader(void)
 
 int text_create(u32 xsize, u32 ysize)
 {
-	u32 color_size;
-	u32 color_limit;
-	u32 depth_size;
-	u32 depth_limit;
 	u32 buffer_width;
 
 	text_width = xsize;
@@ -767,12 +761,6 @@ int text_create(u32 xsize, u32 ysize)
 	text_depthp = cellGcmGetTiledPitchSize(buffer_width * 4);
 	if (text_depthp == 0)
 		return -1;
-
-	color_size = text_colorp * ROUNDUP(text_height, 64);
-	color_limit = ROUNDUP(2 * color_size, 0x10000);
-
-	depth_size = text_depthp * ROUNDUP(text_height, 64);
-	depth_limit = ROUNDUP(depth_size, 0x10000);
 
 	init_text_shader();
 
