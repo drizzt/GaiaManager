@@ -714,7 +714,6 @@ static int _my_game_copy(char *path, char *path2)
 				closedir(dir);
 				DPrintf("malloc() Error!!!\n\n");
 				abort_copy = 2;
-				closedir(dir);
 				return -1;
 			}
 			sprintf(d1, "%s/%s", path, entry->d_name);
