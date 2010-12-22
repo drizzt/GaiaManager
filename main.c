@@ -1465,10 +1465,10 @@ int main(int argc, char *argv[])
 					if (stat(filename, &st) < 0) {
 						FILE *fp;
 						char *buf = NULL;
-						long len;
 
 						snprintf(string1, sizeof(string1), "%s/PS3_GAME/PIC1.PNG", menu_list[game_sel].path);
 						if ((fp = fopen(string1, "rb"))) {
+							long len;
 							fseek(fp, 0, SEEK_END);
 							len = ftell(fp);
 							if ((buf = (char *) malloc(len)) == NULL) {
