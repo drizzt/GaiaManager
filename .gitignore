@@ -18,3 +18,6 @@ readme.tex
 # Copyrighted files
 at3plus.h
 waveout.h
+
+# Vim
+.*.sw[ponm]
