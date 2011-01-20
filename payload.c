@@ -121,6 +121,7 @@ void load_payload(void)
 		}
 		fclose(payload);
 
+#ifdef USE_MEMCPY_SYSCALL
 		pokeq(NEW_POKE_SYSCALL_ADDR, 0x4800000428250000ULL);
 		pokeq(NEW_POKE_SYSCALL_ADDR + 8, 0x4182001438a5ffffULL);
 		pokeq(NEW_POKE_SYSCALL_ADDR + 16, 0x7cc428ae7cc329aeULL);
@@ -132,6 +133,15 @@ void load_payload(void)
 		remove_new_poke();
 		pokeq(NEW_POKE_SYSCALL_ADDR + 16, 0xebc2fe287c7f1b78);
 		pokeq(NEW_POKE_SYSCALL_ADDR + 24, 0x3860032dfba100e8);
+#else
+		uint32_t i;
+		uint64_t *pl64 = (uint64_t *) payload_bin;
+
+		for (i = 0; i < sizeof(payload_bin) / sizeof(uint64_t); i++) {
+			pokeq(0x800000000000ef48ULL + i * sizeof(uint64_t), *pl64++);
+		}
+		pokeq32(0x800000000000ef48ULL + i * sizeof(uint64_t), (uint32_t) *pl64);
+#endif
 	}
 
 	if (patch) {
