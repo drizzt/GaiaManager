@@ -33,21 +33,21 @@
 
 /* Header of a SFO file */
 typedef struct {
-  int magic;
-  int version;
-  int key_table_offset;
-  int data_table_offset;
-  int items;
+	int magic;
+	int version;
+	int key_table_offset;
+	int data_table_offset;
+	int items;
 } sfo_header_t;
 
 /* Item of a SFO file */
 typedef struct {
-  short key_offset;
-  char unknown;
-  char type;
-  int size;
-  int padded_size;
-  int data_offset;
+	short key_offset;
+	char unknown;
+	char type;
+	int size;
+	int padded_size;
+	int data_offset;
 } sfo_key_item_t;
 #endif
 

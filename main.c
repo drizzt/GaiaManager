@@ -61,6 +61,7 @@
 #include "network.h"
 #include "graphics.h"
 #include "parse.h"
+#include "payload.h"
 #include "syscall8.h"
 #ifndef WITHOUT_SOUND
 #include "at3plus.h"
@@ -151,7 +152,7 @@ static uint32_t syscall35(const char *srcpath, const char *dstpath);
 void syscall36(const char *path);	// for some strange reasons it does not work as static
 static void restorecall36(const char *path);
 //static uint64_t peekq(uint64_t addr);
-static void pokeq(uint64_t addr, uint64_t val);
+//static void pokeq(uint64_t addr, uint64_t val);
 static void cleanup(void);
 static void fix_perm_recursive(const char *start_path);
 static void sort_entries(t_menu_list * list, int *max);
@@ -191,7 +192,7 @@ int pad_read(void)
 
 	u32 padd;
 
-	u32 paddLX, paddLY; //, paddRX, paddRY;
+	u32 paddLX, paddLY;			//, paddRX, paddRY;
 
 	CellPadData databuf;
 #if (CELL_SDK_VERSION<=0x210001)
@@ -679,19 +680,6 @@ static void restorecall36(const char *path)
 /****************************************************/
 /* UTILS                                            */
 /****************************************************/
-
-#if 0							// Unused
-static uint64_t peekq(uint64_t addr)
-{
-	system_call_1(6, addr);
-	return_to_user_prog(uint64_t);
-}
-#endif
-
-static void pokeq(uint64_t addr, uint64_t val)
-{
-	system_call_2(7, addr, val);
-}
 
 static void fix_perm_recursive(const char *start_path)
 {
@@ -1248,6 +1236,23 @@ int main(int argc, char *argv[])
 #endif
 
 	//fix_perm_recursive("/dev_hdd0/game/OMAN46756/cache2/");
+
+	if (!is_payload_loaded()) {
+		install_new_poke();
+
+		if (!map_lv1()) {
+			remove_new_poke();
+			exit(0);
+		}
+		
+		patch_lv2_protection();
+		remove_new_poke();
+
+		unmap_lv1();
+
+		load_payload();
+	}
+
 	cleanup();
 	cellSysutilGetSystemParamInt(CELL_SYSUTIL_SYSTEMPARAM_ID_LANG, &region);
 
@@ -1308,8 +1313,10 @@ int main(int argc, char *argv[])
 	if (syscall35("/dev_hdd0", "/dev_hdd0") == 0) {
 		payload_type = 1;
 	} else {
+#if 0
 		// Disable mem patch on startup
 		set_hermes_mode(2ULL);
+#endif
 	}
 
 	if (!memcmp(hdd_folder, "ASDFGHJKLM", 10) && hdd_folder[10] == 'N')
