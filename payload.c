@@ -1,15 +1,16 @@
-/*                                                                                                                                                                                 
- * Copyright (C) 2010 drizzt                                                                                                                                                       
- *                                                                                                                                                                                 
- * Authors:                                                                                                                                                                        
- * drizzt <drizzt@ibeglab.org>                                                                                                                                                     
+/*
+ * Copyright (C) 2010 drizzt
+ *
+ * Authors:
+ * drizzt <drizzt@ibeglab.org>
  * flukes1
  * kmeaw
- *                                                                                                                                                                                 
- * This program is free software; you can redistribute it and/or modify                                                                                                            
- * it under the terms of the GNU General Public License as published by                                                                                                            
- * the Free Software Foundation, version 3 of the License.                                                                                                                         
- */ 
+ * TheAnswer
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ */
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -51,6 +52,9 @@ static FILE *search_file(const char *filename)
 	const char **search_dir = search_dirs;
 	char buf[256];
 
+	if (*filename == '/')
+		return fopen(filename, "r");
+
 	while (*search_dir) {
 		strcpy(buf, *search_dir);
 		strcat(buf, filename);
@@ -63,6 +67,77 @@ static FILE *search_file(const char *filename)
 
 	return NULL;
 }
+
+unsigned char *read_file(FILE * f, size_t * sz)
+{
+	if (!f)
+		return NULL;
+
+	fseek(f, 0, SEEK_END);
+	*sz = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	unsigned char *userlandBuffer = malloc(*sz);
+	if (!userlandBuffer)
+		return NULL;
+
+	fread(userlandBuffer, 1, *sz, f);
+	fclose(f);
+
+	return userlandBuffer;
+}
+
+void go(u64 addr)
+{
+	u64 syscall11_ptr = lv2_peek(SYSCALL_PTR(11));
+	u64 old_syscall11 = lv2_peek(syscall11_ptr);
+	lv2_poke(syscall11_ptr, addr);
+	Lv2Syscall0(11);
+	lv2_poke(syscall11_ptr, old_syscall11);
+}
+
+#ifdef USE_MEMCPY_SYSCALL
+void install_lv2_memcpy()
+{
+	PRINTF("installing memcpy...\n");
+	/* install memcpy */
+	lv2_poke(NEW_POKE_SYSCALL_ADDR, 0x4800000428250000ULL);
+	lv2_poke(NEW_POKE_SYSCALL_ADDR + 8, 0x4182001438a5ffffULL);
+	lv2_poke(NEW_POKE_SYSCALL_ADDR + 16, 0x7cc428ae7cc329aeULL);
+	lv2_poke(NEW_POKE_SYSCALL_ADDR + 24, 0x4bffffec4e800020ULL);
+
+}
+
+void remove_lv2_memcpy()
+{
+	PRINTF("uninstalling memcpy...\n");
+	/* restore syscall */
+	remove_new_poke();
+	lv2_poke(NEW_POKE_SYSCALL_ADDR + 16, 0xebc2fe287c7f1b78);
+	lv2_poke(NEW_POKE_SYSCALL_ADDR + 24, 0x3860032dfba100e8);
+}
+
+inline static void lv2_memcpy(void *to, const void *from, size_t sz)
+{
+	Lv2Syscall3(NEW_POKE_SYSCALL, to, (unsigned long long) from, sz);
+}
+#else
+void install_lv2_memcpy() {}
+void remove_lv2_memcpy() {}
+void lv2_memcpy(void *to, const void *from, size_t sz)
+{
+	/* WARNING!! It supports only payload with a size multiple of 4 */
+	uint64_t *source64 = (uint64_t *) from;
+	uint64_t *target64 = (uint64_t *) to;
+
+	for (i = 0; i < sz / sizeof(uint64_t); i++) {
+		pokeq(target64++, *source64++);
+	}
+	if (sz % sizeof(uint64_t)) {
+		pokeq32(target64, (uint32_t) *source64);
+	}
+}
+#endif
 
 uint64_t peekq(uint64_t addr)
 {
@@ -105,48 +180,15 @@ bool is_payload_loaded(void)
 
 void load_payload(void)
 {
+#define PATCH_FLAG_EXEC		1
+#define PATCH_FLAG_BACKUP	2
 	char buf[512], *ptr, *ptr2;
-	unsigned long long addr, value;
-	int patches = 0;
+	unsigned long long addr, value, backup_addr;
+	int patches = 0, payloads = 0;
+	int flags = 0;
 
-	FILE *payload = search_file("payload.bin");
+	FILE *payload;
 	FILE *patch = search_file("patch.txt");
-
-	if (payload) {
-		if (fread((void *) payload_bin, sizeof(payload_bin), 1, payload) != 1) {
-			fclose(payload);
-			payload = NULL;
-			return;
-			//break;
-		}
-		fclose(payload);
-
-#ifdef USE_MEMCPY_SYSCALL
-		/* This does not work on some PS3s */
-		pokeq(NEW_POKE_SYSCALL_ADDR, 0x4800000428250000ULL);
-		pokeq(NEW_POKE_SYSCALL_ADDR + 8, 0x4182001438a5ffffULL);
-		pokeq(NEW_POKE_SYSCALL_ADDR + 16, 0x7cc428ae7cc329aeULL);
-		pokeq(NEW_POKE_SYSCALL_ADDR + 24, 0x4bffffec4e800020ULL);
-
-		system_call_3(NEW_POKE_SYSCALL, 0x800000000000ef48ULL, (unsigned long long) payload_bin, sizeof(payload_bin));
-
-		/* restore syscall */
-		remove_new_poke();
-		pokeq(NEW_POKE_SYSCALL_ADDR + 16, 0xebc2fe287c7f1b78);
-		pokeq(NEW_POKE_SYSCALL_ADDR + 24, 0x3860032dfba100e8);
-#else
-		/* WARNING!! It supports only payload with a size multiple of 4 */
-		uint32_t i;
-		uint64_t *pl64 = (uint64_t *) payload_bin;
-
-		for (i = 0; i < sizeof(payload_bin) / sizeof(uint64_t); i++) {
-			pokeq(0x800000000000ef48ULL + i * sizeof(uint64_t), *pl64++);
-		}
-		if (sizeof(payload_bin) % sizeof(uint64_t)) {
-			pokeq32(0x800000000000ef48ULL + i * sizeof(uint64_t), (uint32_t) *pl64);
-		}
-#endif
-	}
 
 	if (patch) {
 		while (!feof(patch)) {
@@ -154,6 +196,14 @@ void load_payload(void)
 				break;
 			if (!buf[0])
 				break;
+
+			/*
+			 * address: [@[x][b]] { payload_name | poke32 | poke64 | "go" }
+			 *
+			 * 472461: xb payload.bin
+			 * 28ca70: 37719461
+			 * 7f918a: 16380059372ab00a
+			 */
 
 			ptr = strchr(buf, '#');
 			if (ptr)
@@ -170,24 +220,112 @@ void load_payload(void)
 				ptr++;
 			while (*ptr == ' ' || *ptr == '\t')
 				ptr++;
-			if (!strchr("0123456789abcdefABCDEF", *ptr))
-				continue;
-			ptr2 = ptr;
-			value = strtoull(ptr, &ptr, 16);
+			flags = 0;
+			if (*ptr == '@') {
+				ptr++;
+				if (*ptr == 'x') {
+					flags |= PATCH_FLAG_EXEC;
+					ptr++;
+				}
+				if (*ptr == 'b') {
+					flags |= PATCH_FLAG_BACKUP;
+					ptr++;
+				}
+				while (*ptr == ' ' || *ptr == '\t')
+					ptr++;
+			}
+			if (ptr[0] == 'g' && ptr[1] == 'o') {
 
-			patches++;
+			} else if (!strchr("0123456789abcdefABCDEF", *ptr))
+				do {
+					ptr2 = strchr(ptr, '\n');
+					if (ptr2)
+						*ptr2 = 0;
+					ptr2 = strchr(ptr, '\r');
+					if (ptr2)
+						*ptr2 = 0;
+					ptr2 = strchr(ptr, ' ');
+					if (ptr2)
+						*ptr2 = 0;
+					ptr2 = strchr(ptr, '\t');
+					if (ptr2)
+						*ptr2 = 0;
+					payload = search_file(ptr);
 
-			if (ptr - ptr2 == 8) {
-				_poke32(addr, value);
-			} else if (ptr - ptr2 == 16) {
-				_poke(addr, value);
-			} else
-				patches--;
+					if (!payload) {
+						PRINTF
+						    ("Cannot open file \"%s\".\n",
+						     ptr);
+						break;
+					}
+
+					PRINTF("reading payload...\n");
+					size_t sz;
+					unsigned char *payload_bin =
+					    read_file(payload, &sz);
+
+					backup_addr = 0;
+					if (!addr)
+						addr = lv2_alloc(sz, 0x27);
+					else
+						backup_addr =
+						    lv2_alloc(sz, 0x27);
+
+					install_lv2_memcpy();
+
+					if (flags & PATCH_FLAG_BACKUP) {
+						/* backup */
+						PRINTF
+						    ("backing up the data...\n");
+						lv2_memcpy(backup_addr, addr, sz);
+					}
+
+					/* copy the payload */
+					PRINTF("copying the payload...\n");
+					lv2_memcpy((void*) (0x8000000000000000ULL + addr), payload_bin, sz);
+					remove_lv2_memcpy();
+
+					if (flags & PATCH_FLAG_EXEC) {
+						PRINTF
+						    ("Executing the payload...\n");
+						go(addr);
+					}
+
+					if (flags & PATCH_FLAG_BACKUP) {
+						PRINTF
+						    ("Restoring LV2 memory...\n");
+						install_lv2_memcpy();
+						Lv2Syscall3(NEW_POKE_SYSCALL,
+							    addr, backup_addr,
+							    sz);
+						remove_lv2_memcpy();
+					}
+
+					PRINTF("Done.\n");
+
+					payloads++;
+				} while (0);
+			else {
+				ptr2 = ptr;
+				value = strtoull(ptr, &ptr, 16);
+
+				patches++;
+
+				if (ptr - ptr2 == 8) {
+					_poke32(addr, value);
+					PRINTF("poke32 %p %08llX\n",
+					       (void *)addr, value);
+				} else if (ptr - ptr2 == 16) {
+					_poke(addr, value);
+					PRINTF("poke64 %p %16llX\n",
+					       (void *)addr, value);
+				} else
+					patches--;
+			}
 		}
 
 		fclose(patch);
 	}
-
 }
 
 int map_lv1(void)

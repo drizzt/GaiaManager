@@ -1,3 +1,5 @@
+# PL3:
+ef48: payload.bin
 # Segment 0:
 24e44: 38600000 # patch_func6
 55dc4: 38600000 # lv2open: patch_func8_offset1
