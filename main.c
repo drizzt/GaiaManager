@@ -1224,6 +1224,22 @@ int main(int argc, char *argv[])
 	u8 *text_h = NULL;
 	u8 *text_bg = NULL;
 	//char INPUT_FILE[] = "/dev_bdvd/PS3_GAME/SND0.AT3";
+
+	if (!is_payload_loaded()) {
+		install_new_poke();
+
+		if (!map_lv1()) {
+			remove_new_poke();
+			exit(0);
+		}
+
+		patch_lv2_protection();
+		remove_new_poke();
+
+		unmap_lv1();
+
+		load_payload();
+	}
 	load_modules();
 	load_libfont_module();
 
@@ -1236,22 +1252,6 @@ int main(int argc, char *argv[])
 #endif
 
 	//fix_perm_recursive("/dev_hdd0/game/OMAN46756/cache2/");
-
-	if (!is_payload_loaded()) {
-		install_new_poke();
-
-		if (!map_lv1()) {
-			remove_new_poke();
-			exit(0);
-		}
-		
-		patch_lv2_protection();
-		remove_new_poke();
-
-		unmap_lv1();
-
-		load_payload();
-	}
 
 	cleanup();
 	cellSysutilGetSystemParamInt(CELL_SYSUTIL_SYSTEMPARAM_ID_LANG, &region);
@@ -1982,9 +1982,11 @@ int main(int argc, char *argv[])
 				disc_less ^= true;
 			}
 		}
+#if 0
 		if ((new_pad & BUTTON_L2) && mode_list == GAME) {
 			direct_boot ^= true;
 		}
+#endif
 		if (new_pad & BUTTON_R1) {
 			if (ftp_flags & 2)
 				ftp_off();
