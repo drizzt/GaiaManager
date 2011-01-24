@@ -22,8 +22,10 @@
 
 extern uint32_t _binary_payload_patch_txt_start;
 extern uint32_t _binary_payload_patch_txt_size;
-extern uint32_t _binary_payload_payload_bin_start;
-extern uint32_t _binary_payload_payload_bin_size;
+extern uint32_t _binary_payload_payload_bin1_start;
+extern uint32_t _binary_payload_payload_bin1_size;
+extern uint32_t _binary_payload_payload_bin2_start;
+extern uint32_t _binary_payload_payload_bin2_size;
 
 uint64_t mmap_lpar_addr;
 static int poke_syscall = 7;
@@ -62,9 +64,9 @@ static inline void _poke32(uint64_t addr, uint32_t val)
 
 bool is_payload_loaded(void)
 {
-	uint64_t *tmp = (uint64_t *) (uint64_t) & _binary_payload_payload_bin_start;
+	uint64_t *tmp = (uint64_t *) (uint64_t) & _binary_payload_payload_bin1_start;
 
-	return peekq(0x800000000000ef48ULL) == *tmp;
+	return peekq(0x80000000002be4a0ULL) == *tmp;
 }
 
 void load_payload(void)
@@ -72,7 +74,7 @@ void load_payload(void)
 	char *ptr, *ptr2;
 	unsigned long long addr, value;
 	int patches = 0;
-
+#if 1
 #ifdef USE_MEMCPY_SYSCALL
 	/* This does not work on some PS3s */
 	pokeq(NEW_POKE_SYSCALL_ADDR, 0x4800000428250000ULL);
@@ -90,14 +92,22 @@ void load_payload(void)
 #else
 	/* WARNING!! It supports only payload with a size multiple of 4 */
 	uint32_t i;
-	uint64_t *pl64 = (uint64_t *) (uint64_t) & _binary_payload_payload_bin_start;
+	uint64_t *pl64 = (uint64_t *) (uint64_t) & _binary_payload_payload_bin1_start;
 
-	for (i = 0; i < (uint64_t) & _binary_payload_payload_bin_size / sizeof(uint64_t); i++) {
-		pokeq(0x800000000000ef48ULL + i * sizeof(uint64_t), *pl64++);
+	for (i = 0; i < (uint64_t) & _binary_payload_payload_bin1_size / sizeof(uint64_t); i++) {
+		pokeq(0x80000000002be4a0ULL + i * sizeof(uint64_t), *pl64++);
 	}
-	if ((uint64_t) & _binary_payload_payload_bin_size % sizeof(uint64_t)) {
-		pokeq32(0x800000000000ef48ULL + i * sizeof(uint64_t), (uint32_t) * pl64);
+
+	pl64 = (uint64_t *) (uint64_t) & _binary_payload_payload_bin2_start;
+	for (i = 0; i < (uint64_t) & _binary_payload_payload_bin2_size / sizeof(uint64_t); i++) {
+		pokeq(0x80000000002d8430ULL + i * sizeof(uint64_t), *pl64++);
 	}
+
+//	if ((uint64_t) & _binary_payload_payload_bin1_size % sizeof(uint64_t)) {
+//		pokeq32(0x800000000000ef48ULL + i * sizeof(uint64_t), (uint32_t) * pl64);
+//	}
+#endif
+
 #endif
 
 	char *tmp = strtok((char *) &_binary_payload_patch_txt_start, "\n");
