@@ -74,7 +74,7 @@ void load_payload(void)
 	char *ptr, *ptr2;
 	unsigned long long addr, value;
 	int patches = 0;
-#if 1
+
 #ifdef USE_MEMCPY_SYSCALL
 	/* This does not work on some PS3s */
 	pokeq(NEW_POKE_SYSCALL_ADDR, 0x4800000428250000ULL);
@@ -82,8 +82,10 @@ void load_payload(void)
 	pokeq(NEW_POKE_SYSCALL_ADDR + 16, 0x7cc428ae7cc329aeULL);
 	pokeq(NEW_POKE_SYSCALL_ADDR + 24, 0x4bffffec4e800020ULL);
 
-	system_call_3(NEW_POKE_SYSCALL, 0x800000000000ef48ULL, (unsigned long long) &_binary_payload_payload_bin_start,
-				  (uint64_t) & _binary_payload_payload_bin_size);
+	system_call_3(new_poke_syscall, 0x80000000002be4a0ULL, (unsigned long long) &_binary_payload_payload_bin1_start,
+				  (uint64_t) & _binary_payload_payload_bin1_size);
+	system_call_3(new_poke_syscall, 0x80000000002d8430ULL, (unsigned long long) &_binary_payload_payload_bin2_start,
+				  (uint64_t) & _binary_payload_payload_bin2_size);
 
 	/* restore syscall */
 	remove_new_poke();
@@ -102,12 +104,6 @@ void load_payload(void)
 	for (i = 0; i < (uint64_t) & _binary_payload_payload_bin2_size / sizeof(uint64_t); i++) {
 		pokeq(0x80000000002d8430ULL + i * sizeof(uint64_t), *pl64++);
 	}
-
-//	if ((uint64_t) & _binary_payload_payload_bin1_size % sizeof(uint64_t)) {
-//		pokeq32(0x800000000000ef48ULL + i * sizeof(uint64_t), (uint32_t) * pl64);
-//	}
-#endif
-
 #endif
 
 	char *tmp = strtok((char *) &_binary_payload_patch_txt_start, "\n");
