@@ -658,8 +658,11 @@ void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot _
 		cellDbgFontPrintf(0.775, 0.595, 0.8, 0xffffffff, text_refresh[region]);
 		cellDbgFontPrintf(0.775, 0.635, 0.8, 0xffffffff, text_check[region]);
 		cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff,
-						  payload_type == 1 ? text_discless[region] : text_mempatch[region]);
-		draw_text_bool(0.895, 0.68, 0.8, hermes);
+						  text_discless[region]);
+		if (payload_type == 1)
+			draw_text_bool(0.895, 0.68, 0.8, hermes);
+		else
+			cellDbgFontPrintf(0.895, 0.68, 0.8, 0xffff0000, "N/A");
 #if 0
 		cellDbgFontPrintf(0.775, 0.72, 0.8, 0xffffffff, text_directboot[region]);
 		draw_text_bool(0.895, 0.72, 0.8, direct_boot);

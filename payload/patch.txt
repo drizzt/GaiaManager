@@ -1,6 +1,10 @@
-# Segment 0:
-55dc4: 38600000 # lv2open: patch_func8_offset1
-55f28: 60000000 # lv2open: patch_func8_offset2
-2b3298: 4BD5C050 # hook_open (patch_func3 + patch_func3_offset)
-# Segment 1:
-346688: 800000000000f2dc # syscall_map_open_desc
+55f14: 60000000
+55f1c: 48000098
+7af68: 60000000
+7af7c: 60000000
+
+2b3274: 480251ec2ba30420
+#2b3270: 4bffff34480251ec
+#2b3278: 2ba30420fb810080
+
+346690: 80000000002be570 # syscall_map_open_desc

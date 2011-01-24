@@ -100,8 +100,8 @@ static bool direct_boot = false;
 static bool disc_less = false;
 static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
 
-static uint64_t mem_orig = 0x386000014E800020ULL;
-static uint64_t mem_patched = 0xE92296887C0802A6ULL;
+//static uint64_t mem_orig = 0x386000014E800020ULL;
+//static uint64_t mem_patched = 0xE92296887C0802A6ULL;
 static uint64_t patchmode = 2;	//0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)
 
 static t_menu_list menu_homebrew_list[MAX_LIST];
@@ -164,7 +164,7 @@ static void parse_ini(void);
 static void update_game_folder(char *ebootbin);
 static void quit(void);
 static void reset_game_list(int force, int sel);
-static void set_hermes_mode(uint64_t mode);
+//static void set_hermes_mode(uint64_t mode);
 static void copy_from_bluray(void);
 
 static int load_libfont_module(void)
@@ -1022,6 +1022,7 @@ static void reset_game_list(int force, int sel)
 	game_sel = sel;
 }
 
+#if 0
 static void set_hermes_mode(uint64_t mode)
 {
 	if (sys8_enable(0) > 0) {
@@ -1030,6 +1031,7 @@ static void set_hermes_mode(uint64_t mode)
 		pokeq(0x80000000000505d0ULL, mode == 0 ? mem_patched : mem_orig);
 	}
 }
+#endif
 
 static void copy_from_bluray(void)
 {
@@ -2048,8 +2050,10 @@ int main(int argc, char *argv[])
 					snprintf(filename, sizeof(filename), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
 					//change_param_sfo_version(filename);
 					sprintf(filename, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
+#if 0
 					if (payload_type == 0)
 						set_hermes_mode(patchmode);
+#endif
 					syscall36(menu_list[game_sel].path);
 					if (direct_boot) {
 						unload_modules();
