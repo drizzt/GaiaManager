@@ -22,17 +22,17 @@ PPU_CPPFLAGS += -Werror -D'FOLDER_NAME="$(FOLDER_NAME)"'
 
 PPU_EMBEDDED_SRCS = PNG/BGG.PNG PNG/BGH.PNG PNG/HIGHLIGHT.PNG payload/patch.txt payload/payload.bin
 
-PACKAGE_NAME = $(shell sed -n 's/^Product_ID[[:space:]]*=[[:space:]]*//p' openmanager.conf)
+PACKAGE_NAME = UP0001-GAIA01985_00-7679866932773369
 FOLDER_NAME = $(shell echo $(PACKAGE_NAME) | sed -n 's/^[[:alnum:]]*-\([[:alnum:]]*\)_.*/\1/p')
 
-PKG_TARGET = $(PACKAGE_NAME).pkg
+WITH_GAMES_DIR ?= BDRIPS
+
+PKG_TARGET = $(PACKAGE_NAME)-$(GITHEAD)-$(WITH_GAMES_DIR).pkg
 
 CLEANFILES = PS3_GAME/USRDIR/EBOOT.BIN $(OBJS_DIR)/$(PPU_TARGET) readme.aux readme.log readme.out readme.tex
 SUBDIRS = ext
 
-ifneq ($(strip $(WITH_GAMES_DIR)),)
 PPU_CPPFLAGS += -D'GAMES_DIR="$(WITH_GAMES_DIR)"'
-endif
 
 ifneq ($(strip $(WITH_COVERS_DIR)),)
 PPU_CPPFLAGS += -D'COVERS_DIR="$(WITH_COVERS_DIR)"'
@@ -75,7 +75,7 @@ PS3_GAME/USRDIR/EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET)
 	@mkdir -p $(dir $(@))
 	$(SELF_NPDRM) $< $@ $(PACKAGE_NAME)
 
-$(PKG_TARGET): openmanager.conf PS3_GAME/USRDIR/EBOOT.BIN
+$(PKG_TARGET): PS3_GAME/USRDIR/EBOOT.BIN
 	@echo generating package.
 	$(PKG) --contentid $(PACKAGE_NAME) PS3_GAME/ $@
 	@#$(PKG_GEO) $@
