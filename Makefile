@@ -1,6 +1,11 @@
 CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
+# PSL1GHT tools
+PKG := $(PSL1GHT)/host/bin/pkg.py
+PKG_GEO := $(PSL1GHT)/host/bin/package_finalize
+SELF_NPDRM := $(PSL1GHT)/host/bin/make_self_npdrm
+
 PPU_SRCS = main.c dialog.c fileutils.c hvcall.c graphics.c i18n.c mm.c network.c parse.c payload.c syscall8.c vpshader.vp vpshader2.vp fpshader.fp fpshader2.fp
 PPU_TARGET = open_manager.elf
 
@@ -68,11 +73,12 @@ $(OBJS_DIR)/$(PPU_TARGET): $(PPU_TARGET)
 
 PS3_GAME/USRDIR/EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET)
 	@mkdir -p $(dir $(@))
-	$(MAKE_FSELF_NPDRM) $< $@
+	$(SELF_NPDRM) $< $@ $(PACKAGE_NAME)
 
 $(PKG_TARGET): openmanager.conf PS3_GAME/USRDIR/EBOOT.BIN
 	@echo generating package.
-	$(MAKE_PACKAGE_NPDRM) openmanager.conf PS3_GAME/
+	$(PKG) --contentid $(PACKAGE_NAME) PS3_GAME/ $@
+	@#$(PKG_GEO) $@
 
 EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET)	# to use in /app_home/PS3_GAME
 	@echo generating EBOOT.BIN to use in /app_home/PS3_GAME
