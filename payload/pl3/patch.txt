@@ -1,0 +1,6 @@
+# Segment 0:
+55dc4: 38600000 # lv2open: patch_func8_offset1
+55f28: 60000000 # lv2open: patch_func8_offset2
+2b3298: 4BD5C050 # hook_open (patch_func3 + patch_func3_offset)
+# Segment 1:
+346688: 800000000000f2dc # syscall_map_open_desc

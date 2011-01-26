@@ -61,8 +61,10 @@
 #include "network.h"
 #include "graphics.h"
 #include "parse.h"
-#include "payload.h"
 #include "syscall8.h"
+#ifdef WITH_CFW
+#include "payload.h"
+#endif
 #ifndef WITHOUT_SOUND
 #include "at3plus.h"
 #endif
@@ -100,8 +102,10 @@ static bool direct_boot = false;
 static bool disc_less = false;
 static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
 
-//static uint64_t mem_orig = 0x386000014E800020ULL;
-//static uint64_t mem_patched = 0xE92296887C0802A6ULL;
+#ifndef WITH_CFW
+static uint64_t mem_orig = 0x386000014E800020ULL;
+static uint64_t mem_patched = 0xE92296887C0802A6ULL;
+#endif
 static uint64_t patchmode = 2;	//0 -> PS3 perms normally, 1-> Psjailbreak by default, 2-> Special for games as F1 2010 (option by default)
 
 static t_menu_list menu_homebrew_list[MAX_LIST];
@@ -152,7 +156,9 @@ static uint32_t syscall35(const char *srcpath, const char *dstpath);
 void syscall36(const char *path);	// for some strange reasons it does not work as static
 static void restorecall36(const char *path);
 //static uint64_t peekq(uint64_t addr);
-//static void pokeq(uint64_t addr, uint64_t val);
+#ifndef WITH_CFW
+static void pokeq(uint64_t addr, uint64_t val);
+#endif
 static void cleanup(void);
 static void fix_perm_recursive(const char *start_path);
 static void sort_entries(t_menu_list * list, int *max);
@@ -164,7 +170,9 @@ static void parse_ini(void);
 static void update_game_folder(char *ebootbin);
 static void quit(void);
 static void reset_game_list(int force, int sel);
-//static void set_hermes_mode(uint64_t mode);
+#ifndef WITH_CFW
+static void set_hermes_mode(uint64_t mode);
+#endif
 static void copy_from_bluray(void);
 
 static int load_libfont_module(void)
@@ -681,6 +689,21 @@ static void restorecall36(const char *path)
 /* UTILS                                            */
 /****************************************************/
 
+#ifndef WITH_CFW
+#if 0							// Unused
+static uint64_t peekq(uint64_t addr)
+{
+	system_call_1(6, addr);
+	return_to_user_prog(uint64_t);
+}
+#endif
+
+static void pokeq(uint64_t addr, uint64_t val)
+{
+	system_call_2(7, addr, val);
+}
+#endif
+
 static void fix_perm_recursive(const char *start_path)
 {
 	int dir_fd;
@@ -1022,7 +1045,7 @@ static void reset_game_list(int force, int sel)
 	game_sel = sel;
 }
 
-#if 0
+#ifndef WITH_CFW
 static void set_hermes_mode(uint64_t mode)
 {
 	if (sys8_enable(0) > 0) {
@@ -1227,6 +1250,7 @@ int main(int argc, char *argv[])
 	u8 *text_bg = NULL;
 	//char INPUT_FILE[] = "/dev_bdvd/PS3_GAME/SND0.AT3";
 
+#ifdef WITH_CFW
 	if (!is_payload_loaded()) {
 		install_new_poke();
 
@@ -1242,6 +1266,8 @@ int main(int argc, char *argv[])
 
 		load_payload();
 	}
+#endif
+
 	load_modules();
 	load_libfont_module();
 
@@ -1254,7 +1280,6 @@ int main(int argc, char *argv[])
 #endif
 
 	//fix_perm_recursive("/dev_hdd0/game/OMAN46756/cache2/");
-
 	cleanup();
 	cellSysutilGetSystemParamInt(CELL_SYSUTIL_SYSTEMPARAM_ID_LANG, &region);
 
@@ -1315,7 +1340,7 @@ int main(int argc, char *argv[])
 	if (syscall35("/dev_hdd0", "/dev_hdd0") == 0) {
 		payload_type = 1;
 	} else {
-#if 0
+#ifndef WITH_CFW
 		// Disable mem patch on startup
 		set_hermes_mode(2ULL);
 #endif
@@ -1984,7 +2009,7 @@ int main(int argc, char *argv[])
 				disc_less ^= true;
 			}
 		}
-#if 0
+#ifndef WITH_CFW
 		if ((new_pad & BUTTON_L2) && mode_list == GAME) {
 			direct_boot ^= true;
 		}
@@ -2050,7 +2075,7 @@ int main(int argc, char *argv[])
 					snprintf(filename, sizeof(filename), "%s/PS3_GAME/PARAM.SFO", menu_list[game_sel].path);
 					//change_param_sfo_version(filename);
 					sprintf(filename, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
-#if 0
+#ifndef WITH_CFW
 					if (payload_type == 0)
 						set_hermes_mode(patchmode);
 #endif

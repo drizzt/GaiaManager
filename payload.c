@@ -20,12 +20,19 @@
 #include "hvcall.h"
 #include "mm.h"
 
-extern uint32_t _binary_payload_patch_txt_start;
-extern uint32_t _binary_payload_patch_txt_size;
-extern uint32_t _binary_payload_payload_bin1_start;
-extern uint32_t _binary_payload_payload_bin1_size;
-extern uint32_t _binary_payload_payload_bin2_start;
-extern uint32_t _binary_payload_payload_bin2_size;
+#ifdef WITH_PL3
+extern uint32_t _binary_payload_pl3_patch_txt_start;
+extern uint32_t _binary_payload_pl3_patch_txt_size;
+extern uint32_t _binary_payload_pl3_payload_bin_start;
+extern uint32_t _binary_payload_pl3_payload_bin_size;
+#else
+extern uint32_t _binary_payload_syscall36_patch_txt_start;
+extern uint32_t _binary_payload_syscall36_patch_txt_size;
+extern uint32_t _binary_payload_syscall36_payload_bin1_start;
+extern uint32_t _binary_payload_syscall36_payload_bin1_size;
+extern uint32_t _binary_payload_syscall36_payload_bin2_start;
+extern uint32_t _binary_payload_syscall36_payload_bin2_size;
+#endif
 
 uint64_t mmap_lpar_addr;
 static int poke_syscall = 7;
@@ -64,9 +71,15 @@ static inline void _poke32(uint64_t addr, uint32_t val)
 
 bool is_payload_loaded(void)
 {
-	uint64_t *tmp = (uint64_t *) (uint64_t) & _binary_payload_payload_bin1_start;
+#ifdef WITH_PL3
+	uint64_t *tmp = (uint64_t *) (uint64_t) & _binary_payload_pl3_payload_bin_start;
+
+	return peekq(0x800000000000ef48ULL) == *tmp;
+#else
+	uint64_t *tmp = (uint64_t *) (uint64_t) & _binary_payload_syscall36_payload_bin1_start;
 
 	return peekq(0x80000000002be4a0ULL) == *tmp;
+#endif
 }
 
 void load_payload(void)
@@ -82,10 +95,17 @@ void load_payload(void)
 	pokeq(NEW_POKE_SYSCALL_ADDR + 16, 0x7cc428ae7cc329aeULL);
 	pokeq(NEW_POKE_SYSCALL_ADDR + 24, 0x4bffffec4e800020ULL);
 
-	system_call_3(new_poke_syscall, 0x80000000002be4a0ULL, (unsigned long long) &_binary_payload_payload_bin1_start,
-				  (uint64_t) & _binary_payload_payload_bin1_size);
-	system_call_3(new_poke_syscall, 0x80000000002d8430ULL, (unsigned long long) &_binary_payload_payload_bin2_start,
-				  (uint64_t) & _binary_payload_payload_bin2_size);
+#ifdef WITH_PL3
+	system_call_3(NEW_POKE_SYSCALL, 0x800000000000ef48ULL, (unsigned long long) &&_binary_payload_pl3_payload_bin_start,
+				  (uint64_t) & _binary_payload_pl3_payload_bin_size);
+#else
+	system_call_3(new_poke_syscall, 0x80000000002be4a0ULL,
+				  (unsigned long long) &_binary_payload_syscall36_payload_bin1_start,
+				  (uint64_t) & _binary_payload_syscall36_payload_bin1_size);
+	system_call_3(new_poke_syscall, 0x80000000002d8430ULL,
+				  (unsigned long long) &_binary_payload_syscall36_payload_bin2_start,
+				  (uint64_t) & _binary_payload_syscall36_payload_bin2_size);
+#endif
 
 	/* restore syscall */
 	remove_new_poke();
@@ -94,19 +114,34 @@ void load_payload(void)
 #else
 	/* WARNING!! It supports only payload with a size multiple of 4 */
 	uint32_t i;
-	uint64_t *pl64 = (uint64_t *) (uint64_t) & _binary_payload_payload_bin1_start;
 
-	for (i = 0; i < (uint64_t) & _binary_payload_payload_bin1_size / sizeof(uint64_t); i++) {
+#ifdef WITH_PL3
+	uint64_t *pl64 = (uint64_t *) (uint64_t) & _binary_payload_pl3_payload_bin_start;
+	for (i = 0; i < (uint64_t) & _binary_payload_pl3_payload_bin_size / sizeof(uint64_t); i++) {
+		pokeq(0x800000000000ef48ULL + i * sizeof(uint64_t), *pl64++);
+	}
+	if ((uint64_t) & _binary_payload_pl3_payload_bin_size % sizeof(uint64_t)) {
+		pokeq32(0x800000000000ef48ULL + i * sizeof(uint64_t), (uint32_t) * pl64);
+	}
+#else
+	uint64_t *pl64 = (uint64_t *) (uint64_t) & _binary_payload_syscall36_payload_bin1_start;
+
+	for (i = 0; i < (uint64_t) & _binary_payload_syscall36_payload_bin1_size / sizeof(uint64_t); i++) {
 		pokeq(0x80000000002be4a0ULL + i * sizeof(uint64_t), *pl64++);
 	}
 
-	pl64 = (uint64_t *) (uint64_t) & _binary_payload_payload_bin2_start;
-	for (i = 0; i < (uint64_t) & _binary_payload_payload_bin2_size / sizeof(uint64_t); i++) {
+	pl64 = (uint64_t *) (uint64_t) & _binary_payload_syscall36_payload_bin2_start;
+	for (i = 0; i < (uint64_t) & _binary_payload_syscall36_payload_bin2_size / sizeof(uint64_t); i++) {
 		pokeq(0x80000000002d8430ULL + i * sizeof(uint64_t), *pl64++);
 	}
 #endif
+#endif
 
-	char *tmp = strtok((char *) &_binary_payload_patch_txt_start, "\n");
+#ifdef WITH_PL3
+	char *tmp = strtok((char *) &_binary_payload_pl3_patch_txt_start, "\n");
+#else
+	char *tmp = strtok((char *) &_binary_payload_syscall36_patch_txt_start, "\n");
+#endif
 
 	do {
 		ptr = strchr(tmp, '#');

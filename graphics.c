@@ -581,7 +581,11 @@ static void draw_text_bool(float x, float y, float size, bool on)
 	cellDbgFontPrintf(x, y, size, color, on ? "ON" : "OFF");
 }
 
-void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot __attribute__ ((unused)), int ftp)
+void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot
+#ifdef WITH_CFW
+		__attribute__ ((unused))
+#endif
+		, int ftp)
 {
 	float y = 0.84f;
 	char str[256];
@@ -658,12 +662,16 @@ void draw_device_list(u32 flags, int hermes, int payload_type, int direct_boot _
 		cellDbgFontPrintf(0.775, 0.595, 0.8, 0xffffffff, text_refresh[region]);
 		cellDbgFontPrintf(0.775, 0.635, 0.8, 0xffffffff, text_check[region]);
 		cellDbgFontPrintf(0.775, 0.68, 0.8, 0xffffffff,
+#ifdef WITH_CFW
 						  text_discless[region]);
 		if (payload_type == 1)
 			draw_text_bool(0.895, 0.68, 0.8, hermes);
 		else
 			cellDbgFontPrintf(0.895, 0.68, 0.8, 0xffff0000, "N/A");
-#if 0
+#else
+				payload_type == 1 ? text_discless[region] : text_mempatch[region]);
+
+		draw_text_bool(0.895, 0.68, 0.8, hermes);
 		cellDbgFontPrintf(0.775, 0.72, 0.8, 0xffffffff, text_directboot[region]);
 		draw_text_bool(0.895, 0.72, 0.8, direct_boot);
 #endif
