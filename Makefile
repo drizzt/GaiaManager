@@ -2,9 +2,11 @@ CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
 # PSL1GHT tools
+SFO := $(PSL1GHT)/host/bin/sfo.py
 PKG := $(PSL1GHT)/host/bin/pkg.py
 PKG_GEO := $(PSL1GHT)/host/bin/package_finalize
 SELF_NPDRM := $(PSL1GHT)/host/bin/make_self_npdrm
+
 
 PPU_SRCS = main.c dialog.c fileutils.c hvcall.c graphics.c i18n.c mm.c network.c parse.c payload.c syscall8.c vpshader.vp vpshader2.vp fpshader.fp fpshader2.fp
 PPU_TARGET = open_manager.elf
@@ -71,7 +73,10 @@ $(OBJS_DIR)/$(PPU_TARGET): $(PPU_TARGET)
 	@echo setting ftp home path to /
 	./ext/libftphack/libftphack $@
 
-PS3_GAME/USRDIR/EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET)
+PS3_GAME/PARAM.SFO: package.xml
+	$(SFO) -f $< $@
+
+PS3_GAME/USRDIR/EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET) PS3_GAME/PARAM.SFO
 	@mkdir -p $(dir $(@))
 	$(SELF_NPDRM) $< $@ $(PACKAGE_NAME)
 
