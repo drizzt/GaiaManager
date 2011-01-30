@@ -96,7 +96,7 @@ PS3_GAME/USRDIR/EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET) PS3_GAME/PARAM.SFO
 $(PKG_TARGET): PS3_GAME/USRDIR/EBOOT.BIN
 	@echo generating package.
 	$(PKG) --contentid $(PACKAGE_NAME) PS3_GAME/ $@
-	@#$(PKG_GEO) $@
+	$(PKG_GEO) $@
 
 EBOOT.BIN: $(OBJS_DIR)/$(PPU_TARGET)	# to use in /app_home/PS3_GAME
 	@echo generating EBOOT.BIN to use in /app_home/PS3_GAME
