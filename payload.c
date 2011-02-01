@@ -28,10 +28,8 @@ extern uint32_t _binary_payload_pl3_payload_bin_size;
 #else
 extern uint32_t _binary_payload_syscall36_patch_txt_start;
 extern uint32_t _binary_payload_syscall36_patch_txt_size;
-extern uint32_t _binary_payload_syscall36_payload_bin1_start;
-extern uint32_t _binary_payload_syscall36_payload_bin1_size;
-extern uint32_t _binary_payload_syscall36_payload_bin2_start;
-extern uint32_t _binary_payload_syscall36_payload_bin2_size;
+extern uint32_t _binary_payload_syscall36_payload_bin_start;
+extern uint32_t _binary_payload_syscall36_payload_bin_size;
 #endif
 
 uint64_t mmap_lpar_addr;
@@ -76,7 +74,7 @@ bool is_payload_loaded(void)
 
 	return peekq(0x800000000000ef48ULL) == *tmp;
 #else
-	uint64_t *tmp = (uint64_t *) (uint64_t) & _binary_payload_syscall36_payload_bin1_start;
+	uint64_t *tmp = (uint64_t *) (uint64_t) & _binary_payload_syscall36_payload_bin_start;
 
 	return peekq(0x80000000002be4a0ULL) == *tmp;
 #endif
@@ -100,11 +98,8 @@ void load_payload(void)
 				  (uint64_t) & _binary_payload_pl3_payload_bin_size);
 #else
 	system_call_3(new_poke_syscall, 0x80000000002be4a0ULL,
-				  (unsigned long long) &_binary_payload_syscall36_payload_bin1_start,
-				  (uint64_t) & _binary_payload_syscall36_payload_bin1_size);
-	system_call_3(new_poke_syscall, 0x80000000002d8430ULL,
-				  (unsigned long long) &_binary_payload_syscall36_payload_bin2_start,
-				  (uint64_t) & _binary_payload_syscall36_payload_bin2_size);
+				  (unsigned long long) &_binary_payload_syscall36_payload_bin_start,
+				  (uint64_t) & _binary_payload_syscall36_payload_bin_size);
 #endif
 
 	/* restore syscall */
@@ -124,15 +119,13 @@ void load_payload(void)
 		pokeq32(0x800000000000ef48ULL + i * sizeof(uint64_t), (uint32_t) * pl64);
 	}
 #else
-	uint64_t *pl64 = (uint64_t *) (uint64_t) & _binary_payload_syscall36_payload_bin1_start;
+	uint64_t *pl64 = (uint64_t *) (uint64_t) & _binary_payload_syscall36_payload_bin_start;
 
-	for (i = 0; i < (uint64_t) & _binary_payload_syscall36_payload_bin1_size / sizeof(uint64_t); i++) {
+	for (i = 0; i < (uint64_t) & _binary_payload_syscall36_payload_bin_size / sizeof(uint64_t); i++) {
 		pokeq(0x80000000002be4a0ULL + i * sizeof(uint64_t), *pl64++);
 	}
-
-	pl64 = (uint64_t *) (uint64_t) & _binary_payload_syscall36_payload_bin2_start;
-	for (i = 0; i < (uint64_t) & _binary_payload_syscall36_payload_bin2_size / sizeof(uint64_t); i++) {
-		pokeq(0x80000000002d8430ULL + i * sizeof(uint64_t), *pl64++);
+	if ((uint64_t) & _binary_payload_syscall36_payload_bin_size % sizeof(uint64_t)) {
+		pokeq(0x80000000002be4a0ULL + i * sizeof(uint64_t), (uint32_t) * pl64);
 	}
 #endif
 #endif

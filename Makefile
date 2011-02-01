@@ -43,7 +43,7 @@ ifneq ($(strip $(WITH_PL3)),)
 PPU_EMBEDDED_SRCS += payload/pl3/patch.txt payload/pl3/payload.bin
 PPU_CPPFLAGS += -DWITH_PL3
 else
-PPU_EMBEDDED_SRCS += payload/syscall36/patch.txt payload/syscall36/payload.bin1 payload/syscall36/payload.bin2
+PPU_EMBEDDED_SRCS += payload/syscall36/patch.txt payload/syscall36/payload.bin
 endif
 
 PPU_CPPFLAGS += -DWITH_CFW
