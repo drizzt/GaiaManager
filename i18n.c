@@ -112,22 +112,22 @@ const char *const text_eboot[] = {
 };
 
 const char *const text_launcher[] = {
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
+	"You can launch this utility by pressing SELECT+START the next time",
+	"You can launch this utility by pressing SELECT+START the next time",
 	"Vous pouvez lancer cet utilitaire en appuyant sur SELECT+START la prochaine fois",
 	"Puedes ejecutar esta utilidad presionando SELECT+START la proxima vez.",
 	"Das Spiel kann ab jetzt mit SELECT+START gestartet werden",
 	"Puoi lanciare questa utility premendo SELECT+START la prossima volta",
-	"You can launch this utility pressing SELECT+START the next time",
+	"You can launch this utility by pressing SELECT+START the next time",
 	"Pode iniciar este utilit�rio pressionando SELECT+START na proxima vez",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time",
+	"You can launch this utility by pressing SELECT+START the next time",
+	"You can launch this utility by pressing SELECT+START the next time",
+	"You can launch this utility by pressing SELECT+START the next time",
+	"You can launch this utility by pressing SELECT+START the next time",
+	"You can launch this utility by pressing SELECT+START the next time",
 	"Du kan nu starta detta program genom att trycka SELECT+START nasta gang.",
-	"You can launch this utility pressing SELECT+START the next time",
-	"You can launch this utility pressing SELECT+START the next time"
+	"You can launch this utility by pressing SELECT+START the next time",
+	"You can launch this utility by pressing SELECT+START the next time"
 };
 
 const char *const text_notfound[] = {
@@ -228,22 +228,22 @@ const char *const text_toinstall[] = {
 };
 
 const char *const text_cover_msg[] = {
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
 	"Vous-voulez telecharger les jaquettes manquantes(dans /dev_hdd0/" COVERS_DIR")?\nCela peut prendre un certain temps...\nVeuillez-Patientez",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
 	"Vuoi scaricare le cover mancanti (in /dev_hdd0/" COVERS_DIR ")?\nPotrebbe volerci un po'...\nAttendere prego",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait",
-	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could takes awhile...\nPlease wait"
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait",
+	"Do you want to download missing covers (in /dev_hdd0/" COVERS_DIR ")?\nIt could take awhile...\nPlease wait"
 };
 
 const char *const text_fix_permission[] = {
