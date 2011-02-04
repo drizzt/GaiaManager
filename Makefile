@@ -7,7 +7,7 @@ PKG := $(PSL1GHT)/host/bin/pkg.py
 PKG_GEO := $(PSL1GHT)/host/bin/package_finalize
 SELF_NPDRM := $(PSL1GHT)/host/bin/make_self_npdrm
 
-PPU_SRCS = main.c dialog.c fileutils.c graphics.c i18n.c network.c parse.c syscall8.c vpshader.vp vpshader2.vp fpshader.fp fpshader2.fp
+PPU_SRCS = main.c dialog.c fileutils.c fnt35.c fnt_print.c graphics.c i18n.c network.c parse.c syscall8.c vpshader.vp vpshader2.vp fpshader.fp fpshader2.fp
 PPU_EMBEDDED_SRCS = PNG/BGG.PNG PNG/BGH.PNG PNG/HIGHLIGHT.PNG
 
 PPU_TARGET = open_manager.elf

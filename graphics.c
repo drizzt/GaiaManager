@@ -26,6 +26,12 @@
 #include <cell/cell_fs.h>
 #include <netex/libnetctl.h>
 
+// JAPANESE PATCH
+#include "fnt_print.h"
+
+extern fnt_t font;
+extern u8* fnt_buffer;
+
 CellDbgFontConsoleId consoleID = CELL_DBGFONT_STDOUT_ID;
 
 #define ROUNDUP(x, a) (((x)+((a)-1))&(~((a)-1)))
@@ -484,6 +490,7 @@ int DPrintf(const char *string, ...)
 	return ret;
 }
 
+#if 0
 static void utf8_to_ansi(char *utf8, char *ansi, int len)
 {
 	u8 *ch = (u8 *) utf8;
@@ -561,6 +568,7 @@ static void utf8_to_ansi(char *utf8, char *ansi, int len)
 		len--;
 	}
 }
+#endif
 
 static void draw_text_stroke(float x, float y, float size, u32 color, const char *str)
 {
@@ -710,7 +718,9 @@ void draw_list(t_menu_list * menu, int menu_size, int selected)
 		int grey = 0;
 
 		if (i < menu_size) {
-			utf8_to_ansi(menu[i].title, ansi, 65);
+			// JAPANESE PATCH
+			//utf8_to_ansi(menu[i].title, ansi, 65);
+			memcpy(ansi, menu[i].title, 65);
 			ansi[65] = 0;
 			//sprintf(str, "%i) %s", i+1, ansi);
 			sprintf(str, "%s", ansi);
@@ -719,14 +729,16 @@ void draw_list(t_menu_list * menu, int menu_size, int selected)
 			sprintf(str, " ");
 		}
 
-		color = 0xff606060;
+		color = 0x606060ff;
 
 		if (i == selected)
-			color = (flagb && i == 0) ? 0xfff0e000 : ((grey == 0) ? 0xff00ffff : 0xff008080);
+			color = (flagb && i == 0) ? 0x00e0f0ff : ((grey == 0) ? 0xffff00ff : 0x808000ff);
 		else
-			color = (flagb && i == 0) ? 0xff807000 : ((grey == 0) ? 0xffffffff : 0xff606060);
+			color = (flagb && i == 0) ? 0x007080ff : ((grey == 0) ? 0xffffffff : 0x606060ff);
 
-		draw_text_stroke(0.06f, y, 1.05f, color, str);
+		// JAPANESE PATCH
+		//draw_text_stroke(0.06f, y, 1.05f, color, str);
+		fnt_print_vram(&font, (u32 *)fnt_buffer, DISPLAY_WIDTH, (int)(0.06f * 1920), (int)(y * 1080), str, color, 0x00000000, (int)1.05f, (int)1.05f);
 
 		y += 0.0455f;
 		i++;

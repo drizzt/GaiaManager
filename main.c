@@ -62,6 +62,10 @@
 #include "graphics.h"
 #include "parse.h"
 #include "syscall8.h"
+// JAPANESE PATCH
+#include "fnt_print.h"
+#include "fnt35.h"
+
 #ifdef WITH_CFW
 #include "payload.h"
 #endif
@@ -85,6 +89,10 @@ enum BmModes {
 	GAME = 0,
 	HOMEBREW = 1
 };
+
+// JAPANESE PATCH
+fnt_t font;
+uint8_t* fnt_buffer = NULL;
 
 #ifndef WITHOUT_SOUND
 static int fm = -1;
@@ -1245,6 +1253,8 @@ int main(int argc, char *argv[])
 	char *pngptr = filename;
 	struct stat st;
 
+	// JAPANESE PATCH
+	u8 *text_fnt = NULL;
 	u8 *text_bmp = NULL;
 	u8 *text_h = NULL;
 	u8 *text_bg = NULL;
@@ -1302,12 +1312,19 @@ int main(int argc, char *argv[])
 	u32 frame_buf_size = DISPLAY_HEIGHT * DISPLAY_WIDTH * 4;
 
 	frame_buf_size = (frame_buf_size + 0xfffff) & (~0xfffff);
+	// JAPANESE PATCH
+	text_fnt = (u8 *) memalign(0x100000, frame_buf_size);
 	text_bmp = (u8 *) memalign(0x100000, frame_buf_size);
 	text_bg = (u8 *) memalign(0x100000, frame_buf_size);
 	text_h = (u8 *) memalign(0x100000, frame_buf_size);
-	if (!text_bmp)
+	if (!text_bmp || !text_fnt || !text_bg || !text_h)
 		exit(-1);
 
+	fnt_buffer = text_fnt;
+
+	// JAPANESE PATCH
+	if (png_out_mapmem(text_fnt, frame_buf_size))
+		exit(-1);
 	if (png_out_mapmem(text_bmp, frame_buf_size))
 		exit(-1);
 	if (png_out_mapmem(text_bg, frame_buf_size))
@@ -1316,6 +1333,9 @@ int main(int argc, char *argv[])
 		exit(-1);
 
 	cellSysutilRegisterCallback(0, gfxSysutilCallback, NULL);
+
+	// JAPANESE PATCH
+	fnt_load_mem(fnt35, &font);
 
 	sprintf(filename, "/dev_hdd0/game/%s/USRDIR/BGG.PNG", hdd_folder_home);
 	pngsize = 0;
@@ -2156,9 +2176,14 @@ int main(int argc, char *argv[])
 										  : 1U << 31)), payload_type == 1 ? disc_less : !patchmode, payload_type,
 							 direct_boot, ftp_flags & 2);
 
+		set_texture(text_fnt, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+		setRenderTexture();
+		display_png(0,0,DISPLAY_WIDTH,DISPLAY_HEIGHT,DISPLAY_WIDTH,DISPLAY_HEIGHT);
+
 		cellDbgFontDrawGcm();
 
 		flip();
+		memset(text_fnt, 0, frame_buf_size);
 		cellSysutilCheckCallback();
 	}
 
