@@ -958,7 +958,8 @@ static void update_game_folder(char *ebootbin
 		mkdir(filename, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 
 		dialog_ret = 0;
-		sprintf(filename, "/dev_hdd0/%s is the new folder for games", GAMES_DIR);
+		//sprintf(filename, "/dev_hdd0/%s is the new folder for games", GAMES_DIR);
+		sprintf(filename, "/dev_hdd0/%s %s", GAMES_DIR, text_games_folder[region]);
 
 		cellMsgDialogOpen2(type_dialog_ok, filename, dialog_fun2, (void *) 0x0000aaab, NULL);
 		wait_dialog();
