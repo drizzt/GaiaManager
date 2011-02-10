@@ -92,7 +92,7 @@ enum BmModes {
 
 // JAPANESE PATCH
 fnt_t font;
-uint8_t* fnt_buffer = NULL;
+uint8_t *fnt_buffer = NULL;
 
 #ifndef WITHOUT_SOUND
 static int fm = -1;
@@ -2178,7 +2178,7 @@ int main(int argc, char *argv[])
 
 		set_texture(text_fnt, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 		setRenderTexture();
-		display_png(0,0,DISPLAY_WIDTH,DISPLAY_HEIGHT,DISPLAY_WIDTH,DISPLAY_HEIGHT);
+		display_png(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
 		cellDbgFontDrawGcm();
 
