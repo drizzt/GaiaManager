@@ -1823,29 +1823,49 @@ int main(int argc, char *argv[])
 				if (n == 11)
 					continue;
 
-				curr_device = 0;
+				for (dest = 0; dest < 11; dest++) {
+					if (dest == n)
+						continue;
+					if (dest == 0)
+						sprintf(filename, "%s\n\n%s USB00%c %s HDD0?", menu_list[game_sel].title, text_wantcopy[region],
+								47 + n, text_to[region]);
+					else
+						sprintf(filename, "%s\n\n%s USB00%c %s USB00%c?", menu_list[game_sel].title,
+								text_wantcopy[region], 47 + n, text_to[region], 47 + dest);
+					dialog_ret = 0;
+					cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
 
-				dest = 0;
-				sprintf(filename, "%s\n\n%s USB00%c %s HDD0?", menu_list[game_sel].title, text_wantcopy[region], 47 + n,
-						text_to[region]);
-				dialog_ret = 0;
-				cellMsgDialogOpen2(type_dialog_yes_no, filename, dialog_fun1, (void *) 0x0000aaaa, NULL);
-
-				wait_dialog();
+					wait_dialog();
+					if (dialog_ret == 1) {
+						curr_device = dest;
+						break;
+					}			// exit
+				}
 
 				if (dialog_ret == 1) {
 					char *p = strstr(menu_list[game_sel].path,
 									 "/" GAMES_DIR) + sizeof(GAMES_DIR) + 1;
 
-					if (p[0] == '_')
-						p++;	// skip special char
+					if (dest == 0) {	// HDD0
+						if (p[0] == '_')
+							p++;	// skip special char
 
-					sprintf(name, "/dev_hdd0/game/%s/", hdd_folder);
-					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-					sprintf(name, "/dev_hdd0/game/%s/%s", hdd_folder, GAMES_DIR);
-					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-					sprintf(name, "/dev_hdd0/game/%s/%s/%s", hdd_folder, GAMES_DIR, p);
-					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+						sprintf(name, "/dev_hdd0/game/%s/", hdd_folder);
+						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+						sprintf(name, "/dev_hdd0/game/%s/%s", hdd_folder, GAMES_DIR);
+						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+						sprintf(name, "/dev_hdd0/game/%s/%s/%s", hdd_folder, GAMES_DIR, p);
+						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+					} else {
+						sprintf(name, "/dev_usb00%c/%s", 47 + curr_device, GAMES_DIR);
+						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+						sprintf(name, "/dev_usb00%c/%s", 47 + curr_device, GAMES_DIR);
+						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+						sprintf(name, "/dev_usb00%c/%s/%s", 47 + curr_device, GAMES_DIR,
+								strstr(menu_list[game_sel].path, "/" GAMES_DIR) + sizeof(GAMES_DIR) + 1);
+						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+
+					}
 				}
 
 			}
