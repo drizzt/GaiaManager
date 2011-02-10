@@ -1258,6 +1258,7 @@ int main(int argc, char *argv[])
 	u8 *text_bmp = NULL;
 	u8 *text_h = NULL;
 	u8 *text_bg = NULL;
+	u8 *text_pic1 = NULL;
 	//char INPUT_FILE[] = "/dev_bdvd/PS3_GAME/SND0.AT3";
 
 #ifdef WITH_CFW
@@ -1317,7 +1318,8 @@ int main(int argc, char *argv[])
 	text_bmp = (u8 *) memalign(0x100000, frame_buf_size);
 	text_bg = (u8 *) memalign(0x100000, frame_buf_size);
 	text_h = (u8 *) memalign(0x100000, frame_buf_size);
-	if (!text_bmp || !text_fnt || !text_bg || !text_h)
+	text_pic1 = (u8 *) memalign(0x100000, frame_buf_size);
+	if (!text_bmp || !text_fnt || !text_bg || !text_h || !text_pic1)
 		exit(-1);
 
 	fnt_buffer = text_fnt;
@@ -1330,6 +1332,8 @@ int main(int argc, char *argv[])
 	if (png_out_mapmem(text_bg, frame_buf_size))
 		exit(-1);
 	if (png_out_mapmem(text_h, frame_buf_size))
+		exit(-1);
+	if (png_out_mapmem(text_pic1, frame_buf_size))
 		exit(-1);
 
 	cellSysutilRegisterCallback(0, gfxSysutilCallback, NULL);
@@ -1508,6 +1512,42 @@ int main(int argc, char *argv[])
 			if (old_fi != game_sel && game_sel >= 0 && counter_png == 0) {
 				old_fi = game_sel;
 				if (mode_list == GAME) {
+
+					mkdir("/dev_hdd0/game/" FOLDER_NAME "/cache/", S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+					sprintf(filename, "/dev_hdd0/game/%s/cache/%s-PIC1.PNG", hdd_folder_home,
+							menu_list[game_sel].title_id);
+					if (stat(filename, &st) < 0) {
+						FILE *fp;
+						char *buf = NULL;
+
+						snprintf(string1, sizeof(string1), "%s/PS3_GAME/PIC1.PNG", menu_list[game_sel].path);
+						if ((fp = fopen(string1, "rb"))) {
+							long len;
+							fseek(fp, 0, SEEK_END);
+							len = ftell(fp);
+							if ((buf = (char *) malloc(len)) == NULL) {
+								fclose(fp);
+								break;
+							}
+							fseek(fp, 0, SEEK_SET);
+							fread(buf, len, 1, fp);
+							fclose(fp);
+
+							if ((fp = fopen(filename, "wb")) == NULL) {
+								free(buf);
+								continue;
+							}
+							fwrite(buf, len, 1, fp);
+							fclose(fp);
+							free(buf);
+						} else {
+							// Empty text_pic1
+							memset(text_pic1, 0, frame_buf_size);
+						}
+					}
+
+					load_png_texture(text_pic1, filename, 0);
+
 					sprintf(filename, "%s/COVER.PNG", menu_list[game_sel].path);
 					if (stat(filename, &st) < 0) {
 						sprintf(filename, "/dev_hdd0/%s/%s.PNG", COVERS_DIR, menu_list[game_sel].title_id);
@@ -2138,6 +2178,10 @@ int main(int argc, char *argv[])
 		cellGcmSetClearSurface(gCellGcmCurrentContext,
 							   CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B |
 							   CELL_GCM_CLEAR_A);
+
+		set_texture(text_pic1, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+		setRenderTexture();
+		display_png(0, 0, 1920, 1080, 1920, 1080);
 
 		setRenderColor();
 		// square for screen
