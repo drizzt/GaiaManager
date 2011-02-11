@@ -108,6 +108,7 @@ static int max_menu_list = 0;
 
 static bool direct_boot = false;
 static bool disc_less = false;
+static bool pic1_mode = false;
 static int payload_type = 0;	//0 -> psgroove (or old psfreedom), 1 -> new pl3 with syscall35
 
 #ifndef WITH_CFW
@@ -449,6 +450,7 @@ static int unload_modules(void)
 		fprintf(fid, "direct_boot = %d\n", direct_boot);
 		fprintf(fid, "ftp_flags = %d\n", ftp_flags);
 		fprintf(fid, "hdd_folder = %s\n", hdd_folder);
+		fprintf(fid, "pic1_mode = %d\n", pic1_mode);
 		fclose(fid);
 	}
 #endif
@@ -865,6 +867,8 @@ static void parse_ini(void)
 			ftp_flags = atoi(&filename[12]);
 		else if (strncmp(filename, "hdd_folder = ", 13) == 0)
 			strncpy(hdd_folder, &filename[13], sizeof(hdd_folder) - 1);
+		else if (strncmp(filename, "pic1_mode = ", 12) == 0)
+			pic1_mode = atoi(&filename[12]);
 	}
 
 	fclose(fid);
@@ -1513,37 +1517,42 @@ int main(int argc, char *argv[])
 				old_fi = game_sel;
 				if (mode_list == GAME) {
 
-					mkdir("/dev_hdd0/game/" FOLDER_NAME "/cache/", S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-					sprintf(filename, "/dev_hdd0/game/%s/cache/%s-PIC1.PNG", hdd_folder_home,
-							menu_list[game_sel].title_id);
-					if (stat(filename, &st) < 0) {
-						FILE *fp;
-						char *buf = NULL;
+					if (pic1_mode) {
+						mkdir("/dev_hdd0/game/" FOLDER_NAME "/cache/", S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+						sprintf(filename, "/dev_hdd0/game/%s/cache/%s-PIC1.PNG", hdd_folder_home,
+								menu_list[game_sel].title_id);
+						if (stat(filename, &st) < 0) {
+							FILE *fp;
+							char *buf = NULL;
 
-						snprintf(string1, sizeof(string1), "%s/PS3_GAME/PIC1.PNG", menu_list[game_sel].path);
-						if ((fp = fopen(string1, "rb"))) {
-							long len;
-							fseek(fp, 0, SEEK_END);
-							len = ftell(fp);
-							if ((buf = (char *) malloc(len)) == NULL) {
+							snprintf(string1, sizeof(string1), "%s/PS3_GAME/PIC1.PNG", menu_list[game_sel].path);
+							if ((fp = fopen(string1, "rb"))) {
+								long len;
+								fseek(fp, 0, SEEK_END);
+								len = ftell(fp);
+								if ((buf = (char *) malloc(len)) == NULL) {
+									fclose(fp);
+									break;
+								}
+								fseek(fp, 0, SEEK_SET);
+								fread(buf, len, 1, fp);
 								fclose(fp);
-								break;
-							}
-							fseek(fp, 0, SEEK_SET);
-							fread(buf, len, 1, fp);
-							fclose(fp);
 
-							if ((fp = fopen(filename, "wb")) == NULL) {
+								if ((fp = fopen(filename, "wb")) == NULL) {
+									free(buf);
+									continue;
+								}
+								fwrite(buf, len, 1, fp);
+								fclose(fp);
 								free(buf);
-								continue;
+							} else {
+								// Empty text_pic1
+								memset(text_pic1, 0, frame_buf_size);
 							}
-							fwrite(buf, len, 1, fp);
-							fclose(fp);
-							free(buf);
-						} else {
-							// Empty text_pic1
-							memset(text_pic1, 0, frame_buf_size);
 						}
+					} else {
+						// Empty text_pic1
+						memset(text_pic1, 0, frame_buf_size);
 					}
 
 					load_png_texture(text_pic1, filename, 0);
@@ -2094,6 +2103,13 @@ int main(int argc, char *argv[])
 			direct_boot ^= true;
 		}
 #endif
+
+		if ((new_pad & BUTTON_SELECT)) {
+			pic1_mode ^= true;
+			//reset_game_list(1, game_sel);
+			counter_png = 0;
+		}
+
 		if (new_pad & BUTTON_R1) {
 			if (ftp_flags & 2)
 				ftp_off();
