@@ -733,7 +733,7 @@ static int _my_game_copy(char *path, char *path2)
 		} else {
 			if (strcmp(entry->d_name, "PS3UPDAT.PUP") == 0) {
 			} else {
-				DPrintf("EPATH: %s\nEPATH2: %s\nENTRY %s", path, path2, entry->d_name);
+//				DPrintf("EPATH: %s\nEPATH2: %s\nENTRY %s\n", path, path2, entry->d_name);
 				if (fast_copy_add(path, path2, entry->d_name) < 0) {
 					abort_copy = 666;
 					closedir(dir);
