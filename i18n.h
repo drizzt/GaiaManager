@@ -13,6 +13,7 @@ extern const char *const text_wantuse[];
 extern const char *const text_toinstall[];
 extern const char *const text_cover_msg[];
 extern const char *const text_fix_permission[];
+extern const char *const text_games_folder[];
 // Graphics
 extern const char *const text_launch[];
 extern const char *const text_copy[];
